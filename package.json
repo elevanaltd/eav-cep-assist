@@ -1,0 +1,67 @@
+{
+
+  "name": "eav-cep-assist",
+
+  "version": "1.0.0",
+
+  "description": "Adobe CEP panel for Premiere Pro - Video/Image ingestion and metadata tagging",
+
+  "main": "index.html",
+
+  "scripts": {
+
+    "install": "echo 'Copy this folder to Adobe CEP extensions directory'",
+
+    "test": "echo 'No automated tests configured'"
+
+  },
+
+  "repository": {
+
+    "type": "git",
+
+    "url": "https://github.com/elevanaltd/eav-cep-assist.git"
+
+  },
+
+  "keywords": [
+
+    "adobe",
+
+    "premiere-pro",
+
+    "cep",
+
+    "panel",
+
+    "video-ingestion",
+
+    "metadata",
+
+    "tagging"
+
+  ],
+
+  "author": "Elevana Ltd",
+
+  "license": "PROPRIETARY",
+
+  "dependencies": {},
+
+  "devDependencies": {},
+
+  "cep": {
+
+    "id": "com.elevana.eav-cep-assist",
+
+    "version": "1.0.0",
+
+    "hosts": ["PPRO"],
+
+    "minVersion": "14.0",
+
+    "debugPort": 8092
+
+  }
+
+}

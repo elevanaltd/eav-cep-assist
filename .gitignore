@@ -1,0 +1,59 @@
+# macOS
+
+.DS_Store
+
+.AppleDouble
+
+.LSOverride
+
+
+
+# Windows
+
+Thumbs.db
+
+ehthumbs.db
+
+Desktop.ini
+
+
+
+# Editor directories and files
+
+.vscode/
+
+.idea/
+
+*.swp
+
+*.swo
+
+*~
+
+
+
+# Logs
+
+*.log
+
+npm-debug.log*
+
+
+
+# Temporary files
+
+*.tmp
+
+*.temp
+
+
+
+# CEP cache
+
+.cache/
+
+
+
+# Node modules (if added later)
+
+node_modules/
