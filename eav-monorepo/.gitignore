@@ -1,0 +1,30 @@
+# Coordination - Full tracking for GitHub agent collaboration
+# All .coord documentation tracked to enable agent context awareness
+.coord/.DS_Store
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+.turbo/
+
+# Environment
+.env*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+*.log
+
+# Testing
+coverage/
+
+# Worktrees (local working directories)
+worktrees/

@@ -1,0 +1,288 @@
+turbo 2.6.0
+
+• Packages in scope: @workspace/shared
+• Running test in 1 packages
+• Remote caching disabled
+@workspace/shared:test: cache bypass, force executing ee469c06075a28c9
+@workspace/shared:test: 
+@workspace/shared:test: > @workspace/shared@0.5.0 test /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: > vitest run
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test:  RUN  v3.2.4 /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: 
+@workspace/shared:test:  ✓ src/test/infrastructure.test.ts (3 tests) 2ms
+@workspace/shared:test: stderr | src/test/__tests__/infrastructure.test.ts
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test:  ❯ src/index.test.ts (6 tests | 2 failed) 128ms
+@workspace/shared:test:    × @elevanaltd/shared > should export client module utilities 42ms
+@workspace/shared:test:      → expected undefined to be defined
+@workspace/shared:test:    × @elevanaltd/shared > should export authentication utilities 5ms
+@workspace/shared:test:      → expected undefined to be defined
+@workspace/shared:test:    ✓ @elevanaltd/shared > should export RLS utilities 20ms
+@workspace/shared:test:    ✓ @elevanaltd/shared > should export navigation provider 61ms
+@workspace/shared:test:    ✓ @elevanaltd/shared > should export UI components 0ms
+@workspace/shared:test:    ✓ @elevanaltd/shared > should export dropdown context 0ms
+@workspace/shared:test:  ✓ src/test/__tests__/infrastructure.test.ts (16 tests) 8350ms
+@workspace/shared:test:    ✓ Test Infrastructure Smoke Test > 3. Auth Operations > should sign in as client  752ms
+@workspace/shared:test:    ✓ Test Infrastructure Smoke Test > 3. Auth Operations > should rate limit auth operations  751ms
+@workspace/shared:test:    ✓ Test Infrastructure Smoke Test > 4. User Profiles (RLS Critical) > should have user_profile for admin  1502ms
+@workspace/shared:test:    ✓ Test Infrastructure Smoke Test > 4. User Profiles (RLS Critical) > should have user_profile for client  1501ms
+@workspace/shared:test:    ✓ Test Infrastructure Smoke Test > 5. User Clients (RLS Client Filtering) > should have CLIENT_ALPHA for client.test  1500ms
+@workspace/shared:test:    ✓ Test Infrastructure Smoke Test > 5. User Clients (RLS Client Filtering) > should have CLIENT_UNAUTHORIZED for unauthorized.test  1503ms
+@workspace/shared:test:    ✓ Test Infrastructure Smoke Test > 7. Basic Query Execution > should query user_profiles table  757ms
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts (9 tests | 9 failed) 15098ms
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided 1589ms
+@workspace/shared:test:      → createComment is not defined
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided 2240ms
+@workspace/shared:test:      → createComment is not defined
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided 2258ms
+@workspace/shared:test:      → createComment is not defined
+@workspace/shared:test:    × Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true 2253ms
+@workspace/shared:test:      → attemptPositionRecovery is not defined
+@workspace/shared:test:    × Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false 2257ms
+@workspace/shared:test:      → attemptPositionRecovery is not defined
+@workspace/shared:test:    × Comment Capabilities - enableTipTapIntegration > LOADS TipTap extension when enableTipTapIntegration=true 0ms
+@workspace/shared:test:      → loadTipTapExtension is not defined
+@workspace/shared:test:    × Comment Capabilities - enableTipTapIntegration > SKIPS TipTap when enableTipTapIntegration=false 0ms
+@workspace/shared:test:      → loadTipTapExtension is not defined
+@workspace/shared:test:    × Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true) 2241ms
+@workspace/shared:test:      → createComment is not defined
+@workspace/shared:test:    × Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false) 2259ms
+@workspace/shared:test:      → createComment is not defined
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯ Failed Suites 4 ⎯⎯⎯⎯⎯⎯⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/components/AutocompleteField.test.tsx [ src/components/AutocompleteField.test.tsx ]
+@workspace/shared:test: Error: Failed to resolve import "@testing-library/user-event" from "src/components/AutocompleteField.test.tsx". Does the file exist?
+@workspace/shared:test:   Plugin: vite:import-analysis
+@workspace/shared:test:   File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/AutocompleteField.test.tsx:4:22
+@workspace/shared:test:   2  |  import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+@workspace/shared:test:   3  |  import { render, screen, cleanup, waitFor } from "@testing-library/react";
+@workspace/shared:test:   4  |  import userEvent from "@testing-library/user-event";
+@workspace/shared:test:      |                         ^
+@workspace/shared:test:   5  |  import { AutocompleteField } from "./AutocompleteField";
+@workspace/shared:test:   6  |  import { DropdownProvider } from "../contexts/DropdownContext";
+@workspace/shared:test:  ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+@workspace/shared:test:  ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+@workspace/shared:test:  ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+@workspace/shared:test:  ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+@workspace/shared:test:  ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+@workspace/shared:test:  ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+@workspace/shared:test:  ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/components/Header.test.tsx [ src/components/Header.test.tsx ]
+@workspace/shared:test: Error: Failed to resolve import "@testing-library/user-event" from "src/components/Header.test.tsx". Does the file exist?
+@workspace/shared:test:   Plugin: vite:import-analysis
+@workspace/shared:test:   File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/Header.test.tsx:3:22
+@workspace/shared:test:   2  |  import { describe, it, expect, vi } from "vitest";
+@workspace/shared:test:   3  |  import { render, screen } from "@testing-library/react";
+@workspace/shared:test:   4  |  import userEvent from "@testing-library/user-event";
+@workspace/shared:test:      |                         ^
+@workspace/shared:test:   5  |  import { Header } from "./Header";
+@workspace/shared:test:   6  |  describe("Header Component", () => {
+@workspace/shared:test:  ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+@workspace/shared:test:  ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+@workspace/shared:test:  ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+@workspace/shared:test:  ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+@workspace/shared:test:  ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+@workspace/shared:test:  ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+@workspace/shared:test:  ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/components/HierarchicalNavigationSidebar.integration.test.tsx [ src/components/HierarchicalNavigationSidebar.integration.test.tsx ]
+@workspace/shared:test: Error: Failed to resolve import "@elevanaltd/shared-lib" from "src/components/HierarchicalNavigationSidebar.integration.test.tsx". Does the file exist?
+@workspace/shared:test:   Plugin: vite:import-analysis
+@workspace/shared:test:   File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/HierarchicalNavigationSidebar.integration.test.tsx:3:35
+@workspace/shared:test:   2  |  import { describe, it, expect, vi } from "vitest";
+@workspace/shared:test:   3  |  import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+@workspace/shared:test:   4  |  import { NavigationProvider } from "@elevanaltd/shared-lib";
+@workspace/shared:test:      |                                      ^
+@workspace/shared:test:   5  |  import { HierarchicalNavigationSidebar } from "./HierarchicalNavigationSidebar";
+@workspace/shared:test:   6  |  describe("HierarchicalNavigationSidebar Integration", () => {
+@workspace/shared:test:  ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+@workspace/shared:test:  ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+@workspace/shared:test:  ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+@workspace/shared:test:  ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+@workspace/shared:test:  ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+@workspace/shared:test:  ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+@workspace/shared:test:  ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/components/HierarchicalNavigationSidebar.test.tsx [ src/components/HierarchicalNavigationSidebar.test.tsx ]
+@workspace/shared:test: Error: Failed to resolve import "@elevanaltd/shared-lib" from "src/components/HierarchicalNavigationSidebar.test.tsx". Does the file exist?
+@workspace/shared:test:   Plugin: vite:import-analysis
+@workspace/shared:test:   File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/HierarchicalNavigationSidebar.test.tsx:3:35
+@workspace/shared:test:   2  |  import { describe, it, expect, vi } from "vitest";
+@workspace/shared:test:   3  |  import { render, screen, fireEvent } from "@testing-library/react";
+@workspace/shared:test:   4  |  import { NavigationProvider } from "@elevanaltd/shared-lib";
+@workspace/shared:test:      |                                      ^
+@workspace/shared:test:   5  |  import { HierarchicalNavigationSidebar } from "./HierarchicalNavigationSidebar";
+@workspace/shared:test:   6  |  describe("HierarchicalNavigationSidebar", () => {
+@workspace/shared:test:  ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+@workspace/shared:test:  ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+@workspace/shared:test:  ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+@workspace/shared:test:  ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+@workspace/shared:test:  ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+@workspace/shared:test:  ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+@workspace/shared:test:  ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/index.test.ts > @elevanaltd/shared > should export client module utilities
+@workspace/shared:test: AssertionError: expected undefined to be defined
+@workspace/shared:test:  ❯ src/index.test.ts:6:26
+@workspace/shared:test:       4|   it('should export client module utilities', async () => {
+@workspace/shared:test:       5|     const { createClient } = await import('./lib/client/index.js')
+@workspace/shared:test:       6|     expect(createClient).toBeDefined()
+@workspace/shared:test:        |                          ^
+@workspace/shared:test:       7|   })
+@workspace/shared:test:       8| 
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/index.test.ts > @elevanaltd/shared > should export authentication utilities
+@workspace/shared:test: AssertionError: expected undefined to be defined
+@workspace/shared:test:  ❯ src/index.test.ts:11:38
+@workspace/shared:test:       9|   it('should export authentication utilities', async () => {
+@workspace/shared:test:      10|     const { createSupabaseAuthClient } = await import('./lib/auth/inde…
+@workspace/shared:test:      11|     expect(createSupabaseAuthClient).toBeDefined()
+@workspace/shared:test:        |                                      ^
+@workspace/shared:test:      12|   })
+@workspace/shared:test:      13| 
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided
+@workspace/shared:test: ReferenceError: createComment is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:88:20
+@workspace/shared:test:      86| 
+@workspace/shared:test:      87|     // RED: This will fail because createComment doesn't exist yet
+@workspace/shared:test:      88|     const result = await createComment(
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:      89|       testSupabase,
+@workspace/shared:test:      90|       {
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided
+@workspace/shared:test: ReferenceError: createComment is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:115:20
+@workspace/shared:test:     113| 
+@workspace/shared:test:     114|     // RED: This will fail because createComment doesn't exist yet
+@workspace/shared:test:     115|     const result = await createComment(
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:     116|       testSupabase,
+@workspace/shared:test:     117|       {
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided
+@workspace/shared:test: ReferenceError: createComment is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:141:20
+@workspace/shared:test:     139| 
+@workspace/shared:test:     140|     // RED: This will fail because createComment doesn't exist yet
+@workspace/shared:test:     141|     const result = await createComment(
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:     142|       testSupabase,
+@workspace/shared:test:     143|       {
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true
+@workspace/shared:test: ReferenceError: attemptPositionRecovery is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:180:20
+@workspace/shared:test:     178| 
+@workspace/shared:test:     179|     // RED: This will fail because attemptPositionRecovery doesn't exi…
+@workspace/shared:test:     180|     const result = await attemptPositionRecovery(
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:     181|       testSupabase,
+@workspace/shared:test:     182|       testCommentId,
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false
+@workspace/shared:test: ReferenceError: attemptPositionRecovery is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:202:20
+@workspace/shared:test:     200| 
+@workspace/shared:test:     201|     // RED: This will fail because attemptPositionRecovery doesn't exi…
+@workspace/shared:test:     202|     const result = await attemptPositionRecovery(
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:     203|       testSupabase,
+@workspace/shared:test:     204|       testCommentId,
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enableTipTapIntegration > LOADS TipTap extension when enableTipTapIntegration=true
+@workspace/shared:test: ReferenceError: loadTipTapExtension is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:231:20
+@workspace/shared:test:     229|   it('LOADS TipTap extension when enableTipTapIntegration=true', () =>…
+@workspace/shared:test:     230|     // RED: This will fail because loadTipTapExtension doesn't exist y…
+@workspace/shared:test:     231|     const result = loadTipTapExtension({
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:     232|       requireAnchors: false,
+@workspace/shared:test:     233|       enablePositionRecovery: false,
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enableTipTapIntegration > SKIPS TipTap when enableTipTapIntegration=false
+@workspace/shared:test: ReferenceError: loadTipTapExtension is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:249:20
+@workspace/shared:test:     247|   it('SKIPS TipTap when enableTipTapIntegration=false', () => {
+@workspace/shared:test:     248|     // RED: This will fail because loadTipTapExtension doesn't exist y…
+@workspace/shared:test:     249|     const result = loadTipTapExtension({
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:     250|       requireAnchors: false,
+@workspace/shared:test:     251|       enablePositionRecovery: false,
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true)
+@workspace/shared:test: ReferenceError: createComment is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:288:27
+@workspace/shared:test:     286| 
+@workspace/shared:test:     287|     // Test 1: Enforce anchor requirement
+@workspace/shared:test:     288|     const invalidResult = await createComment(
+@workspace/shared:test:        |                           ^
+@workspace/shared:test:     289|       testSupabase,
+@workspace/shared:test:     290|       {
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false)
+@workspace/shared:test: ReferenceError: createComment is not defined
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:340:20
+@workspace/shared:test:     338| 
+@workspace/shared:test:     339|     // Test 1: Allow zero-length anchors
+@workspace/shared:test:     340|     const result = await createComment(
+@workspace/shared:test:        |                    ^
+@workspace/shared:test:     341|       testSupabase,
+@workspace/shared:test:     342|       {
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test:  Test Files  6 failed | 2 passed (8)
+@workspace/shared:test:       Tests  11 failed | 23 passed (34)
+@workspace/shared:test:    Start at  11:49:11
+@workspace/shared:test:    Duration  15.89s (transform 113ms, setup 1.30s, collect 173ms, tests 23.58s, environment 3.13s, prepare 414ms)
+@workspace/shared:test: 
+@workspace/shared:test:  ELIFECYCLE  Test failed. See above for more details.
+@workspace/shared:test: ERROR: command finished with error: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run test exited (1)
+@workspace/shared#test: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run test exited (1)
+
+ Tasks:    0 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    16.348s 
+Failed:    @workspace/shared#test
+
+ ERROR  run failed: command  exited (1)
+TEST_EXIT_CODE: 1

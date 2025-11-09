@@ -1,0 +1,9 @@
+
+> @workspace/shared@0.5.0 typecheck /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+> tsc --noEmit
+
+src/comments/extensions/CommentHighlightExtension.ts(175,13): error TS18048: 'state.schema.marks.commentHighlight' is possibly 'undefined'.
+src/comments/extensions/CommentHighlightExtension.ts(236,17): error TS18048: 'state.schema.marks.commentHighlight' is possibly 'undefined'.
+src/comments/extensions/CommentHighlightExtension.ts(261,25): error TS6133: 'view' is declared but its value is never read.
+src/comments/extensions/CommentHighlightExtension.ts(261,31): error TS6133: 'pos' is declared but its value is never read.
+ ELIFECYCLE  Command failed with exit code 2.

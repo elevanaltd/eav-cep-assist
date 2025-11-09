@@ -1,0 +1,25 @@
+turbo 2.6.0
+
+• Packages in scope: @workspace/shared
+• Running typecheck in 1 packages
+• Remote caching disabled
+@workspace/shared:typecheck: cache miss, executing 2fc8289e0eba106c
+@workspace/shared:typecheck: 
+@workspace/shared:typecheck: > @workspace/shared@0.5.0 typecheck /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:typecheck: > tsc --noEmit
+@workspace/shared:typecheck: 
+@workspace/shared:typecheck: src/test/supabase-test-client.ts(154,21): error TS2769: No overload matches this call.
+@workspace/shared:typecheck:   Overload 1 of 2, '(relation: "comments" | "scripts" | "user_profiles" | "videos" | "projects" | "audit_log" | "script_components" | "user_clients"): PostgrestQueryBuilder<{ PostgrestVersion: "13.0.5"; }, { Tables: { ...; }; Views: { ...; }; Functions: { ...; }; Enums: { ...; }; CompositeTypes: {}; }, { ...; } | ... 6 more ... | { ...; }, "comments" | ... 6 more ... | "user_clients", [] | ... 3 more ... | [...]>', gave the following error.
+@workspace/shared:typecheck:     Argument of type '"script_locks"' is not assignable to parameter of type '"comments" | "scripts" | "user_profiles" | "videos" | "projects" | "audit_log" | "script_components" | "user_clients"'.
+@workspace/shared:typecheck:   Overload 2 of 2, '(relation: "scripts_with_eav" | "user_accessible_scripts"): PostgrestQueryBuilder<{ PostgrestVersion: "13.0.5"; }, { Tables: { audit_log: { Row: { action: string; created_at: string; details: Json; id: string; status: string; target_resource: string | null; user_id: string | null; }; Insert: { ...; }; Update: { ...; }; Relationships: []; }; ... 6 more ...; videos: { ...; }; }; Views: { ...; }; Functions: { ...; }; Enums: { ...; }; CompositeTypes: {}; }, { ...; } | { ...; }, "scripts_with_eav" | "user_accessible_scripts", [] | [...]>', gave the following error.
+@workspace/shared:typecheck:     Argument of type '"script_locks"' is not assignable to parameter of type '"scripts_with_eav" | "user_accessible_scripts"'.
+@workspace/shared:typecheck:  ELIFECYCLE  Command failed with exit code 2.
+@workspace/shared:typecheck: ERROR: command finished with error: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run typecheck exited (2)
+@workspace/shared#typecheck: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run typecheck exited (2)
+
+ Tasks:    0 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    1.184s 
+Failed:    @workspace/shared#typecheck
+
+ ERROR  run failed: command  exited (2)

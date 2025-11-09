@@ -1,0 +1,52 @@
+=== Phase 2 Capability-Config Implementation ===
+
+1. repository.ts transformations:
+   - Import fixed: Database type from @elevanaltd/shared → ../../lib/types/database.types.js
+   - Import fixed: Comment types from ../types/comments → ./types.js
+   - Import fixed: batchRecoverCommentPositions from ./comments-position-recovery → ./positionRecovery.js
+   - Import added: CommentCapabilities from ./capabilities.js
+   - Parameter added: createComment() now accepts capabilities: CommentCapabilities
+   - Validation added: requireAnchors capability enforced (lines 72-82)
+     * If capabilities.requireAnchors && startPosition === endPosition → VALIDATION_ERROR
+     * Enables scripts-web strict mode (text selection required)
+     * Allows cam-op-pwa flexible mode (zero-length anchors permitted)
+
+
+2. positionRecovery.ts transformations:
+   - Import added: CommentCapabilities from ./capabilities.js
+   - Header updated: Added "Week 2 GREEN: Capability-config integration enables conditional recovery"
+   - Function added: attemptPositionRecovery() wrapper for test compatibility
+     * Accepts parameters: (supabase, commentId, capabilities)
+     * Returns: { recovered: boolean }
+     * Logic: if (!capabilities.enablePositionRecovery) return { recovered: false }
+     * Purpose: Satisfy capability-config.test.ts interface expectations
+
+3. loadTipTapExtension.ts created:
+   - New file: packages/shared/src/comments/extensions/loadTipTapExtension.ts
+   - Import: CommentCapabilities from ../domain/capabilities.js
+   - Function: loadTipTapExtension(capabilities)
+   - Returns: { loaded: boolean }
+   - Logic: if (!capabilities.enableTipTapIntegration) return { loaded: false }
+   - Purpose: Enable/disable TipTap based on app capabilities (scripts-web vs cam-op-pwa)
+
+4. capability-config.test.ts transformations:
+   - Removed: declare statements for attemptPositionRecovery and loadTipTapExtension
+   - Added: import { attemptPositionRecovery } from '../domain/positionRecovery.js'
+   - Added: import { loadTipTapExtension } from '../extensions/loadTipTapExtension.js'
+   - Status: All 3 functions now imported from actual implementations (not mocks)
+
+
+5. attemptPositionRecovery wrapper pattern (HO-approved Adapter Pattern):
+   - Constitutional Rationale: Extract POC reality, adapt to test contract, integrate capabilities
+   - POC Reality: batchRecoverCommentPositions(comments[], documentContent) → Map<id, result>
+   - Test Contract: attemptPositionRecovery(supabase, commentId, capabilities) → { recovered: boolean }
+   - Wrapper Implementation:
+     * Step 1: Check capabilities.enablePositionRecovery (early return if disabled)
+     * Step 2: Fetch comment by ID from Supabase (comments table)
+     * Step 3: Fetch script content from Supabase (scripts table via comment.script_id)
+     * Step 4: Transform DB format → POC CommentData format
+     * Step 5: Call POC recoverCommentPosition(commentData, scriptContent)
+     * Step 6: Transform POC result → test format { recovered: boolean, details }
+   - Emergent Property: Single API supports both batch efficiency (POC) and single-comment simplicity (tests)
+   - Both functions exported: Future apps can use batch function directly for optimization
+

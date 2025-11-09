@@ -1,0 +1,40 @@
+
+> @workspace/shared@0.5.0 test /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+> vitest run src/auth/AuthContext.test.tsx
+
+
+ RUN  v3.2.4 /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/auth/AuthContext.test.tsx [ src/auth/AuthContext.test.tsx ]
+Error: [vitest] No "createBrowserClient" export is defined on the "../lib/client/browser" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi[33m.[39m[34mmock[39m([35mimport[39m([32m"../lib/client/browser"[39m)[33m,[39m [35masync[39m (importOriginal) [33m=>[39m {
+  [35mconst[39m actual [33m=[39m [35mawait[39m [34mimportOriginal[39m()
+  [35mreturn[39m {
+    [33m...[39mactual[33m,[39m
+    [90m// your mocked methods[39m
+  }
+})
+
+ ❯ src/auth/AuthContext.tsx:10:18
+      8| 
+      9| // Create Supabase client instance
+     10| const supabase = createBrowserClient()
+       |                  ^
+     11| 
+     12| interface AuthContextType {
+ ❯ src/auth/AuthContext.test.tsx:3:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  00:57:55
+   Duration  584ms (transform 45ms, setup 104ms, collect 0ms, tests 0ms, environment 255ms, prepare 35ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

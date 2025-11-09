@@ -1,0 +1,108 @@
+{
+  "name": "@workspace/data",
+  "version": "0.1.0",
+  "description": "Pure data layer - Supabase client, types, database utilities, RLS helpers",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js",
+      "require": "./dist/client/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js",
+      "require": "./dist/types/index.cjs"
+    },
+    "./database": {
+      "types": "./dist/database/index.d.ts",
+      "import": "./dist/database/index.js",
+      "require": "./dist/database/index.cjs"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "import": "./dist/errors/index.js",
+      "require": "./dist/errors/index.cjs"
+    },
+    "./services": {
+      "types": "./dist/services/index.d.ts",
+      "import": "./dist/services/index.js",
+      "require": "./dist/services/index.cjs"
+    },
+    "./rls": {
+      "types": "./dist/rls/index.d.ts",
+      "import": "./dist/rls/index.js",
+      "require": "./dist/rls/index.cjs"
+    },
+    "./mappers": {
+      "types": "./dist/mappers/index.d.ts",
+      "import": "./dist/mappers/index.js",
+      "require": "./dist/mappers/index.cjs"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js",
+      "require": "./dist/auth/index.cjs"
+    },
+    "./test": {
+      "types": "./dist/test/index.d.ts",
+      "import": "./dist/test/index.js",
+      "require": "./dist/test/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "VITEST_INTEGRATION=true vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "eav",
+    "supabase",
+    "data-layer",
+    "database",
+    "pure-data"
+  ],
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.75.0"
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.38.0",
+    "@supabase/supabase-js": "^2.76.1",
+    "@types/node": "^20.19.23",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.38.0",
+    "globals": "^16.4.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "vite": "^7.1.11",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

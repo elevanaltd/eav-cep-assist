@@ -1,0 +1,362 @@
+
+> @workspace/shared@0.5.0 test /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+> vitest run -- capability-config.test.ts
+
+
+ RUN  v3.2.4 /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+
+ ✓ src/test/infrastructure.test.ts (3 tests) 3ms
+ ✓ src/lib/mappers/userProfileMapper.test.ts (13 tests) 7ms
+ ✓ src/services/logger.test.ts (7 tests) 5ms
+stderr | src/test/__tests__/infrastructure.test.ts
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ✓ src/database/validation.test.ts (16 tests) 16ms
+ ❯ src/index.test.ts (6 tests | 2 failed) 201ms
+   × @elevanaltd/shared > should export client module utilities 108ms
+     → expected undefined to be defined
+   × @elevanaltd/shared > should export authentication utilities 12ms
+     → expected undefined to be defined
+   ✓ @elevanaltd/shared > should export RLS utilities 24ms
+   ✓ @elevanaltd/shared > should export navigation provider 55ms
+   ✓ @elevanaltd/shared > should export UI components 0ms
+   ✓ @elevanaltd/shared > should export dropdown context 0ms
+ ✓ src/errors/errorHandling.test.ts (30 tests) 7013ms
+   ✓ Error Handling Utilities > withRetry > should give up after max attempts  684ms
+   ✓ Error Handling Utilities > AsyncErrorBoundary > should return error result for failed operations  1872ms
+   ✓ Error Handling Utilities > AsyncErrorBoundary > should call error handler when provided  2033ms
+   ✓ Error Handling Utilities > useErrorHandling > should create AsyncErrorBoundary with correct operation name  2405ms
+ ❯ src/test/__tests__/infrastructure.test.ts (16 tests | 1 failed) 8352ms
+   ✓ Test Infrastructure Smoke Test > 1. Local Supabase Connection > should connect to local Supabase 1ms
+   ✓ Test Infrastructure Smoke Test > 1. Local Supabase Connection > should use local URL (not production) 0ms
+   ✓ Test Infrastructure Smoke Test > 2. Test Users Configuration > should have admin test user defined 0ms
+   ✓ Test Infrastructure Smoke Test > 2. Test Users Configuration > should have client test user defined 0ms
+   ✓ Test Infrastructure Smoke Test > 2. Test Users Configuration > should have unauthorized test user defined 0ms
+   ✓ Test Infrastructure Smoke Test > 3. Auth Operations > should sign in as admin 79ms
+   ✓ Test Infrastructure Smoke Test > 3. Auth Operations > should sign in as client  751ms
+   × Test Infrastructure Smoke Test > 3. Auth Operations > should rate limit auth operations 752ms
+     → expected 749 to be greater than or equal to 750
+   ✓ Test Infrastructure Smoke Test > 4. User Profiles (RLS Critical) > should have user_profile for admin  1500ms
+   ✓ Test Infrastructure Smoke Test > 4. User Profiles (RLS Critical) > should have user_profile for client  1501ms
+   ✓ Test Infrastructure Smoke Test > 5. User Clients (RLS Client Filtering) > should have CLIENT_ALPHA for client.test  1503ms
+   ✓ Test Infrastructure Smoke Test > 5. User Clients (RLS Client Filtering) > should have CLIENT_UNAUTHORIZED for unauthorized.test  1503ms
+   ✓ Test Infrastructure Smoke Test > 6. Test Data Factories > should create deterministic project data 1ms
+   ✓ Test Infrastructure Smoke Test > 6. Test Data Factories > should reset factory IDs 0ms
+   ✓ Test Infrastructure Smoke Test > 6. Test Data Factories > should create script data 0ms
+   ✓ Test Infrastructure Smoke Test > 7. Basic Query Execution > should query user_profiles table  757ms
+ ❯ src/comments/__tests__/capability-config.test.ts (9 tests | 9 failed) 15101ms
+   × Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided 1589ms
+     → createComment is not defined
+   × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided 2222ms
+     → createComment is not defined
+   × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided 2280ms
+     → createComment is not defined
+   × Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true 2250ms
+     → attemptPositionRecovery is not defined
+   × Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false 2246ms
+     → attemptPositionRecovery is not defined
+   × Comment Capabilities - enableTipTapIntegration > LOADS TipTap extension when enableTipTapIntegration=true 0ms
+     → loadTipTapExtension is not defined
+   × Comment Capabilities - enableTipTapIntegration > SKIPS TipTap when enableTipTapIntegration=false 0ms
+     → loadTipTapExtension is not defined
+   × Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true) 2250ms
+     → createComment is not defined
+   × Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false) 2261ms
+     → createComment is not defined
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/auth/AuthContext.test.tsx [ src/auth/AuthContext.test.tsx ]
+Error: Failed to resolve import "../test/testUtils" from "src/auth/AuthContext.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/auth/AuthContext.test.tsx:4:0
+  17 |  const __vi_import_1__ = await import("@testing-library/react");
+  18 |  const __vi_import_2__ = await import("./AuthContext");
+  19 |  const __vi_import_3__ = await import("../test/testUtils");
+     |                                       ^
+  20 |  
+  21 |  import { describe, it, expect, vi, beforeEach } from "vitest";
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+ ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/19]⎯
+
+ FAIL  src/components/AutocompleteField.test.tsx [ src/components/AutocompleteField.test.tsx ]
+Error: Failed to resolve import "@testing-library/user-event" from "src/components/AutocompleteField.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/AutocompleteField.test.tsx:4:22
+  2  |  import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+  3  |  import { render, screen, cleanup, waitFor } from "@testing-library/react";
+  4  |  import userEvent from "@testing-library/user-event";
+     |                         ^
+  5  |  import { AutocompleteField } from "./AutocompleteField";
+  6  |  import { DropdownProvider } from "../contexts/DropdownContext";
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+ ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/19]⎯
+
+ FAIL  src/components/Header.test.tsx [ src/components/Header.test.tsx ]
+Error: Failed to resolve import "@testing-library/user-event" from "src/components/Header.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/Header.test.tsx:3:22
+  2  |  import { describe, it, expect, vi } from "vitest";
+  3  |  import { render, screen } from "@testing-library/react";
+  4  |  import userEvent from "@testing-library/user-event";
+     |                         ^
+  5  |  import { Header } from "./Header";
+  6  |  describe("Header Component", () => {
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+ ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/19]⎯
+
+ FAIL  src/components/HierarchicalNavigationSidebar.integration.test.tsx [ src/components/HierarchicalNavigationSidebar.integration.test.tsx ]
+Error: Failed to resolve import "@elevanaltd/shared-lib" from "src/components/HierarchicalNavigationSidebar.integration.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/HierarchicalNavigationSidebar.integration.test.tsx:3:35
+  2  |  import { describe, it, expect, vi } from "vitest";
+  3  |  import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+  4  |  import { NavigationProvider } from "@elevanaltd/shared-lib";
+     |                                      ^
+  5  |  import { HierarchicalNavigationSidebar } from "./HierarchicalNavigationSidebar";
+  6  |  describe("HierarchicalNavigationSidebar Integration", () => {
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+ ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/19]⎯
+
+ FAIL  src/components/HierarchicalNavigationSidebar.test.tsx [ src/components/HierarchicalNavigationSidebar.test.tsx ]
+Error: Failed to resolve import "@elevanaltd/shared-lib" from "src/components/HierarchicalNavigationSidebar.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/components/HierarchicalNavigationSidebar.test.tsx:3:35
+  2  |  import { describe, it, expect, vi } from "vitest";
+  3  |  import { render, screen, fireEvent } from "@testing-library/react";
+  4  |  import { NavigationProvider } from "@elevanaltd/shared-lib";
+     |                                      ^
+  5  |  import { HierarchicalNavigationSidebar } from "./HierarchicalNavigationSidebar";
+  6  |  describe("HierarchicalNavigationSidebar", () => {
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+ ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/19]⎯
+
+ FAIL  src/editor/componentExtraction.test.ts [ src/editor/componentExtraction.test.ts ]
+Error: Failed to resolve import "../services/scriptService" from "src/editor/componentExtraction.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/editor/componentExtraction.test.ts:3:36
+  1  |  import { describe, it, expect } from "vitest";
+  2  |  import { extractComponents, isComponentParagraph } from "./componentExtraction";
+  3  |  import { generateContentHash } from "../services/scriptService";
+     |                                       ^
+  4  |  import { schema } from "@tiptap/pm/schema-basic";
+  5  |  function createMockNode(type, textContent = "", children = []) {
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+ ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/19]⎯
+
+ FAIL  src/editor/locking/useScriptLock.test.ts [ src/editor/locking/useScriptLock.test.ts ]
+Error: Failed to resolve import "../test/supabase-test-client" from "src/editor/locking/useScriptLock.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/editor/locking/useScriptLock.test.ts:30:75
+  2  |  import { renderHook, waitFor } from "@testing-library/react";
+  3  |  import { useScriptLock } from "./useScriptLock";
+  4  |  import { testSupabase, signInAsTestUser, cleanupTestData, authDelay } from "../test/supabase-test-client";
+     |                                                                              ^
+  5  |  describe("useScriptLock (integration)", () => {
+  6  |    const TEST_SCRIPT_ID = "00000000-0000-0000-0000-000000000101";
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31106:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:31103:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29590:18
+ ❯ ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29648:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:29616:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:30905:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.1.12_@types+node@20.19.24/node_modules/vite/dist/node/chunks/config.js:26043:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/19]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/index.test.ts > @elevanaltd/shared > should export client module utilities
+AssertionError: expected undefined to be defined
+ ❯ src/index.test.ts:6:26
+      4|   it('should export client module utilities', async () => {
+      5|     const { createClient } = await import('./lib/client/index.js')
+      6|     expect(createClient).toBeDefined()
+       |                          ^
+      7|   })
+      8| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/19]⎯
+
+ FAIL  src/index.test.ts > @elevanaltd/shared > should export authentication utilities
+AssertionError: expected undefined to be defined
+ ❯ src/index.test.ts:11:38
+      9|   it('should export authentication utilities', async () => {
+     10|     const { createSupabaseAuthClient } = await import('./lib/auth/inde…
+     11|     expect(createSupabaseAuthClient).toBeDefined()
+       |                                      ^
+     12|   })
+     13| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided
+ReferenceError: createComment is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:88:20
+     86| 
+     87|     // RED: This will fail because createComment doesn't exist yet
+     88|     const result = await createComment(
+       |                    ^
+     89|       testSupabase,
+     90|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided
+ReferenceError: createComment is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:115:20
+    113| 
+    114|     // RED: This will fail because createComment doesn't exist yet
+    115|     const result = await createComment(
+       |                    ^
+    116|       testSupabase,
+    117|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided
+ReferenceError: createComment is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:141:20
+    139| 
+    140|     // RED: This will fail because createComment doesn't exist yet
+    141|     const result = await createComment(
+       |                    ^
+    142|       testSupabase,
+    143|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true
+ReferenceError: attemptPositionRecovery is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:180:20
+    178| 
+    179|     // RED: This will fail because attemptPositionRecovery doesn't exi…
+    180|     const result = await attemptPositionRecovery(
+       |                    ^
+    181|       testSupabase,
+    182|       testCommentId,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false
+ReferenceError: attemptPositionRecovery is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:202:20
+    200| 
+    201|     // RED: This will fail because attemptPositionRecovery doesn't exi…
+    202|     const result = await attemptPositionRecovery(
+       |                    ^
+    203|       testSupabase,
+    204|       testCommentId,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enableTipTapIntegration > LOADS TipTap extension when enableTipTapIntegration=true
+ReferenceError: loadTipTapExtension is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:231:20
+    229|   it('LOADS TipTap extension when enableTipTapIntegration=true', () =>…
+    230|     // RED: This will fail because loadTipTapExtension doesn't exist y…
+    231|     const result = loadTipTapExtension({
+       |                    ^
+    232|       requireAnchors: false,
+    233|       enablePositionRecovery: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enableTipTapIntegration > SKIPS TipTap when enableTipTapIntegration=false
+ReferenceError: loadTipTapExtension is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:249:20
+    247|   it('SKIPS TipTap when enableTipTapIntegration=false', () => {
+    248|     // RED: This will fail because loadTipTapExtension doesn't exist y…
+    249|     const result = loadTipTapExtension({
+       |                    ^
+    250|       requireAnchors: false,
+    251|       enablePositionRecovery: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true)
+ReferenceError: createComment is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:288:27
+    286| 
+    287|     // Test 1: Enforce anchor requirement
+    288|     const invalidResult = await createComment(
+       |                           ^
+    289|       testSupabase,
+    290|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/19]⎯
+
+ FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false)
+ReferenceError: createComment is not defined
+ ❯ src/comments/__tests__/capability-config.test.ts:340:20
+    338| 
+    339|     // Test 1: Allow zero-length anchors
+    340|     const result = await createComment(
+       |                    ^
+    341|       testSupabase,
+    342|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/19]⎯
+
+ FAIL  src/test/__tests__/infrastructure.test.ts > Test Infrastructure Smoke Test > 3. Auth Operations > should rate limit auth operations
+AssertionError: expected 749 to be greater than or equal to 750
+ ❯ src/test/__tests__/infrastructure.test.ts:90:23
+     88| 
+     89|       // Should delay at least 750ms
+     90|       expect(elapsed).toBeGreaterThanOrEqual(750)
+       |                       ^
+     91|     })
+     92|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/19]⎯
+
+
+ Test Files  10 failed | 5 passed (15)
+      Tests  12 failed | 88 passed (100)
+   Start at  13:16:34
+   Duration  16.12s (transform 431ms, setup 3.34s, collect 858ms, tests 30.70s, environment 6.27s, prepare 1.09s)
+
+ ELIFECYCLE  Test failed. See above for more details.

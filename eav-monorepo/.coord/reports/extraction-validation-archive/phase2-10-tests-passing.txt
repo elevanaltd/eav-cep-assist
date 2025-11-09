@@ -1,0 +1,58 @@
+
+> eav-monorepo@1.0.0 test /Volumes/HestAI-Projects/eav-monorepo
+> turbo run test -- capability-config.test.ts
+
+turbo 2.6.0
+
+• Packages in scope: @workspace/shared
+• Running test in 1 packages
+• Remote caching disabled
+@workspace/shared:test: cache bypass, force executing 0628838a9971eb59
+@workspace/shared:test: 
+@workspace/shared:test: > @workspace/shared@0.5.0 test /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: > vitest run capability-config.test.ts
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test:  RUN  v3.2.4 /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > NEGATIVE PATH: only signals recovered when POC actually relocates
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true)
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false)
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test:  ✓ src/comments/__tests__/capability-config.test.ts (10 tests) 17380ms
+@workspace/shared:test:    ✓ Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided  1606ms
+@workspace/shared:test:    ✓ Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided  2238ms
+@workspace/shared:test:    ✓ Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided  2264ms
+@workspace/shared:test:    ✓ Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true  2239ms
+@workspace/shared:test:    ✓ Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false  2244ms
+@workspace/shared:test:    ✓ Comment Capabilities - enablePositionRecovery > NEGATIVE PATH: only signals recovered when POC actually relocates  2264ms
+@workspace/shared:test:    ✓ Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true)  2272ms
+@workspace/shared:test:    ✓ Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false)  2252ms
+@workspace/shared:test: 
+@workspace/shared:test:  Test Files  1 passed (1)
+@workspace/shared:test:       Tests  10 passed (10)
+@workspace/shared:test:    Start at  16:08:41
+@workspace/shared:test:    Duration  17.83s (transform 47ms, setup 69ms, collect 56ms, tests 17.38s, environment 163ms, prepare 29ms)
+@workspace/shared:test: 
+
+ Tasks:    1 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    18.21s 
+

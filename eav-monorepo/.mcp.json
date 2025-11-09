@@ -1,0 +1,12 @@
+{
+  "$schema": "https://github.com/modelcontextprotocol/servers/blob/main/schema.json",
+  "mcpServers": {
+    "repomix": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "repomix", "--mcp"],
+      "autoApprove": [],
+      "disabled": false
+    }
+  }
+}

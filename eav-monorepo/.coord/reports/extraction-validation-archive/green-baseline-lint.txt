@@ -1,0 +1,34 @@
+
+> @workspace/shared@0.5.0 lint /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+> eslint .
+
+
+/Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/auth/AuthContext.tsx
+  23:1  warning  Unused eslint-disable directive (no problems were reported from 'react-refresh/only-export-components')
+
+/Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/comments/domain/positionRecovery.ts
+  357:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/lib/dropdowns/useDropdownOptions.ts
+  22:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+  22:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-call')
+  24:9  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+  26:9  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+  30:9  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment', '@typescript-eslint/no-unsafe-call', or '@typescript-eslint/no-unsafe-member-access')
+  34:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment', '@typescript-eslint/no-unsafe-call', or '@typescript-eslint/no-unsafe-member-access')
+
+/Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/lib/rls/buildClientQuery.ts
+  68:5  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+  77:3  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-return')
+
+/Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/lib/types/database.types.ts
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+/Volumes/HestAI-Projects/eav-monorepo/packages/shared/src/scripts/domain/scriptService.ts
+  309:5  warning  Unused eslint-disable directive (no problems were reported from 'no-undef')
+  311:9  error    'btoa' is not defined                                                        no-undef
+
+✖ 13 problems (2 errors, 11 warnings)
+  0 errors and 11 warnings potentially fixable with the `--fix` option.
+
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,0 +1,561 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'                    # All Markdown documentation
+      - '.coord/**'                # Coordination docs (ephemeral scaffolding)
+      - 'docs/**'                  # Documentation directory
+      - '.github/**/*.md'          # Workflow documentation
+      - '.vscode/**'               # Editor configuration
+      - '.editorconfig'            # Editor config
+  pull_request:
+    branches:
+      - main
+    # NOTE: paths-ignore removed from pull_request trigger
+    # Reason: GitHub required status checks need workflow to run for reporting
+    # Solution: Job-level path detection with conditional execution preserves optimization
+
+jobs:
+  # ============================================================================
+  # TIER 1: Quality Gates (ALL commits)
+  # ============================================================================
+  quality-gates:
+    name: Quality Gates (Lint • TypeCheck • Test • Build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ------------------------------------------------------------------------
+      # Path Detection: Skip quality gates for documentation-only PRs
+      # ------------------------------------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need history for path detection
+
+      - name: Detect documentation-only changes
+        id: path-detection
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          echo "📊 Analyzing changed files between $BASE and $HEAD"
+          CHANGED_FILES=$(git diff --name-only $BASE...$HEAD)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Check if ALL changes are documentation/config only
+          # Documentation patterns: **.md, .coord/**, docs/**, .github/**/*.md, .vscode/**, .editorconfig
+          NON_DOC_CHANGES=$(echo "$CHANGED_FILES" | grep -v -E "\\.md$|^\\.coord/|^docs/|^\\.github/.*\\.md$|^\\.vscode/|^\\.editorconfig$" || true)
+
+          if [ -z "$NON_DOC_CHANGES" ]; then
+            echo "✅ Documentation-only PR detected (no code changes)"
+            echo "⚡ Skipping quality gates to save ~8-10 minutes"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Code changes detected - running full quality gates"
+            echo "$NON_DOC_CHANGES"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      # ------------------------------------------------------------------------
+      # Setup: Node.js, pnpm, Dependencies
+      # ------------------------------------------------------------------------
+      - name: Checkout code (for push events)
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: steps.path-detection.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        if: steps.path-detection.outputs.skip != 'true'
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.20.0
+
+      - name: Install dependencies
+        if: steps.path-detection.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+
+      # ------------------------------------------------------------------------
+      # Setup: Supabase CLI
+      # ------------------------------------------------------------------------
+      - name: Setup Supabase CLI
+        if: steps.path-detection.outputs.skip != 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # ------------------------------------------------------------------------
+      # GAP 1: Supabase Start with Retry Logic + GoTrue Health Check
+      # Reference: CI-PIPELINE-GAP-ANALYSIS.md:25-94
+      # ------------------------------------------------------------------------
+      - name: Start local Supabase with retry logic
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
+
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "=== Attempt $ATTEMPT of $MAX_ATTEMPTS ==="
+
+            # Cleanup from previous failed attempts
+            if [ $ATTEMPT -gt 1 ]; then
+              echo "🧹 Cleaning up failed attempt..."
+              supabase stop --no-backup || true
+              docker system prune -f || true
+              sleep 5
+            fi
+
+            # Start Supabase with timeout
+            if timeout 300 supabase start; then
+              echo "✅ Supabase started successfully"
+
+              # CRITICAL: Wait for GoTrue health check
+              # Without this, auth tests fail with "service unavailable"
+              if timeout 60 bash -c 'until curl -f http://127.0.0.1:54321/auth/v1/health > /dev/null 2>&1; do
+                echo "⏳ Waiting for GoTrue...";
+                sleep 2;
+              done'; then
+                echo "✅ GoTrue ready - health check passed"
+                break
+              else
+                echo "❌ GoTrue health check timeout on attempt $ATTEMPT"
+              fi
+            else
+              echo "❌ Supabase start failed on attempt $ATTEMPT"
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            if [ $ATTEMPT -le $MAX_ATTEMPTS ]; then
+              echo "🔄 Retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
+
+          # Hard fail if all attempts exhausted
+          if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
+            echo "❌ CRITICAL: Supabase failed to start after $MAX_ATTEMPTS attempts"
+            echo "This is a blocking infrastructure failure - cannot proceed with tests"
+            exit 1
+          fi
+
+          echo "🎯 Supabase ready for testing"
+
+      # ------------------------------------------------------------------------
+      # GAP 2: Environment Variable Override Strategy
+      # Reference: CI-PIPELINE-GAP-ANALYSIS.md:98-146
+      # BLOCKING FIX #2: Export both URL and anon key with verification
+      # ------------------------------------------------------------------------
+      - name: Override environment variables for local Supabase
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          # Export URL (override production → local)
+          echo "VITE_SUPABASE_URL=http://127.0.0.1:54321" >> $GITHUB_ENV
+
+          # Export anon key (BLOCKING FIX: was missing in initial plan)
+          ANON_KEY=$(supabase status -o json | jq -r '.ANON_KEY')
+          echo "VITE_SUPABASE_PUBLISHABLE_KEY=$ANON_KEY" >> $GITHUB_ENV
+
+          # Verification logging (prove override worked)
+          echo "=== Local Supabase Configuration ==="
+          echo "URL: http://127.0.0.1:54321"
+          echo "Anon Key: ${ANON_KEY:0:20}..."
+          echo "✅ Environment overrides configured for CI"
+
+      # ------------------------------------------------------------------------
+      # Database Setup: Migrations
+      # ------------------------------------------------------------------------
+      - name: Apply database migrations
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          # Use db reset (NOT db push)
+          # Reason: Complex trigger functions fail with db push (POC lesson)
+          echo "📦 Applying all migrations via db reset..."
+          supabase db reset --local
+          echo "✅ Migrations applied successfully"
+
+      # ------------------------------------------------------------------------
+      # GAP 3: Test User Creation Timing
+      # Reference: CI-PIPELINE-GAP-ANALYSIS.md:150-183
+      # Must run AFTER pnpm install (needs @supabase/supabase-js)
+      # Must run AFTER migrations (needs user_profiles, user_clients tables)
+      # ------------------------------------------------------------------------
+      - name: Create test users via Auth Admin API
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "👥 Creating test users for RLS testing..."
+          export SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r '.SERVICE_ROLE_KEY')
+          node scripts/create-test-users-via-api.mjs
+
+      # ------------------------------------------------------------------------
+      # GAP 3: Seed Baseline Data
+      # Reference: CI-PIPELINE-GAP-ANALYSIS.md:150-183
+      # BLOCKING FIX #3: Run AFTER Auth API user creation
+      # Reason: TRUNCATE safety - seed.sql doesn't affect auth.users
+      # ------------------------------------------------------------------------
+      - name: Seed baseline data (if exists)
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          if [ -f supabase/seed.sql ]; then
+            echo "📊 Seeding baseline data (projects, videos)..."
+            psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f supabase/seed.sql
+            echo "✅ Baseline data seeded"
+          else
+            echo "ℹ️  No seed.sql found - skipping baseline data"
+          fi
+
+      # ------------------------------------------------------------------------
+      # Phase B: Database Schema Lint
+      # Reference: PHASE-B-DRIFT-DETECTION-SCOPE.md (Component 1)
+      # Validates schema for typing errors, unused variables, syntax issues
+      # Blocks on ERRORS, shows WARNINGS (advisory)
+      # ------------------------------------------------------------------------
+      - name: Lint database schema
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "🔍 Linting database schema for typing errors..."
+          supabase db lint --level warning --fail-on error
+          echo "✅ Schema lint passed (errors block, warnings advisory)"
+
+      # ------------------------------------------------------------------------
+      # Quality Gates: Zero-Error Discipline
+      # Reference: RULES.md:119-125, TMG Decision: Zero-tolerance correct
+      # CRITICAL: Build MUST run BEFORE typecheck in monorepo
+      # Reason: TypeScript needs @workspace/shared dist/ for barrel exports
+      # ------------------------------------------------------------------------
+      - name: Run build
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "🏗️  Building all packages..."
+          pnpm build
+          echo "✅ Build successful"
+
+      - name: Run lint
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "🔍 Running lint..."
+          pnpm lint
+          echo "✅ Lint passed (0 errors)"
+
+      - name: Run typecheck
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "🔍 Running TypeScript type checking..."
+          pnpm typecheck
+          echo "✅ TypeCheck passed (0 errors)"
+
+      - name: Run unit tests
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "🧪 Running unit tests (excludes integration tests)..."
+          pnpm test:unit
+          echo "✅ Unit tests passed"
+
+      # ------------------------------------------------------------------------
+      # Integration Tests: RLS, Auth, Database validation
+      # Reference: critical-engineer consultation (Option B - Tier 1 execution)
+      # Reuses Supabase infrastructure from earlier steps
+      # ------------------------------------------------------------------------
+      - name: Run integration tests
+        if: steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "🧪 Running integration tests (RLS, auth, database)..."
+          export VITEST_INTEGRATION=true
+          pnpm test:integration
+          echo "✅ Integration tests passed"
+
+      # ------------------------------------------------------------------------
+      # Post-Test Cleanup: Reset Supabase state
+      # Prevents test data contamination between runs
+      # ------------------------------------------------------------------------
+      - name: Reset database after integration tests
+        if: always() && steps.path-detection.outputs.skip != 'true'
+        continue-on-error: true  # Don't fail CI if cleanup fails (tests already passed)
+        run: |
+          echo "🧹 Resetting database state..."
+
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
+          SUCCESS=false
+
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "=== Reset Attempt $ATTEMPT of $MAX_ATTEMPTS ==="
+
+            if supabase db reset --local; then
+              echo "✅ Database reset complete"
+              SUCCESS=true
+              break
+            else
+              echo "❌ Database reset failed on attempt $ATTEMPT (exit code: $?)"
+
+              if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+                echo "🔄 Retrying in 5 seconds..."
+                sleep 5
+
+                # Try to restart containers before retry
+                echo "🔄 Restarting Supabase containers..."
+                supabase stop --no-backup || true
+                sleep 2
+                supabase start || true
+                sleep 3
+              fi
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+          if [ "$SUCCESS" = false ]; then
+            echo "⚠️  WARNING: Database reset failed after $MAX_ATTEMPTS attempts"
+            echo "This is a non-blocking cleanup failure - tests already passed"
+            echo "Next CI run will start fresh (Supabase containers reset on job start)"
+          fi
+
+      # ------------------------------------------------------------------------
+      # GAP 8: Failure Debugging - Capture Supabase Logs
+      # Reference: CI-PIPELINE-GAP-ANALYSIS.md:342-376
+      # ------------------------------------------------------------------------
+      - name: Capture Supabase logs on failure
+        if: failure() && steps.path-detection.outputs.skip != 'true'
+        run: |
+          echo "=== Supabase Auth Logs ==="
+          docker logs supabase_auth_dev 2>&1 || echo "❌ Auth logs not available"
+
+          echo ""
+          echo "=== Supabase DB Logs ==="
+          docker logs supabase_db_dev 2>&1 || echo "❌ DB logs not available"
+
+          echo ""
+          echo "=== Supabase Status ==="
+          supabase status || echo "❌ Status not available"
+
+      # ------------------------------------------------------------------------
+      # Advisory: Commit Message Linter (Non-blocking)
+      # Reference: Issue #27 - Conventional Commits Standard
+      # Validates against conventional commits format for consistency
+      # Provides advisory feedback without blocking merges
+      # Full validation happens via code review + tests
+      # ------------------------------------------------------------------------
+      - name: Validate commit messages (advisory)
+        if: github.event_name == 'pull_request'
+        uses: amannn/action-semantic-pull-request@v5.4.0
+        with:
+          # Enforce conventional commits format in PR titles
+          requireScope: false  # Scope is optional at PR level (full validation at commit level)
+          types: |
+            feat
+            fix
+            test
+            docs
+            refactor
+            chore
+            ci
+            style
+            perf
+          # Make failures advisory (PR can still merge)
+          ignoreLabels: |
+            ignore-semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true  # Advisory only - don't block PR
+
+      # Commit-level validation (stricter, checks individual commits)
+      - name: Check conventional commits in PR
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "📋 Checking conventional commit format in PR commits..."
+
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          # Get all commits in this PR
+          COMMITS=$(git log --format="%H %s" $BASE..$HEAD)
+
+          if [ -z "$COMMITS" ]; then
+            echo "ℹ️  No commits to check"
+            exit 0
+          fi
+
+          VIOLATIONS=0
+          VALID_TYPES="feat|fix|test|docs|refactor|chore|ci|style|perf"
+
+          echo ""
+          echo "Commits in this PR:"
+          while IFS= read -r commit_hash commit_msg; do
+            # Check if commit follows conventional format: type(scope): description
+            # Allow merges and other special commits
+            if [[ $commit_msg =~ ^Merge|^revert|^Revert ]]; then
+              echo "✅ $commit_hash (merge/revert - skipped)"
+            elif [[ $commit_msg =~ ^($VALID_TYPES)\(.+\):\s.+ ]]; then
+              echo "✅ $commit_hash: $commit_msg"
+            elif [[ $commit_msg =~ ^($VALID_TYPES):\s.+ ]]; then
+              echo "⚠️  $commit_hash: $commit_msg (missing scope, but acceptable)"
+            else
+              echo "❌ $commit_hash: $commit_msg"
+              VIOLATIONS=$((VIOLATIONS + 1))
+            fi
+          done <<< "$COMMITS"
+
+          echo ""
+          if [ $VIOLATIONS -eq 0 ]; then
+            echo "✅ All commits follow conventional format (or acceptable variations)"
+            exit 0
+          else
+            echo "⚠️  Found $VIOLATIONS commit(s) with non-standard format"
+            echo "Recommendation: Consider squashing into fewer commits with conventional format"
+            echo "This is advisory only - merges are still allowed"
+            echo "See .gitmessage for format examples"
+            exit 0  # Advisory - don't block
+          fi
+
+      # ------------------------------------------------------------------------
+      # Always-Run Success Reporter: Unblocks documentation-only PRs
+      # Ensures GitHub status check always reports (even when quality gates skip)
+      # ------------------------------------------------------------------------
+      - name: Quality Gates Complete
+        if: always()
+        run: |
+          if [ "${{ steps.path-detection.outputs.skip }}" == "true" ]; then
+            echo "✅ Quality Gates: SKIPPED (documentation-only PR)"
+            echo "⚡ Optimization saved ~8-10 minutes of CI time"
+            echo "📝 Documentation changes approved - no code validation needed"
+          else
+            echo "✅ Quality Gates: PASSED"
+            echo "🎯 All quality checks completed successfully"
+          fi
+
+  # ============================================================================
+  # TIER 2: Preview Integration Tests (PRs only)
+  # ============================================================================
+  preview-integration-tests:
+    name: Preview Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'pull_request'
+
+    steps:
+      # ------------------------------------------------------------------------
+      # Setup
+      # ------------------------------------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for git diff
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        if: steps.path-detection.outputs.skip != 'true'
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.20.0
+
+      - name: Install dependencies
+        if: steps.path-detection.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Supabase CLI
+        if: steps.path-detection.outputs.skip != 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # ------------------------------------------------------------------------
+      # GAP 5: Functional Change Detection
+      # Reference: CI-PIPELINE-GAP-ANALYSIS.md:231-265
+      # Skip integration tests if only docs/config changed
+      # ------------------------------------------------------------------------
+      - name: Detect functional changes
+        id: functional-changes
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          echo "📊 Analyzing changes between $BASE and $HEAD"
+          CHANGED_FILES=$(git diff --name-only $BASE...$HEAD)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Look for functional code changes (src/lib *.ts/tsx/js/jsx, excluding tests)
+          FUNCTIONAL_CHANGES=$(echo "$CHANGED_FILES" | grep -E "^(src|lib)/.*\.(ts|tsx|js|jsx)$" | grep -v "\.test\." || true)
+
+          if [ -z "$FUNCTIONAL_CHANGES" ]; then
+            echo "⚠️  No functional code changes detected (docs/config-only PR)"
+            echo "✅ Skipping integration tests - no behavior changes to validate"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Functional changes detected:"
+            echo "$FUNCTIONAL_CHANGES"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      # ------------------------------------------------------------------------
+      # GAP 4: Preview Branch Tri-State Logic
+      # Reference: CI-PIPELINE-GAP-ANALYSIS.md:188-227
+      # States: SUCCESS (run tests) | SKIPPED (no schema changes) | FAILURE (deployment failed)
+      # ------------------------------------------------------------------------
+      - name: Check preview branch exists
+        id: preview-check
+        if: steps.functional-changes.outputs.skip != 'true'
+        run: |
+          BRANCH_NAME="pr-${{ github.event.pull_request.number }}"
+
+          echo "🔍 Checking for Supabase preview branch: $BRANCH_NAME"
+
+          if ! supabase branches list 2>/dev/null | grep -q "$BRANCH_NAME"; then
+            echo "⚠️  No preview branch exists: $BRANCH_NAME"
+            echo "Reason: No schema changes detected (Supabase skips preview when migrations unchanged)"
+            echo "This is expected behavior for PRs without database changes"
+            echo "✅ Skipping integration tests gracefully (tri-state: SKIPPED)"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Preview branch found: $BRANCH_NAME"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      # ------------------------------------------------------------------------
+      # Integration Tests (only if preview exists and functional changes present)
+      # ------------------------------------------------------------------------
+      - name: Run integration tests against preview branch
+        if: steps.functional-changes.outputs.skip != 'true' && steps.preview-check.outputs.skip != 'true'
+        run: |
+          BRANCH_NAME="pr-${{ github.event.pull_request.number }}"
+
+          echo "🔗 Configuring preview branch credentials..."
+          export SUPABASE_PREVIEW_URL=$(supabase branches get $BRANCH_NAME --json | jq -r '.url')
+          export VITEST_INTEGRATION=true
+
+          echo "Preview URL: $SUPABASE_PREVIEW_URL"
+
+          # Note: Preview seeding and test user creation would go here if needed
+          # Currently, integration tests use local Supabase for full isolation
+
+          echo "🧪 Running integration tests..."
+          pnpm test:integration
+          echo "✅ Integration tests passed"
+
+      # ------------------------------------------------------------------------
+      # Skip confirmation (for observability)
+      # ------------------------------------------------------------------------
+      - name: Integration tests skipped
+        if: steps.functional-changes.outputs.skip == 'true' || steps.preview-check.outputs.skip == 'true'
+        run: |
+          if [ "${{ steps.functional-changes.outputs.skip }}" == "true" ]; then
+            echo "ℹ️  Integration tests skipped: No functional code changes"
+          elif [ "${{ steps.preview-check.outputs.skip }}" == "true" ]; then
+            echo "ℹ️  Integration tests skipped: No preview branch (no schema changes)"
+          fi
+          echo "This is expected behavior and not a failure"

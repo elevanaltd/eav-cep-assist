@@ -1,0 +1,405 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f5f5f5;
+  color: #333;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+/* Layout matches scripts-web pattern: header + content area */
+.app-layout {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  background: white;
+  overflow: hidden;
+  padding-top: 64px;
+}
+
+.sidebar {
+  width: 280px;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f5f5f5;
+  /* Removed margin-left: HierarchicalNavigationSidebar from @elevanaltd/ui handles its own fixed positioning */
+  padding: 24px;
+}
+
+.content-header {
+  margin-bottom: 24px;
+}
+
+.content-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.content-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.content-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.center-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid #ddd;
+}
+
+.right-panel {
+  width: 350px;
+  border-left: 1px solid #ddd;
+  overflow-y: auto;
+  background: #fafafa;
+}
+
+/* Workspace container - outer flex wrapper */
+.scenes-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Fixed height boundary - content scrolls within, not window */
+  width: 100%;
+  overflow: hidden; /* Prevent window scroll */
+}
+
+/* Header styles moved to @elevanaltd/ui/Header component */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 14px;
+  color: #666;
+}
+
+.error-message {
+  padding: 16px;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+  color: #c33;
+  margin: 8px;
+}
+
+.success-message {
+  padding: 16px;
+  background: #efe;
+  border: 1px solid #cfc;
+  border-radius: 4px;
+  color: #3c3;
+  margin: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  background: #f0f0f0;
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+  color: #333;
+}
+
+td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+  background: #f9f9f9;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background: #d1d5db;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-control {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* Disable scroll anchoring everywhere in the chain */
+html, body, #root {
+  overflow-anchor: none;
+}
+
+/* Scrollable content area */
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: 50vh; /* Reserve space for scroll adjustments when collapsing components */
+  overflow-anchor: none; /* Disable browser's automatic scroll anchoring */
+}
+
+/* Component card styling */
+.component-card {
+  margin-bottom: 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+  overflow-anchor: none; /* Disable anchoring on cards too */
+}
+
+.component-header {
+  width: 100%;
+  padding: 14px 16px;
+  background: #f8f9fa;
+  border: none;
+  border-bottom: 1px solid #e5e5e5;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  transition: background 0.2s;
+}
+
+.component-header:hover {
+  background: #f0f1f3;
+}
+
+.toggle-icon {
+  font-size: 12px;
+  color: #999;
+}
+
+.component-body {
+  padding: 16px;
+}
+
+.component-text {
+  margin-bottom: 16px;
+}
+
+.component-text h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.component-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Empty and error states */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.error-state {
+  padding: 16px;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+  color: #c33;
+}
+
+.error-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Right panel area (future notes panel) */
+.right-sidebar {
+  width: 320px;
+  border-left: 1px solid #ddd;
+  overflow-y: auto;
+  background: #fafafa;
+  display: none; /* Hidden until implemented */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+  }
+
+  .content-wrapper {
+    padding: 0 12px;
+  }
+
+  .error-message,
+  .success-message {
+    margin: 4px;
+    padding: 12px;
+  }
+}

@@ -1,0 +1,35 @@
+=== Phase 1 Import Path Fixes ===
+
+Additional Infrastructure Extracted (auth dependencies):
+- services/logger.ts (149 LOC) - Structured logging with sanitization
+- lib/mappers/userProfileMapper.ts (82 LOC) - Role validation and mapping
+
+Import Path Transformations:
+
+1. lib/mappers/userProfileMapper.ts:
+   - FROM: import type { Tables } from '@elevanaltd/shared'
+   - TO: import type { Tables } from '../types/index.js'
+
+2. auth/AuthContext.tsx:
+   - FROM: import { supabase } from '../lib/supabase'
+   - TO: import { createBrowserClient } from '../lib/client/browser.js'
+   - ADDED: const supabase = createBrowserClient()
+   - FROM: import { Logger } from '../services/logger'
+   - TO: import { Logger } from '../../services/logger.js'
+   - FROM: import { mapUserProfileRowToUserProfile } from '../lib/mappers/userProfileMapper'
+   - TO: import { mapUserProfileRowToUserProfile } from '../lib/mappers/userProfileMapper.js'
+
+3. errors/errorHandling.ts:
+   - FROM: import { Logger } from '../services/logger'
+   - TO: import { Logger } from '../../services/logger.js'
+
+4. editor/locking/useScriptLock.ts:
+   - FROM: import { supabase } from '../lib/supabase'
+   - TO: import { createBrowserClient } from '../../lib/client/browser.js'
+   - ADDED: const supabase = createBrowserClient()
+   - FROM: import { acquireScriptLock, scriptLocksTable } from '../lib/supabaseHelpers'
+   - TO: Inlined helper functions (self-contained module)
+
+5. editor/componentExtraction.ts:
+   - FROM: import type { ComponentData } from './validation'
+   - TO: import type { ComponentData } from '../database/validation.js'

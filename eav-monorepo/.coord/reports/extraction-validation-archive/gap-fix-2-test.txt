@@ -1,0 +1,14 @@
+
+> @workspace/shared@0.5.0 test /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+> vitest run src/comments/extensions/CommentPositionTracker.test.ts
+
+
+ RUN  v3.2.4 /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+
+ ✓ src/comments/extensions/CommentPositionTracker.test.ts (17 tests) 65ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  00:56:10
+   Duration  668ms (transform 38ms, setup 109ms, collect 52ms, tests 65ms, environment 281ms, prepare 36ms)
+

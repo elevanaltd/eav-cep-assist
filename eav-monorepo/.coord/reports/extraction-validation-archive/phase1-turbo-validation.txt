@@ -1,0 +1,82 @@
+turbo 2.6.0
+
+
+Packages in Scope
+Name              Path 
+@workspace/shared packages/shared
+
+Global Hash Inputs
+  Global Files                          = 0
+  External Dependencies Hash            = 37c5a5b014ca0d18
+  Global Cache Key                      = I can’t see ya, but I know you’re here
+  Global Env Vars                       = 
+  Global Env Vars Values                = 
+  Inferred Global Env Vars Values       = 
+  Global Passed Through Env Vars        = 
+  Global Passed Through Env Vars Values = 
+  Engines Values                        = 
+
+Tasks to Run
+@workspace/shared#build
+  Task                           = build
+  Package                        = @workspace/shared
+  Hash                           = 226daf1c9b09f32d
+  Cached (Local)                 = true
+  Cached (Remote)                = false
+  Directory                      = packages/shared
+  Command                        = tsup && npm run build:css
+  Outputs                        = .next/**, dist/**
+  Log File                       = packages/shared/.turbo/turbo-build.log
+  Dependencies                   = 
+  Dependents                     = 
+  With                           = 
+  Inputs Files Considered        = 45
+  Env Vars                       = 
+  Env Vars Values                = 
+  Inferred Env Vars Values       = 
+  Passed Through Env Vars        = 
+  Passed Through Env Vars Values = 
+  Resolved Task Definition       = {"outputs":[".next/**","dist/**"],"cache":true,"dependsOn":["^build"],"inputs":[],"outputLogs":"full","persistent":false,"interruptible":false,"env":[],"passThroughEnv":null,"interactive":false}
+  Framework                      = vite
+=== DRY RUN COMPLETE ===
+turbo 2.6.0
+
+• Packages in scope: @workspace/shared
+• Running build in 1 packages
+• Remote caching disabled
+@workspace/shared:build: cache hit, replaying logs 226daf1c9b09f32d
+@workspace/shared:build: 
+@workspace/shared:build: > @workspace/shared@0.5.0 build /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:build: > tsup && npm run build:css
+@workspace/shared:build: 
+@workspace/shared:build: CLI Building entry: src/index.ts
+@workspace/shared:build: CLI Using tsconfig: tsconfig.json
+@workspace/shared:build: CLI tsup v8.5.0
+@workspace/shared:build: CLI Using tsup config: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/tsup.config.ts
+@workspace/shared:build: CLI Target: es2020
+@workspace/shared:build: CLI Cleaning output folder
+@workspace/shared:build: ESM Build start
+@workspace/shared:build: CJS Build start
+@workspace/shared:build: ESM dist/index.css     12.98 KB
+@workspace/shared:build: ESM dist/index.css.map 23.91 KB
+@workspace/shared:build: ESM dist/index.js      26.50 KB
+@workspace/shared:build: ESM dist/index.js.map  70.41 KB
+@workspace/shared:build: ESM ⚡️ Build success in 85ms
+@workspace/shared:build: CJS dist/index.css     12.98 KB
+@workspace/shared:build: CJS dist/index.css.map 23.91 KB
+@workspace/shared:build: CJS dist/index.cjs     28.02 KB
+@workspace/shared:build: CJS dist/index.cjs.map 70.46 KB
+@workspace/shared:build: CJS ⚡️ Build success in 84ms
+@workspace/shared:build: DTS Build start
+@workspace/shared:build: DTS ⚡️ Build success in 1036ms
+@workspace/shared:build: DTS dist/index.d.ts  33.99 KB
+@workspace/shared:build: DTS dist/index.d.cts 33.99 KB
+@workspace/shared:build: 
+@workspace/shared:build: > @workspace/shared@0.5.0 build:css
+@workspace/shared:build: > cat src/**/*.css > dist/index.css 2>/dev/null || true
+@workspace/shared:build: 
+
+ Tasks:    1 successful, 1 total
+Cached:    1 cached, 1 total
+  Time:    26ms >>> FULL TURBO
+

@@ -1,0 +1,42 @@
+turbo 2.6.0
+
+• Packages in scope: @workspace/shared
+• Running build in 1 packages
+• Remote caching disabled
+@workspace/shared:build: cache miss, executing d790d53729cda167
+@workspace/shared:build: 
+@workspace/shared:build: > @workspace/shared@0.5.0 build /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:build: > tsup && npm run build:css
+@workspace/shared:build: 
+@workspace/shared:build: CLI Building entry: src/index.ts
+@workspace/shared:build: CLI Using tsconfig: tsconfig.json
+@workspace/shared:build: CLI tsup v8.5.0
+@workspace/shared:build: CLI Using tsup config: /Volumes/HestAI-Projects/eav-monorepo/packages/shared/tsup.config.ts
+@workspace/shared:build: CLI Target: es2020
+@workspace/shared:build: CLI Cleaning output folder
+@workspace/shared:build: ESM Build start
+@workspace/shared:build: CJS Build start
+@workspace/shared:build: ESM dist/index.css     12.98 KB
+@workspace/shared:build: ESM dist/index.css.map 23.91 KB
+@workspace/shared:build: ESM dist/index.js      26.50 KB
+@workspace/shared:build: ESM dist/index.js.map  70.41 KB
+@workspace/shared:build: ESM ⚡️ Build success in 85ms
+@workspace/shared:build: CJS dist/index.css     12.98 KB
+@workspace/shared:build: CJS dist/index.css.map 23.91 KB
+@workspace/shared:build: CJS dist/index.cjs     28.02 KB
+@workspace/shared:build: CJS dist/index.cjs.map 70.46 KB
+@workspace/shared:build: CJS ⚡️ Build success in 84ms
+@workspace/shared:build: DTS Build start
+@workspace/shared:build: DTS ⚡️ Build success in 1000ms
+@workspace/shared:build: DTS dist/index.d.ts  33.99 KB
+@workspace/shared:build: DTS dist/index.d.cts 33.99 KB
+@workspace/shared:build: 
+@workspace/shared:build: > @workspace/shared@0.5.0 build:css
+@workspace/shared:build: > cat src/**/*.css > dist/index.css 2>/dev/null || true
+@workspace/shared:build: 
+
+ Tasks:    1 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    1.709s 
+
+BUILD_EXIT_CODE: 0

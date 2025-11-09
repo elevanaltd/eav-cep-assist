@@ -1,0 +1,262 @@
+
+> eav-monorepo@1.0.0 test /Volumes/HestAI-Projects/eav-monorepo
+> turbo run test -- capability-config.test.ts
+
+turbo 2.6.0
+
+• Packages in scope: @workspace/shared
+• Running test in 1 packages
+• Remote caching disabled
+@workspace/shared:test: cache bypass, force executing d1d658f362a105d4
+@workspace/shared:test: 
+@workspace/shared:test: > @workspace/shared@0.5.0 test /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: > vitest run capability-config.test.ts
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test:  RUN  v3.2.4 /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > NEGATIVE PATH: only signals recovered when POC actually relocates
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true)
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false)
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts (10 tests | 5 failed) 17352ms
+@workspace/shared:test:    ✓ Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided  1601ms
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided 2246ms
+@workspace/shared:test:      → expected false to be true // Object.is equality
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided 2248ms
+@workspace/shared:test:      → expected false to be true // Object.is equality
+@workspace/shared:test:    ✓ Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true  2223ms
+@workspace/shared:test:    ✓ Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false  2272ms
+@workspace/shared:test:    × Comment Capabilities - enablePositionRecovery > NEGATIVE PATH: only signals recovered when POC actually relocates 2261ms
+@workspace/shared:test:      → Failed to create test comment
+@workspace/shared:test:    ✓ Comment Capabilities - enableTipTapIntegration > LOADS TipTap extension when enableTipTapIntegration=true 0ms
+@workspace/shared:test:    ✓ Comment Capabilities - enableTipTapIntegration > SKIPS TipTap when enableTipTapIntegration=false 0ms
+@workspace/shared:test:    × Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true) 2248ms
+@workspace/shared:test:      → expected false to be true // Object.is equality
+@workspace/shared:test:    × Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false) 2250ms
+@workspace/shared:test:      → expected false to be true // Object.is equality
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided
+@workspace/shared:test: AssertionError: expected false to be true // Object.is equality
+@workspace/shared:test: 
+@workspace/shared:test: [32m- Expected[39m
+@workspace/shared:test: [31m+ Received[39m
+@workspace/shared:test: 
+@workspace/shared:test: [32m- true[39m
+@workspace/shared:test: [31m+ false[39m
+@workspace/shared:test: 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:106:28
+@workspace/shared:test:     104|     )
+@workspace/shared:test:     105| 
+@workspace/shared:test:     106|     expect(result.success).toBe(true)
+@workspace/shared:test:        |                            ^
+@workspace/shared:test:     107|     expect(result.data).toBeDefined()
+@workspace/shared:test:     108|   })
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided
+@workspace/shared:test: AssertionError: expected false to be true // Object.is equality
+@workspace/shared:test: 
+@workspace/shared:test: [32m- Expected[39m
+@workspace/shared:test: [31m+ Received[39m
+@workspace/shared:test: 
+@workspace/shared:test: [32m- true[39m
+@workspace/shared:test: [31m+ false[39m
+@workspace/shared:test: 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:135:28
+@workspace/shared:test:     133|     )
+@workspace/shared:test:     134| 
+@workspace/shared:test:     135|     expect(result.success).toBe(true)
+@workspace/shared:test:        |                            ^
+@workspace/shared:test:     136|     expect(result.data).toBeDefined()
+@workspace/shared:test:     137|   })
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > NEGATIVE PATH: only signals recovered when POC actually relocates
+@workspace/shared:test: Error: Failed to create test comment
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:226:13
+@workspace/shared:test:     224| 
+@workspace/shared:test:     225|     if (!comment) {
+@workspace/shared:test:     226|       throw new Error('Failed to create test comment')
+@workspace/shared:test:        |             ^
+@workspace/shared:test:     227|     }
+@workspace/shared:test:     228| 
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true)
+@workspace/shared:test: AssertionError: expected false to be true // Object.is equality
+@workspace/shared:test: 
+@workspace/shared:test: [32m- Expected[39m
+@workspace/shared:test: [31m+ Received[39m
+@workspace/shared:test: 
+@workspace/shared:test: [32m- true[39m
+@workspace/shared:test: [31m+ false[39m
+@workspace/shared:test: 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:346:33
+@workspace/shared:test:     344|     )
+@workspace/shared:test:     345| 
+@workspace/shared:test:     346|     expect(validResult.success).toBe(true)
+@workspace/shared:test:        |                                 ^
+@workspace/shared:test:     347| 
+@workspace/shared:test:     348|     // Test 3: Verify TipTap integration enabled
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false)
+@workspace/shared:test: AssertionError: expected false to be true // Object.is equality
+@workspace/shared:test: 
+@workspace/shared:test: [32m- Expected[39m
+@workspace/shared:test: [31m+ Received[39m
+@workspace/shared:test: 
+@workspace/shared:test: [32m- true[39m
+@workspace/shared:test: [31m+ false[39m
+@workspace/shared:test: 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:384:28
+@workspace/shared:test:     382|     )
+@workspace/shared:test:     383| 
+@workspace/shared:test:     384|     expect(result.success).toBe(true)
+@workspace/shared:test:        |                            ^
+@workspace/shared:test:     385| 
+@workspace/shared:test:     386|     // Test 2: Verify TipTap NOT loaded
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test:  Test Files  1 failed (1)
+@workspace/shared:test:       Tests  5 failed | 5 passed (10)
+@workspace/shared:test:    Start at  16:04:00
+@workspace/shared:test:    Duration  18.03s (transform 56ms, setup 123ms, collect 71ms, tests 17.35s, environment 293ms, prepare 38ms)
+@workspace/shared:test: 
+@workspace/shared:test:  ELIFECYCLE  Test failed. See above for more details.
+@workspace/shared:test: ERROR: command finished with error: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run test capability-config.test.ts exited (1)
+@workspace/shared#test: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run test capability-config.test.ts exited (1)
+
+ Tasks:    0 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    18.557s 
+Failed:    @workspace/shared#test
+
+ ERROR  run failed: command  exited (1)
+ ELIFECYCLE  Test failed. See above for more details.
+
+> eav-monorepo@1.0.0 test /Volumes/HestAI-Projects/eav-monorepo
+> turbo run test -- capability-config.test.ts
+
+turbo 2.6.0
+
+• Packages in scope: @workspace/shared
+• Running test in 1 packages
+• Remote caching disabled
+@workspace/shared:test: cache bypass, force executing 9d9f139d3570b8d2
+@workspace/shared:test: 
+@workspace/shared:test: > @workspace/shared@0.5.0 test /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: > vitest run capability-config.test.ts
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test:  RUN  v3.2.4 /Volumes/HestAI-Projects/eav-monorepo/packages/shared
+@workspace/shared:test: 
+@workspace/shared:test: stderr | src/comments/__tests__/capability-config.test.ts
+@workspace/shared:test: Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+@workspace/shared:test: 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts (10 tests | 8 failed) 17279ms
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided 1526ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided 2233ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:    × Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided 2251ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:    × Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true 2261ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:    × Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false 2250ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:    × Comment Capabilities - enablePositionRecovery > NEGATIVE PATH: only signals recovered when POC actually relocates 2249ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:    ✓ Comment Capabilities - enableTipTapIntegration > LOADS TipTap extension when enableTipTapIntegration=true 1ms
+@workspace/shared:test:    ✓ Comment Capabilities - enableTipTapIntegration > SKIPS TipTap when enableTipTapIntegration=false 0ms
+@workspace/shared:test:    × Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true) 2256ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:    × Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false) 2252ms
+@workspace/shared:test:      → Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > FAILS when requireAnchors=true and zero-length anchor provided
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=false and zero-length anchor provided
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - requireAnchors > SUCCEEDS when requireAnchors=true and valid anchor provided
+@workspace/shared:test: Error: Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:  ❯ signInAsTestUser src/test/supabase-test-client.ts:183:11
+@workspace/shared:test:     181| 
+@workspace/shared:test:     182|   if (error) {
+@workspace/shared:test:     183|     throw new Error(`Failed to sign in as ${userType}: ${error.message…
+@workspace/shared:test:        |           ^
+@workspace/shared:test:     184|   }
+@workspace/shared:test:     185| 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:54:5
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > EXECUTES recovery when enablePositionRecovery=true
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > SKIPS recovery when enablePositionRecovery=false
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - enablePositionRecovery > NEGATIVE PATH: only signals recovered when POC actually relocates
+@workspace/shared:test: Error: Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:  ❯ signInAsTestUser src/test/supabase-test-client.ts:183:11
+@workspace/shared:test:     181| 
+@workspace/shared:test:     182|   if (error) {
+@workspace/shared:test:     183|     throw new Error(`Failed to sign in as ${userType}: ${error.message…
+@workspace/shared:test:        |           ^
+@workspace/shared:test:     184|   }
+@workspace/shared:test:     185| 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:156:5
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+@workspace/shared:test: 
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES scripts-web strict configuration (all true)
+@workspace/shared:test:  FAIL  src/comments/__tests__/capability-config.test.ts > Comment Capabilities - Cross-App Integration > APPLIES cam-op-pwa flexible configuration (all false)
+@workspace/shared:test: Error: Failed to sign in as admin: Invalid login credentials
+@workspace/shared:test:  ❯ signInAsTestUser src/test/supabase-test-client.ts:183:11
+@workspace/shared:test:     181| 
+@workspace/shared:test:     182|   if (error) {
+@workspace/shared:test:     183|     throw new Error(`Failed to sign in as ${userType}: ${error.message…
+@workspace/shared:test:        |           ^
+@workspace/shared:test:     184|   }
+@workspace/shared:test:     185| 
+@workspace/shared:test:  ❯ src/comments/__tests__/capability-config.test.ts:306:5
+@workspace/shared:test: 
+@workspace/shared:test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+@workspace/shared:test: 
+@workspace/shared:test: 
+@workspace/shared:test:  Test Files  1 failed (1)
+@workspace/shared:test:       Tests  8 failed | 2 passed (10)
+@workspace/shared:test:    Start at  16:06:49
+@workspace/shared:test:    Duration  17.89s (transform 54ms, setup 100ms, collect 73ms, tests 17.28s, environment 265ms, prepare 38ms)
+@workspace/shared:test: 
+@workspace/shared:test:  ELIFECYCLE  Test failed. See above for more details.
+@workspace/shared:test: ERROR: command finished with error: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run test capability-config.test.ts exited (1)
+@workspace/shared#test: command (/Volumes/HestAI-Projects/eav-monorepo/packages/shared) /opt/homebrew/bin/pnpm run test capability-config.test.ts exited (1)
+
+ Tasks:    0 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    18.351s 
+Failed:    @workspace/shared#test
+
+ ERROR  run failed: command  exited (1)
+ ELIFECYCLE  Test failed. See above for more details.

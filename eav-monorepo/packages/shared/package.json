@@ -1,0 +1,164 @@
+{
+  "name": "@workspace/shared",
+  "version": "0.5.0",
+  "description": "Unified shared library for EAV Operations Suite - utilities, database client, UI components, and types",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./client": {
+      "types": "./dist/lib/client/index.d.ts",
+      "import": "./dist/lib/client/index.js",
+      "require": "./dist/lib/client/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/lib/types/index.d.ts",
+      "import": "./dist/lib/types/index.js",
+      "require": "./dist/lib/types/index.cjs"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js",
+      "require": "./dist/auth/index.cjs"
+    },
+    "./comments": {
+      "types": "./dist/comments/index.d.ts",
+      "import": "./dist/comments/index.js",
+      "require": "./dist/comments/index.cjs"
+    },
+    "./comments/extensions": {
+      "types": "./dist/comments/extensions/index.d.ts",
+      "import": "./dist/comments/extensions/index.js",
+      "require": "./dist/comments/extensions/index.cjs"
+    },
+    "./scripts": {
+      "types": "./dist/scripts/index.d.ts",
+      "import": "./dist/scripts/index.js",
+      "require": "./dist/scripts/index.cjs"
+    },
+    "./services": {
+      "types": "./dist/services/index.d.ts",
+      "import": "./dist/services/index.js",
+      "require": "./dist/services/index.cjs"
+    },
+    "./editor": {
+      "types": "./dist/editor/index.d.ts",
+      "import": "./dist/editor/index.js",
+      "require": "./dist/editor/index.cjs"
+    },
+    "./database": {
+      "types": "./dist/database/index.d.ts",
+      "import": "./dist/database/index.js",
+      "require": "./dist/database/index.cjs"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "import": "./dist/errors/index.js",
+      "require": "./dist/errors/index.cjs"
+    },
+    "./rls": {
+      "types": "./dist/lib/rls/index.d.ts",
+      "import": "./dist/lib/rls/index.js",
+      "require": "./dist/lib/rls/index.cjs"
+    },
+    "./navigation": {
+      "types": "./dist/lib/navigation/index.d.ts",
+      "import": "./dist/lib/navigation/index.js",
+      "require": "./dist/lib/navigation/index.cjs"
+    },
+    "./lib/mappers": {
+      "types": "./dist/lib/mappers/index.d.ts",
+      "import": "./dist/lib/mappers/index.js",
+      "require": "./dist/lib/mappers/index.cjs"
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js",
+      "require": "./dist/components/index.cjs"
+    },
+    "./dist/index.css": "./dist/index.css"
+  },
+  "scripts": {
+    "build": "tsup && npm run build:css",
+    "build:css": "cat src/**/*.css > dist/index.css 2>/dev/null || true",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "VITEST_INTEGRATION=true vitest run",
+    "test:watch": "vitest",
+    "validate": "npm run lint && npm run typecheck && npm run test"
+  },
+  "keywords": [
+    "eav",
+    "supabase",
+    "shared-library",
+    "ui",
+    "react",
+    "components"
+  ],
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.75.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "@workspace/auth": "workspace:*",
+    "@workspace/data": "workspace:*",
+    "@workspace/ui": "workspace:*",
+    "@tanstack/react-query": "5.90.2",
+    "@tiptap/core": "^2.1.13",
+    "@tiptap/pm": "2.1.13",
+    "@tiptap/react": "^2.1.13",
+    "dompurify": "^3.3.0",
+    "zod": "^4.1.12",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.38.0",
+    "@supabase/supabase-js": "^2.76.1",
+    "@testing-library/dom": "^10.0.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@tiptap/starter-kit": "2.1.13",
+    "@types/dompurify": "^3.2.0",
+    "@types/node": "^20.19.23",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "@vitejs/plugin-react": "^4.3.3",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.38.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.4.0",
+    "jsdom": "^27.0.1",
+    "postcss": "^8.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "vite": "^7.1.11",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

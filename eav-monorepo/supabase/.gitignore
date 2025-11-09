@@ -1,0 +1,9 @@
+# Supabase local development artifacts
+.branches
+.temp
+
+# Docker volumes
+.docker
+
+# Environment files (if any local overrides)
+.env.local

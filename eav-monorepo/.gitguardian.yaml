@@ -1,0 +1,64 @@
+# GitGuardian Configuration - Monorepo Test Mock Exclusions
+# Prevents false positives on non-functional test credentials
+# Pattern extracted from: /Volumes/HestAI-Projects/eav-ops/eav-apps/scripts-web/.gitguardian.yaml
+
+version: 2
+
+# Exclude test infrastructure from scanning
+paths-ignore:
+  # Shared test infrastructure
+  - "packages/shared/src/test/**"
+  - "packages/*/src/test/**"
+
+  # App-specific test infrastructure
+  - "apps/*/src/test/**"
+  - "apps/*/tests/**"
+
+  # Co-located test files (all apps + packages)
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+
+  # Test configuration files
+  - "**/vitest.config.ts"
+  - "**/vitest.config.base.ts"
+  - "**/vite.config.ts"
+
+  # CI scripts with test credentials
+  - "scripts/create-test-users-via-api.mjs"
+  - "scripts/**/test-*.mjs"
+
+# Exclude test mock patterns (proven from POC)
+matches-ignore:
+  - name: Test Mock Credentials
+    match: test-mock-.*
+    # Any credential prefixed "test-mock-" (test fixtures only)
+
+  - name: Test Project URLs
+    match: test-project\.supabase\.co
+    # Test Supabase URLs (local instance or test projects)
+
+  - name: Local Supabase URLs
+    match: 127\.0\.0\.1:54321
+    # Local Supabase instance used in tests
+
+  - name: Test JWT Tokens
+    match: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlc3QtcHJvamVjdCI.*
+    # JWT tokens with "test-project" in payload (non-functional test fixtures)
+
+  - name: Test User Credentials
+    match: test-password-(admin|client|unauth)-123
+    # Standardized test passwords from src/test/supabase-test-client.ts
+
+  - name: Supabase Local Default Keys
+    match: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIi.*
+    # Default local Supabase keys (supabase-demo issuer)
+    # Publicly documented at: https://supabase.com/docs/guides/local-development
+    # Only works with localhost:54321 (network boundary protection)
+    # Production keys from environment variables (never committed)
+
+# Rationale (Constitutional Basis):
+# - Real credentials managed via .env (gitignored, never committed)
+# - Test fixtures are non-functional (local Supabase only, no production access)
+# - POC-proven pattern from scripts-web (0 false positives over 3 months)

@@ -1,0 +1,268 @@
+.autocomplete-field {
+  width: 100%;
+  font-family: inherit;
+  /* NOTE: Intentionally NOT position: relative to allow fixed positioned dropdown
+     to escape table cell stacking context. The dropdown uses position: fixed
+     with coordinates calculated from getBoundingClientRect() */
+}
+
+.autocomplete-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.autocomplete-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.autocomplete-input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.autocomplete-input.loading {
+  padding-right: 36px;
+}
+
+.autocomplete-spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+.autocomplete-dropdown {
+  /* Position will be set via inline style (fixed positioning) */
+  /* This allows dropdown to escape any table/div stacking contexts */
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 999999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+}
+
+.autocomplete-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.autocomplete-option:hover {
+  background-color: #f5f5f5;
+}
+
+.autocomplete-option.selected {
+  background-color: #e6f0ff;
+  color: #4a90e2;
+  font-weight: 500;
+}
+
+.autocomplete-option:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-option.add-as-other {
+  color: #666;
+  font-style: italic;
+  background-color: #fafafa;
+}
+
+.autocomplete-option.add-as-other:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+/* Validation Dialog */
+.validation-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.validation-dialog {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.validation-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.validation-message {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.validation-suggestions {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border-left: 3px solid #4a90e2;
+}
+
+.suggestions-label {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-button {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #4a90e2;
+  background-color: white;
+  color: #4a90e2;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.suggestion-button:hover {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.validation-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+.validation-actions .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.validation-actions .btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.validation-actions .btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+.validation-actions .btn-primary {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.validation-actions .btn-primary:hover {
+  background-color: #357abd;
+}
+
+/* Conditional "Other" Text Input */
+.other-text-input-wrapper {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.other-text-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  background-color: #fafafa;
+}
+
+.other-text-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  background-color: white;
+}
+
+.other-text-input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling for dropdown */
+.autocomplete-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

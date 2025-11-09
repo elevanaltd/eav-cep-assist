@@ -1,0 +1,33 @@
+Investigation: batchRecoverCommentPositions vs attemptPositionRecovery
+Date: 2025-11-02
+
+POC Function Analysis:
+- File: /Volumes/HestAI-Projects/eav-monorepo-experimental/apps/scripts-web/src/lib/comments-position-recovery.ts
+- Function name: batchRecoverCommentPositions
+- Signature: export function batchRecoverCommentPositions(comments: CommentData[], currentDocumentContent: string): Map<string, PositionRecoveryResult>
+- Input: Array of enriched comment records plus the full document content string
+- Behavior: Iterates each comment, delegates to recoverCommentPosition for per-comment logic, aggregates outcomes in a Map keyed by comment id
+- Other functions in file: recoverCommentPosition (single-record workflow), findTextInDocument, calculateMatchQuality, findAllOccurrences, findClosestMatch, findFuzzyMatch, levenshteinDistance
+
+Week 1 Test Expectations:
+- Function name expected: attemptPositionRecovery
+- Signature expected: await attemptPositionRecovery(testSupabase, testCommentId, capabilityConfig)
+- Usage in tests: Called with a single comment ID and feature configuration flags; expects result object containing a recovered boolean
+- Behavior tested: When enablePositionRecovery=true it should attempt recovery; when false it should short-circuit and mark recovered=false
+
+Mismatch Analysis:
+[ ] Scenario A: Same operation, different name
+[X] Scenario B: Batch vs single (wrapper needed)
+[ ] Scenario C: Test assumptions incomplete
+
+Evidence:
+- comments-position-recovery.ts:203-212 shows export function batchRecoverCommentPositions(comments: CommentData[], currentDocumentContent: string): Map<string, PositionRecoveryResult> { for (const comment of comments) { ... } }
+- capability-config.test.ts:163-170 calls await attemptPositionRecovery(testSupabase, testCommentId, { requireAnchors: false, enablePositionRecovery: true, enableTipTapIntegration: false }) and asserts typeof result.recovered === 'boolean'
+
+Recommended Resolution Pattern:
+Implement attemptPositionRecovery as an orchestration wrapper: fetch the single comment and its document context, invoke recoverCommentPosition (or batchRecoverCommentPositions for scalability) on a single-element array, then return a structured result (e.g., { recovered: positionResult.status === 'relocated', details: positionResult }) respecting enablePositionRecovery flag.
+
+Constitutional Compliance:
+- Reality > Assumptions: Investigated actual POC batch function instead of aligning to prior expectations
+- System Awareness: Documented helper functions to show integration points for wrapper orchestration
+- TDD Intent: Preserved Week 1 contract by recommending wrapper that satisfies existing test shape while reusing proven recovery logic
