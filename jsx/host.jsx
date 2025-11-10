@@ -20,81 +20,157 @@ var EAVIngest = (function() {
 
     function getSelectedClips() {
 
-        var project = app.project;
+        try {
 
-        if (!project) {
+            var project = app.project;
 
-            return JSON.stringify({ error: "No active project" });
+            if (!project) {
 
-        }
-
-
-
-        var selection = project.getSelection();
-
-        if (!selection || selection.length === 0) {
-
-            return JSON.stringify({ error: "No clips selected" });
-
-        }
-
-
-
-        var clips = [];
-
-        for (var i = 0; i < selection.length; i++) {
-
-            var item = selection[i];
-
-
-
-            // Only process video/image items, not bins
-
-            if (item.type === ProjectItemType.CLIP || item.type === ProjectItemType.FILE) {
-
-                clips.push({
-
-                    nodeId: item.nodeId,
-
-                    name: item.name || "",
-
-                    treePath: item.treePath || "",
-
-                    mediaPath: item.getMediaPath() || "",
-
-                    // Get existing metadata from PP fields
-
-                    tapeName: item.getProjectColumnsMetadata().Tape || "",
-
-                    description: item.getProjectColumnsMetadata().Description || "",
-
-                    shot: item.getProjectColumnsMetadata().Shot || "",
-
-                    // File info
-
-                    videoFrameRate: item.getFootageInterpretation().frameRate || "",
-
-                    duration: item.getOutPoint().seconds || 0,
-
-                    type: item.type
-
-                });
+                return JSON.stringify({ error: "No active project" });
 
             }
 
+
+
+            var selection = project.getSelection();
+
+            if (!selection || selection.length === 0) {
+
+                return JSON.stringify({ error: "No clips selected" });
+
+            }
+
+
+
+            var clips = [];
+
+            for (var i = 0; i < selection.length; i++) {
+
+                var item = selection[i];
+
+
+
+                // Only process video/image items, not bins
+
+                if (item.type === ProjectItemType.CLIP || item.type === ProjectItemType.FILE) {
+
+                    var clipData = {
+
+                        nodeId: item.nodeId,
+
+                        name: item.name || "",
+
+                        type: item.type
+
+                    };
+
+
+
+                    // Safely get optional properties
+
+                    try {
+
+                        clipData.treePath = item.treePath || "";
+
+                    } catch (e) {
+
+                        clipData.treePath = "";
+
+                    }
+
+
+
+                    try {
+
+                        clipData.mediaPath = item.getMediaPath() || "";
+
+                    } catch (e) {
+
+                        clipData.mediaPath = "";
+
+                    }
+
+
+
+                    try {
+
+                        var metadata = item.getProjectColumnsMetadata();
+
+                        clipData.tapeName = metadata.Tape || "";
+
+                        clipData.description = metadata.Description || "";
+
+                        clipData.shot = metadata.Shot || "";
+
+                    } catch (e) {
+
+                        clipData.tapeName = "";
+
+                        clipData.description = "";
+
+                        clipData.shot = "";
+
+                    }
+
+
+
+                    try {
+
+                        clipData.videoFrameRate = item.getFootageInterpretation().frameRate || "";
+
+                    } catch (e) {
+
+                        clipData.videoFrameRate = "";
+
+                    }
+
+
+
+                    try {
+
+                        clipData.duration = item.getOutPoint().seconds || 0;
+
+                    } catch (e) {
+
+                        clipData.duration = 0;
+
+                    }
+
+
+
+                    clips.push(clipData);
+
+                }
+
+            }
+
+
+
+            if (clips.length === 0) {
+
+                return JSON.stringify({ error: "No video/image clips in selection" });
+
+            }
+
+
+
+            return JSON.stringify({ clips: clips });
+
+
+
+        } catch (e) {
+
+            return JSON.stringify({
+
+                error: "Exception in getSelectedClips",
+
+                message: e.toString(),
+
+                line: e.line || "unknown"
+
+            });
+
         }
-
-
-
-        if (clips.length === 0) {
-
-            return JSON.stringify({ error: "No video/image clips in selection" });
-
-        }
-
-
-
-        return JSON.stringify({ clips: clips });
 
     }
 
