@@ -3,8 +3,30 @@
  * Components: ClipBrowser | ThumbnailViewer | MetadataForm
  */
 
+// IMMEDIATE LOAD CONFIRMATION - This alert proves new code is executing
+alert('✓ NEW panel-main.js loaded - Cache cleared successfully!');
+
+// DIAGNOSTIC OVERLAY - Write directly to DOM
+function addDiagnostic(message, isError) {
+    var overlay = document.getElementById('diagnosticOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'diagnosticOverlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;padding:10px;font-family:monospace;font-size:11px;z-index:9999;max-height:200px;overflow-y:auto;border-bottom:2px solid #0f0;';
+        document.body.appendChild(overlay);
+    }
+    var line = document.createElement('div');
+    line.textContent = new Date().toTimeString().substr(0,8) + ' ' + message;
+    line.style.color = isError ? '#f00' : '#0f0';
+    overlay.appendChild(line);
+}
+
+addDiagnostic('✓ Panel-main.js executing...');
+
 (function() {
     'use strict';
+
+    addDiagnostic('✓ IIFE started');
 
     // ========================================
     // GLOBAL STATE
@@ -20,18 +42,18 @@
         filterHasMeta: false       // Show only tagged clips
     };
 
+    addDiagnostic('✓ PanelState created');
+
     // Initialize CSInterface
     var csInterface;
     try {
-        console.log('[Panel] ========================================');
-        console.log('[Panel] EAV Ingest Assistant Starting...');
-        console.log('[Panel] ========================================');
+        addDiagnostic('Attempting CSInterface initialization...');
         csInterface = new CSInterface();
-        console.log('[Panel] ✓ CSInterface initialized successfully');
-        console.log('[Panel] CSInterface version:', csInterface.getHostEnvironment().appVersion);
+        addDiagnostic('✓ CSInterface initialized: ' + typeof csInterface);
+        addDiagnostic('✓ Version: ' + csInterface.getHostEnvironment().appVersion);
     } catch (e) {
-        console.error('[Panel] ✗ Failed to initialize CSInterface:', e);
-        alert('Error: CSInterface not available. Please ensure this panel is running in Premiere Pro.');
+        addDiagnostic('✗ CSInterface FAILED: ' + e.message, true);
+        alert('Error: CSInterface not available. ' + e.message);
         return;
     }
 
@@ -52,9 +74,10 @@
         },
 
         init: function() {
-            console.log('[ClipBrowser] Initializing...');
+            addDiagnostic('[ClipBrowser] Starting init...');
 
             // Get DOM elements
+            addDiagnostic('[ClipBrowser] Getting DOM elements...');
             this.elements = {
                 searchInput: document.getElementById('clipSearch'),
                 clearSearchBtn: document.getElementById('clearSearch'),
@@ -65,12 +88,17 @@
                 clipCount: document.getElementById('clipCount'),
                 refreshBtn: document.getElementById('refreshClips')
             };
+            addDiagnostic('[ClipBrowser] ✓ DOM elements retrieved');
 
             // Set up event listeners
+            addDiagnostic('[ClipBrowser] Setting up event listeners...');
             this.setupEventListeners();
+            addDiagnostic('[ClipBrowser] ✓ Event listeners set up');
 
             // Load all clips from project
+            addDiagnostic('[ClipBrowser] About to call loadAllClips()...');
             this.loadAllClips();
+            addDiagnostic('[ClipBrowser] ✓ loadAllClips() called');
         },
 
         setupEventListeners: function() {
@@ -130,10 +158,32 @@
 
         loadAllClips: function() {
             var self = this;
-            console.log('[ClipBrowser] ========== LOADING ALL CLIPS ==========');
+            addDiagnostic('[ClipBrowser] === LOADING CLIPS ===');
+            addDiagnostic('[ClipBrowser] csInterface type: ' + typeof csInterface);
 
-            csInterface.evalScript('EAVIngest.getAllProjectClips()', function(result) {
-                console.log('[ClipBrowser] getAllProjectClips raw result:', result);
+            if (!csInterface) {
+                addDiagnostic('[ClipBrowser] ✗ csInterface not available!', true);
+                self.showEmptyState('CSInterface not initialized');
+                return;
+            }
+
+            // First test if ExtendScript is available
+            addDiagnostic('[ClipBrowser] Testing ExtendScript...');
+            csInterface.evalScript('typeof EAVIngest', function(testResult) {
+                addDiagnostic('[ClipBrowser] typeof EAVIngest: ' + testResult);
+
+                if (testResult === 'undefined') {
+                    addDiagnostic('[ClipBrowser] ✗ EAVIngest undefined!', true);
+                    self.showEmptyState('ExtendScript not loaded');
+                    return;
+                }
+
+                addDiagnostic('[ClipBrowser] ✓ EAVIngest available');
+                addDiagnostic('[ClipBrowser] Calling getAllProjectClips...');
+
+                csInterface.evalScript('EAVIngest.getAllProjectClips()', function(result) {
+                    addDiagnostic('[ClipBrowser] Callback fired! Result length: ' + (result ? result.length : 0));
+                    addDiagnostic('[ClipBrowser] First 100 chars: ' + (result ? result.substring(0,100) : 'null'));
 
                 try {
                     var data = JSON.parse(result);
@@ -180,6 +230,7 @@
                     console.error('[ClipBrowser] Raw result was:', result);
                     self.showEmptyState('Failed to load clips');
                 }
+                });
             });
         },
 
@@ -791,5 +842,43 @@
     } else {
         init();
     }
+
+    // ========================================
+    // GLOBAL DEBUGGING INTERFACE (temporary)
+    // ========================================
+    window.EAVDebug = {
+        state: PanelState,
+        csInterface: csInterface,
+        ClipBrowser: ClipBrowser,
+        testExtendScript: function() {
+            console.log('[DEBUG] Testing ExtendScript connection...');
+            csInterface.evalScript('typeof EAVIngest', function(result) {
+                console.log('[DEBUG] typeof EAVIngest:', result);
+                if (result === 'object') {
+                    console.log('[DEBUG] ✓ EAVIngest is available, testing getAllProjectClips...');
+                    csInterface.evalScript('EAVIngest.getAllProjectClips()', function(clipsResult) {
+                        console.log('[DEBUG] === RAW RESULT ===');
+                        console.log('[DEBUG] Type:', typeof clipsResult);
+                        console.log('[DEBUG] Length:', clipsResult.length);
+                        console.log('[DEBUG] First 500 chars:', clipsResult.substring(0, 500));
+                        console.log('[DEBUG] Full result:', clipsResult);
+                        try {
+                            var parsed = JSON.parse(clipsResult);
+                            console.log('[DEBUG] ✓ Valid JSON, parsed:', parsed);
+                        } catch (e) {
+                            console.error('[DEBUG] ✗ JSON parse failed:', e);
+                        }
+                    });
+                } else {
+                    console.error('[DEBUG] ✗ EAVIngest not available:', result);
+                }
+            });
+        }
+    };
+    console.log('[Panel] ========================================');
+    console.log('[Panel] Global EAVDebug interface exposed');
+    console.log('[Panel] Run: EAVDebug.testExtendScript()');
+    console.log('[Panel] Check: EAVDebug.state.allClips');
+    console.log('[Panel] ========================================');
 
 })();

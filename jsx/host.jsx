@@ -248,27 +248,63 @@ var EAVIngest = (function() {
 
     function getAllProjectClips() {
 
-        var project = app.project;
+        try {
 
-        if (!project) {
+            var project = app.project;
 
-            return JSON.stringify({ error: "No active project" });
+            if (!project) {
 
-        }
+                return JSON.stringify({ error: "No active project" });
 
-
-
-        var clips = [];
-
-        collectClipsRecursive(project.rootItem, clips);
+            }
 
 
 
-        return JSON.stringify({
+            var clips = [];
 
-            clips: clips.map(function(item) {
+            collectClipsRecursive(project.rootItem, clips);
 
-                return {
+
+
+            // Convert clips to JSON-friendly objects (ES3-compatible, no .map())
+
+            var clipsData = [];
+
+            for (var i = 0; i < clips.length; i++) {
+
+                var item = clips[i];
+
+
+
+                // Safely get metadata with try-catch per item
+
+                var metadata = {};
+
+                try {
+
+                    var colData = item.getProjectColumnsMetadata();
+
+                    metadata.tapeName = colData.Tape || "";
+
+                    metadata.description = colData.Description || "";
+
+                    metadata.shot = colData.Shot || "";
+
+                } catch (metaError) {
+
+                    // Metadata access failed for this item, use defaults
+
+                    metadata.tapeName = "";
+
+                    metadata.description = "";
+
+                    metadata.shot = "";
+
+                }
+
+
+
+                clipsData.push({
 
                     nodeId: item.nodeId,
 
@@ -278,19 +314,33 @@ var EAVIngest = (function() {
 
                     mediaPath: item.getMediaPath() || "",
 
-                    // Get existing metadata from PP fields
+                    tapeName: metadata.tapeName,
 
-                    tapeName: item.getProjectColumnsMetadata().Tape || "",
+                    description: metadata.description,
 
-                    description: item.getProjectColumnsMetadata().Description || "",
+                    shot: metadata.shot
 
-                    shot: item.getProjectColumnsMetadata().Shot || ""
+                });
 
-                };
+            }
 
-            })
 
-        });
+
+            return JSON.stringify({ clips: clipsData });
+
+        } catch (e) {
+
+            return JSON.stringify({
+
+                error: "getAllProjectClips failed",
+
+                details: e.toString(),
+
+                message: e.message || "Unknown error"
+
+            });
+
+        }
 
     }
 
