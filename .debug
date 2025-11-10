@@ -6,7 +6,7 @@
 
         <HostList>
 
-            <Host Name="PPRO" Port="8092"/>
+            <Host Name="PPRO" Port="8093"/>
 
         </HostList>
 
