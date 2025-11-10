@@ -2,11 +2,21 @@
 
 <ExtensionList>
 
-    <Extension Id="com.elevana.eav-cep-assist.panel">
+    <Extension Id="com.elevana.eav-cep-assist.navigation">
 
         <HostList>
 
             <Host Name="PPRO" Port="8093"/>
+
+        </HostList>
+
+    </Extension>
+
+    <Extension Id="com.elevana.eav-cep-assist.metadata">
+
+        <HostList>
+
+            <Host Name="PPRO" Port="8094"/>
 
         </HostList>
 
