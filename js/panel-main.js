@@ -146,15 +146,30 @@
                     }
 
                     if (data.clips && data.clips.length > 0) {
-                        PanelState.allClips = data.clips;
-                        console.log('[ClipBrowser] ✓ Loaded', data.clips.length, 'clips');
-                        console.log('[ClipBrowser] First clip:', data.clips[0]);
+                        // Filter out any clips without nodeId
+                        var validClips = data.clips.filter(function(clip) {
+                            if (!clip.nodeId) {
+                                console.warn('[ClipBrowser] Skipping clip without nodeId:', clip);
+                                return false;
+                            }
+                            return true;
+                        });
+
+                        if (validClips.length === 0) {
+                            console.warn('[ClipBrowser] No valid clips found (all missing nodeId)');
+                            self.showEmptyState('No valid clips in project');
+                            return;
+                        }
+
+                        PanelState.allClips = validClips;
+                        console.log('[ClipBrowser] ✓ Loaded', validClips.length, 'valid clips');
+                        console.log('[ClipBrowser] First clip:', validClips[0]);
                         self.render();
 
                         // Auto-select first clip if none selected
-                        if (!PanelState.currentClip && data.clips.length > 0) {
-                            console.log('[ClipBrowser] Auto-selecting first clip:', data.clips[0].nodeId);
-                            self.selectClip(data.clips[0].nodeId);
+                        if (!PanelState.currentClip && validClips.length > 0) {
+                            console.log('[ClipBrowser] Auto-selecting first clip with nodeId:', validClips[0].nodeId);
+                            self.selectClip(validClips[0].nodeId);
                         }
                     } else {
                         console.warn('[ClipBrowser] No clips found in project');
@@ -177,6 +192,12 @@
             }
 
             var html = filteredClips.map(function(clip) {
+                // Skip clips without nodeId (safety check)
+                if (!clip.nodeId) {
+                    console.warn('[ClipBrowser] Skipping render of clip without nodeId:', clip);
+                    return '';
+                }
+
                 var isSelected = PanelState.currentClip && clip.nodeId === PanelState.currentClip.nodeId;
                 var hasMetadata = clip.shot || clip.description || clip.tapeName;
                 var statusIcon = hasMetadata ? '✓' : '•';
@@ -186,7 +207,7 @@
                        'data-clip-id="' + clip.nodeId + '" ' +
                        'role="listitem" tabindex="0">' +
                        '<span class="status-icon ' + statusClass + '">' + statusIcon + '</span>' +
-                       '<span class="clip-name" title="' + clip.name + '">' + clip.name + '</span>' +
+                       '<span class="clip-name" title="' + (clip.name || 'Unknown') + '">' + (clip.name || 'Unknown') + '</span>' +
                        '</div>';
             }).join('');
 
@@ -221,11 +242,24 @@
         selectClip: function(nodeId) {
             console.log('[ClipBrowser] ========== SELECT CLIP ==========');
             console.log('[ClipBrowser] Selecting nodeId:', nodeId);
+
+            // Validate nodeId
+            if (!nodeId || nodeId === 'undefined' || nodeId === 'null') {
+                console.error('[ClipBrowser] ✗ Invalid nodeId:', nodeId);
+                return;
+            }
+
             console.log('[ClipBrowser] Total clips in state:', PanelState.allClips.length);
 
             var clip = PanelState.allClips.find(function(c) { return c.nodeId === nodeId; });
             if (!clip) {
                 console.error('[ClipBrowser] ✗ Clip not found for nodeId:', nodeId);
+                return;
+            }
+
+            // Double-check clip has valid nodeId
+            if (!clip.nodeId) {
+                console.error('[ClipBrowser] ✗ Found clip but it has no nodeId:', clip);
                 return;
             }
 
@@ -307,6 +341,21 @@
         loadClip: function(clip) {
             var self = this;
             console.log('[ThumbnailViewer] ========== LOADING CLIP ==========');
+
+            // Validate clip object
+            if (!clip) {
+                console.error('[ThumbnailViewer] ✗ Clip is null or undefined');
+                this.showStatus('Error: No clip provided', 'error');
+                return;
+            }
+
+            if (!clip.nodeId) {
+                console.error('[ThumbnailViewer] ✗ Clip nodeId is missing');
+                console.error('[ThumbnailViewer] Clip object:', clip);
+                this.showStatus('Error: Invalid clip data', 'error');
+                return;
+            }
+
             console.log('[ThumbnailViewer] Clip name:', clip.name);
             console.log('[ThumbnailViewer] Clip nodeId:', clip.nodeId);
             console.log('[ThumbnailViewer] Clip treePath:', clip.treePath);
@@ -316,7 +365,7 @@
             this.elements.image.style.display = 'none';
 
             // Update clip info
-            this.elements.clipName.textContent = clip.name;
+            this.elements.clipName.textContent = clip.name || 'Unknown';
             this.elements.clipDetails.textContent = clip.treePath || 'Project';
 
             // Enable buttons
@@ -326,7 +375,7 @@
 
             // AUTO-OPEN IN SOURCE MONITOR (instead of frame extraction)
             this.showStatus('Opening in Source Monitor...', 'info');
-            console.log('[ThumbnailViewer] Calling openInSourceMonitor...');
+            console.log('[ThumbnailViewer] Calling openInSourceMonitor with nodeId:', clip.nodeId);
 
             csInterface.evalScript('EAVIngest.openInSourceMonitor("' + clip.nodeId + '")', function(result) {
                 console.log('[ThumbnailViewer] openInSourceMonitor raw result:', result);
@@ -505,6 +554,19 @@
 
         loadClipIntoForm: function(clip) {
             console.log('[MetadataForm] ========== LOADING CLIP INTO FORM ==========');
+
+            // Validate clip object
+            if (!clip) {
+                console.error('[MetadataForm] ✗ Clip is null or undefined');
+                return;
+            }
+
+            if (!clip.nodeId) {
+                console.error('[MetadataForm] ✗ Clip nodeId is missing');
+                console.error('[MetadataForm] Clip object:', clip);
+                return;
+            }
+
             console.log('[MetadataForm] Clip name:', clip.name);
             console.log('[MetadataForm] Clip nodeId:', clip.nodeId);
 
