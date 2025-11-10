@@ -6,7 +6,9 @@
 
     <ExtensionList>
 
-        <Extension Id="com.elevana.eav-cep-assist.panel" Version="1.0.0" />
+        <Extension Id="com.elevana.eav-cep-assist.navigation" Version="1.0.0" />
+
+        <Extension Id="com.elevana.eav-cep-assist.metadata" Version="1.0.0" />
 
     </ExtensionList>
 
@@ -34,13 +36,15 @@
 
     <DispatchInfoList>
 
-        <Extension Id="com.elevana.eav-cep-assist.panel">
+        <!-- NAVIGATION PANEL -->
+
+        <Extension Id="com.elevana.eav-cep-assist.navigation">
 
             <DispatchInfo>
 
                 <Resources>
 
-                    <MainPath>./test-selection-detection.html</MainPath>
+                    <MainPath>./navigation.html</MainPath>
 
                     <ScriptPath>./jsx/host.jsx</ScriptPath>
 
@@ -64,7 +68,7 @@
 
                     <Type>Panel</Type>
 
-                    <Menu>EAV Ingest Assistant</Menu>
+                    <Menu>EAV Ingest Assistant - Navigation</Menu>
 
                     <Geometry>
 
@@ -72,15 +76,15 @@
 
                             <Height>600</Height>
 
-                            <Width>1200</Width>
+                            <Width>300</Width>
 
                         </Size>
 
                         <MinSize>
 
-                            <Height>500</Height>
+                            <Height>400</Height>
 
-                            <Width>900</Width>
+                            <Width>250</Width>
 
                         </MinSize>
 
@@ -88,7 +92,79 @@
 
                             <Height>1200</Height>
 
-                            <Width>2400</Width>
+                            <Width>500</Width>
+
+                        </MaxSize>
+
+                    </Geometry>
+
+                    <Icons>
+
+                    </Icons>
+
+                </UI>
+
+            </DispatchInfo>
+
+        </Extension>
+
+        <!-- METADATA PANEL -->
+
+        <Extension Id="com.elevana.eav-cep-assist.metadata">
+
+            <DispatchInfo>
+
+                <Resources>
+
+                    <MainPath>./metadata.html</MainPath>
+
+                    <ScriptPath>./jsx/host.jsx</ScriptPath>
+
+                    <CEFCommandLine>
+
+                        <Parameter>--enable-nodejs</Parameter>
+
+                        <Parameter>--mixed-context</Parameter>
+
+                    </CEFCommandLine>
+
+                </Resources>
+
+                <Lifecycle>
+
+                    <AutoVisible>true</AutoVisible>
+
+                </Lifecycle>
+
+                <UI>
+
+                    <Type>Panel</Type>
+
+                    <Menu>EAV Ingest Assistant - Metadata</Menu>
+
+                    <Geometry>
+
+                        <Size>
+
+                            <Height>400</Height>
+
+                            <Width>400</Width>
+
+                        </Size>
+
+                        <MinSize>
+
+                            <Height>300</Height>
+
+                            <Width>350</Width>
+
+                        </MinSize>
+
+                        <MaxSize>
+
+                            <Height>800</Height>
+
+                            <Width>600</Width>
 
                         </MaxSize>
 
