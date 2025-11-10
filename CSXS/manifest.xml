@@ -70,25 +70,25 @@
 
                         <Size>
 
-                            <Height>200</Height>
+                            <Height>600</Height>
 
-                            <Width>500</Width>
+                            <Width>1200</Width>
 
                         </Size>
 
                         <MinSize>
 
-                            <Height>150</Height>
+                            <Height>500</Height>
 
-                            <Width>400</Width>
+                            <Width>900</Width>
 
                         </MinSize>
 
                         <MaxSize>
 
-                            <Height>400</Height>
+                            <Height>1200</Height>
 
-                            <Width>1200</Width>
+                            <Width>2400</Width>
 
                         </MaxSize>
 

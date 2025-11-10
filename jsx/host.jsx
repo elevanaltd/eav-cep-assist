@@ -414,6 +414,218 @@ var EAVIngest = (function() {
 
     /**
 
+     * Export frame at specified time from clip
+
+     * @param {string} nodeId - Project item nodeId
+
+     * @param {number} timeInSeconds - Time in seconds (e.g., 0.5 for half a second)
+
+     * @returns {string} JSON with frame file path or error
+
+     *
+
+     * NOTE: This uses a workaround approach since PP ExtendScript doesn't have
+
+     * a direct "export frame at time" API. We:
+
+     * 1. Open clip in Source Monitor
+
+     * 2. Seek to time
+
+     * 3. Export current frame
+
+     */
+
+    function exportFrameAtTime(nodeId, timeInSeconds) {
+
+        var project = app.project;
+
+        if (!project) {
+
+            return JSON.stringify({ success: false, error: "No active project" });
+
+        }
+
+
+
+        var item = findProjectItemByNodeId(project.rootItem, nodeId);
+
+        if (!item) {
+
+            return JSON.stringify({ success: false, error: "Clip not found" });
+
+        }
+
+
+
+        try {
+
+            // Create a temporary folder for frame exports
+
+            var tempFolder = Folder.temp + "/eav-cep-frames";
+
+            var folder = new Folder(tempFolder);
+
+            if (!folder.exists) {
+
+                folder.create();
+
+            }
+
+
+
+            // Generate unique filename
+
+            var timestamp = new Date().getTime();
+
+            var outputPath = tempFolder + "/frame-" + nodeId + "-" + timestamp + ".jpg";
+
+
+
+            // Method 1: Try using encoder API (PP 2018+)
+
+            // This is the most reliable method if available
+
+            if (app.encoder && typeof app.encoder.encodeFile === 'function') {
+
+                // Convert time to ticks (254016000000 ticks per second)
+
+                var ticksPerSecond = 254016000000;
+
+                var inPoint = Math.floor(timeInSeconds * ticksPerSecond);
+
+                var outPoint = inPoint + 1; // Single frame
+
+
+
+                // Use JPEG export preset
+
+                var success = app.encoder.encodeFile(
+
+                    item.getMediaPath(),
+
+                    outputPath,
+
+                    app.encoder.ENCODE_IN_TO_OUT,
+
+                    [item],
+
+                    inPoint,
+
+                    outPoint
+
+                );
+
+
+
+                if (success) {
+
+                    return JSON.stringify({
+
+                        success: true,
+
+                        framePath: outputPath,
+
+                        timeInSeconds: timeInSeconds,
+
+                        method: "encoder API"
+
+                    });
+
+                }
+
+            }
+
+
+
+            // Method 2: Fallback - Open in Source Monitor and export current frame
+
+            // This is less reliable but works across more PP versions
+
+            app.sourceMonitor.openProjectItem(item);
+
+
+
+            // Seek to time (in ticks)
+
+            var ticksPerSecond = 254016000000;
+
+            var timeInTicks = Math.floor(timeInSeconds * ticksPerSecond);
+
+            app.sourceMonitor.setPosition(timeInTicks);
+
+
+
+            // Export current frame (if method exists)
+
+            // Note: exportFramePNG may not exist in all PP versions
+
+            if (typeof item.exportFramePNG === 'function') {
+
+                var success = item.exportFramePNG(timeInTicks, outputPath);
+
+
+
+                if (success) {
+
+                    return JSON.stringify({
+
+                        success: true,
+
+                        framePath: outputPath,
+
+                        timeInSeconds: timeInSeconds,
+
+                        method: "exportFramePNG"
+
+                    });
+
+                }
+
+            }
+
+
+
+            // Method 3: Ultimate fallback - return media path
+
+            // CEP panel will handle frame extraction client-side if needed
+
+            return JSON.stringify({
+
+                success: false,
+
+                error: "Frame export API not available in this PP version",
+
+                fallback: "use_media_path",
+
+                mediaPath: item.getMediaPath(),
+
+                timeInSeconds: timeInSeconds
+
+            });
+
+
+
+        } catch (e) {
+
+            return JSON.stringify({
+
+                success: false,
+
+                error: "Failed to export frame: " + e.toString(),
+
+                details: "Time: " + timeInSeconds + "s"
+
+            });
+
+        }
+
+    }
+
+
+
+    /**
+
      * Parse structured naming from original filename
 
      * Expects format: {8-digit-id}-restofname.ext
@@ -461,6 +673,8 @@ var EAVIngest = (function() {
         selectClip: selectClip,
 
         openInSourceMonitor: openInSourceMonitor,
+
+        exportFrameAtTime: exportFrameAtTime,
 
         parseStructuredNaming: parseStructuredNaming
 

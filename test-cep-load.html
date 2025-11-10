@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEP Load Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #1e1e1e;
+            color: #d0d0d0;
+            padding: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass { background-color: #1a472a; }
+        .fail { background-color: #5a1a1a; }
+    </style>
+</head>
+<body>
+    <h1>CEP Script Load Test</h1>
+    <div id="results"></div>
+
+    <!-- Load CSInterface first -->
+    <script type="text/javascript" src="js/CSInterface.js"></script>
+
+    <!-- Test Script -->
+    <script type="text/javascript">
+        (function() {
+            var results = document.getElementById('results');
+
+            function addResult(name, passed, message) {
+                var div = document.createElement('div');
+                div.className = 'test-result ' + (passed ? 'pass' : 'fail');
+                div.innerHTML = '<strong>' + (passed ? '✓' : '✗') + ' ' + name + ':</strong> ' + message;
+                results.appendChild(div);
+            }
+
+            // Test 1: CSInterface loaded
+            if (typeof CSInterface !== 'undefined') {
+                addResult('CSInterface Loaded', true, 'CSInterface class is defined');
+
+                // Test 2: Can instantiate
+                try {
+                    var csInterface = new CSInterface();
+                    addResult('CSInterface Instantiation', true, 'CSInterface instance created');
+
+                    // Test 3: Can get system path
+                    try {
+                        var extensionPath = csInterface.getSystemPath('extension');
+                        addResult('System Path API', true, 'Extension path: ' + extensionPath);
+                    } catch (e) {
+                        addResult('System Path API', false, e.message);
+                    }
+
+                    // Test 4: Can call ExtendScript
+                    try {
+                        csInterface.evalScript('1 + 1', function(result) {
+                            addResult('ExtendScript Eval', true, 'Result: ' + result);
+                        });
+                    } catch (e) {
+                        addResult('ExtendScript Eval', false, e.message);
+                    }
+
+                } catch (e) {
+                    addResult('CSInterface Instantiation', false, e.message);
+                }
+            } else {
+                addResult('CSInterface Loaded', false, 'CSInterface is undefined - file not loaded or execution error');
+            }
+
+            // Test 5: DOM Ready
+            addResult('DOM Ready', true, 'Document loaded and executing');
+
+            // Test 6: Console availability
+            if (typeof console !== 'undefined' && console.log) {
+                addResult('Console Available', true, 'console.log is available');
+                console.log('[CEP Test] Console is working');
+            } else {
+                addResult('Console Available', false, 'console.log is not available');
+            }
+        })();
+    </script>
+</body>
+</html>
