@@ -23,10 +23,14 @@
     // Initialize CSInterface
     var csInterface;
     try {
+        console.log('[Panel] ========================================');
+        console.log('[Panel] EAV Ingest Assistant Starting...');
+        console.log('[Panel] ========================================');
         csInterface = new CSInterface();
-        console.log('[Panel] CSInterface initialized');
+        console.log('[Panel] ✓ CSInterface initialized successfully');
+        console.log('[Panel] CSInterface version:', csInterface.getHostEnvironment().appVersion);
     } catch (e) {
-        console.error('[Panel] Failed to initialize CSInterface:', e);
+        console.error('[Panel] ✗ Failed to initialize CSInterface:', e);
         alert('Error: CSInterface not available. Please ensure this panel is running in Premiere Pro.');
         return;
     }
@@ -108,42 +112,72 @@
 
             // Clip list click handling (event delegation)
             this.elements.clipList.addEventListener('click', function(e) {
+                console.log('[ClipBrowser] ========== CLIP CLICKED ==========');
+                console.log('[ClipBrowser] Click target:', e.target);
+
                 var clipItem = e.target.closest('.clip-item');
+                console.log('[ClipBrowser] Found clip-item element:', clipItem);
+
                 if (clipItem) {
                     var nodeId = clipItem.getAttribute('data-clip-id');
+                    console.log('[ClipBrowser] Clip nodeId:', nodeId);
                     self.selectClip(nodeId);
+                } else {
+                    console.warn('[ClipBrowser] No clip-item found in click target hierarchy');
                 }
             });
         },
 
         loadAllClips: function() {
             var self = this;
-            console.log('[ClipBrowser] Loading all clips...');
+            console.log('[ClipBrowser] ========== LOADING ALL CLIPS ==========');
 
             csInterface.evalScript('EAVIngest.getAllProjectClips()', function(result) {
+                console.log('[ClipBrowser] getAllProjectClips raw result:', result);
+
                 try {
                     var data = JSON.parse(result);
+                    console.log('[ClipBrowser] getAllProjectClips parsed data:', data);
 
                     if (data.error) {
-                        console.error('[ClipBrowser] Error loading clips:', data.error);
+                        console.error('[ClipBrowser] ✗ Error loading clips:', data.error);
                         self.showEmptyState(data.error);
                         return;
                     }
 
                     if (data.clips && data.clips.length > 0) {
-                        PanelState.allClips = data.clips;
-                        console.log('[ClipBrowser] Loaded', data.clips.length, 'clips');
+                        // Filter out any clips without nodeId
+                        var validClips = data.clips.filter(function(clip) {
+                            if (!clip.nodeId) {
+                                console.warn('[ClipBrowser] Skipping clip without nodeId:', clip);
+                                return false;
+                            }
+                            return true;
+                        });
+
+                        if (validClips.length === 0) {
+                            console.warn('[ClipBrowser] No valid clips found (all missing nodeId)');
+                            self.showEmptyState('No valid clips in project');
+                            return;
+                        }
+
+                        PanelState.allClips = validClips;
+                        console.log('[ClipBrowser] ✓ Loaded', validClips.length, 'valid clips');
+                        console.log('[ClipBrowser] First clip:', validClips[0]);
                         self.render();
 
                         // Auto-select first clip if none selected
-                        if (!PanelState.currentClip && data.clips.length > 0) {
-                            self.selectClip(data.clips[0].nodeId);
+                        if (!PanelState.currentClip && validClips.length > 0) {
+                            console.log('[ClipBrowser] Auto-selecting first clip with nodeId:', validClips[0].nodeId);
+                            self.selectClip(validClips[0].nodeId);
                         }
                     } else {
+                        console.warn('[ClipBrowser] No clips found in project');
                         self.showEmptyState('No clips in project');
                     }
                 } catch (e) {
-                    console.error('[ClipBrowser] Parse error:', e);
+                    console.error('[ClipBrowser] ✗ JSON Parse error:', e);
+                    console.error('[ClipBrowser] Raw result was:', result);
                     self.showEmptyState('Failed to load clips');
                 }
             });
@@ -158,6 +192,12 @@
             }
 
             var html = filteredClips.map(function(clip) {
+                // Skip clips without nodeId (safety check)
+                if (!clip.nodeId) {
+                    console.warn('[ClipBrowser] Skipping render of clip without nodeId:', clip);
+                    return '';
+                }
+
                 var isSelected = PanelState.currentClip && clip.nodeId === PanelState.currentClip.nodeId;
                 var hasMetadata = clip.shot || clip.description || clip.tapeName;
                 var statusIcon = hasMetadata ? '✓' : '•';
@@ -167,7 +207,7 @@
                        'data-clip-id="' + clip.nodeId + '" ' +
                        'role="listitem" tabindex="0">' +
                        '<span class="status-icon ' + statusClass + '">' + statusIcon + '</span>' +
-                       '<span class="clip-name" title="' + clip.name + '">' + clip.name + '</span>' +
+                       '<span class="clip-name" title="' + (clip.name || 'Unknown') + '">' + (clip.name || 'Unknown') + '</span>' +
                        '</div>';
             }).join('');
 
@@ -200,9 +240,26 @@
         },
 
         selectClip: function(nodeId) {
+            console.log('[ClipBrowser] ========== SELECT CLIP ==========');
+            console.log('[ClipBrowser] Selecting nodeId:', nodeId);
+
+            // Validate nodeId
+            if (!nodeId || nodeId === 'undefined' || nodeId === 'null') {
+                console.error('[ClipBrowser] ✗ Invalid nodeId:', nodeId);
+                return;
+            }
+
+            console.log('[ClipBrowser] Total clips in state:', PanelState.allClips.length);
+
             var clip = PanelState.allClips.find(function(c) { return c.nodeId === nodeId; });
             if (!clip) {
-                console.warn('[ClipBrowser] Clip not found:', nodeId);
+                console.error('[ClipBrowser] ✗ Clip not found for nodeId:', nodeId);
+                return;
+            }
+
+            // Double-check clip has valid nodeId
+            if (!clip.nodeId) {
+                console.error('[ClipBrowser] ✗ Found clip but it has no nodeId:', clip);
                 return;
             }
 
@@ -210,9 +267,11 @@
             PanelState.currentClip = clip;
             PanelState.currentClipIndex = index;
 
-            console.log('[ClipBrowser] Selected clip:', clip.name);
+            console.log('[ClipBrowser] ✓ Selected clip:', clip.name, '(index:', index, ')');
+            console.log('[ClipBrowser] Full clip object:', clip);
 
             // Emit custom event for other components
+            console.log('[ClipBrowser] Dispatching clip-selected event...');
             document.dispatchEvent(new CustomEvent('clip-selected', {
                 detail: clip
             }));
@@ -266,6 +325,8 @@
 
             // Listen for clip selection
             document.addEventListener('clip-selected', function(e) {
+                console.log('[ThumbnailViewer] Received clip-selected event');
+                console.log('[ThumbnailViewer] Event detail:', e.detail);
                 self.loadClip(e.detail);
             });
 
@@ -279,38 +340,61 @@
 
         loadClip: function(clip) {
             var self = this;
-            console.log('[ThumbnailViewer] Loading clip:', clip.name);
+            console.log('[ThumbnailViewer] ========== LOADING CLIP ==========');
 
-            // Show placeholder, hide image
+            // Validate clip object
+            if (!clip) {
+                console.error('[ThumbnailViewer] ✗ Clip is null or undefined');
+                this.showStatus('Error: No clip provided', 'error');
+                return;
+            }
+
+            if (!clip.nodeId) {
+                console.error('[ThumbnailViewer] ✗ Clip nodeId is missing');
+                console.error('[ThumbnailViewer] Clip object:', clip);
+                this.showStatus('Error: Invalid clip data', 'error');
+                return;
+            }
+
+            console.log('[ThumbnailViewer] Clip name:', clip.name);
+            console.log('[ThumbnailViewer] Clip nodeId:', clip.nodeId);
+            console.log('[ThumbnailViewer] Clip treePath:', clip.treePath);
+
+            // Show placeholder (no thumbnail needed - using Source Monitor)
             this.elements.placeholder.style.display = 'flex';
             this.elements.image.style.display = 'none';
 
             // Update clip info
-            this.elements.clipName.textContent = clip.name;
+            this.elements.clipName.textContent = clip.name || 'Unknown';
             this.elements.clipDetails.textContent = clip.treePath || 'Project';
 
             // Enable buttons
             this.elements.openSourceBtn.disabled = false;
 
-            // Show loading status
-            this.showStatus('Extracting frame at 0.5s...', 'info');
+            console.log('[ThumbnailViewer] Buttons enabled');
 
-            // Extract frame at 0.5 seconds
-            csInterface.evalScript('EAVIngest.exportFrameAtTime("' + clip.nodeId + '", 0.5)', function(result) {
+            // AUTO-OPEN IN SOURCE MONITOR (instead of frame extraction)
+            this.showStatus('Opening in Source Monitor...', 'info');
+            console.log('[ThumbnailViewer] Calling openInSourceMonitor with nodeId:', clip.nodeId);
+
+            csInterface.evalScript('EAVIngest.openInSourceMonitor("' + clip.nodeId + '")', function(result) {
+                console.log('[ThumbnailViewer] openInSourceMonitor raw result:', result);
+
                 try {
                     var data = JSON.parse(result);
+                    console.log('[ThumbnailViewer] openInSourceMonitor parsed data:', data);
 
                     if (data.success) {
-                        console.log('[ThumbnailViewer] Frame extracted:', data.framePath);
-                        self.displayFrame(data.framePath);
-                        self.showStatus('Frame loaded', 'success');
+                        console.log('[ThumbnailViewer] ✓ Opened in Source Monitor successfully');
+                        self.showStatus('✓ Opened in Source Monitor', 'success');
                     } else {
-                        console.error('[ThumbnailViewer] Frame extraction failed:', data.error);
-                        self.showStatus('Frame extraction failed: ' + (data.error || 'Unknown error'), 'error');
+                        console.error('[ThumbnailViewer] ✗ Failed to open:', data.error);
+                        self.showStatus('Error: ' + (data.error || 'Unknown error'), 'error');
                     }
                 } catch (e) {
-                    console.error('[ThumbnailViewer] Parse error:', e);
-                    self.showStatus('Failed to extract frame', 'error');
+                    console.error('[ThumbnailViewer] ✗ JSON Parse error:', e);
+                    console.error('[ThumbnailViewer] Raw result was:', result);
+                    self.showStatus('Failed to open in Source Monitor', 'error');
                 }
             });
         },
@@ -442,6 +526,8 @@
 
             // Listen for clip selection
             document.addEventListener('clip-selected', function(e) {
+                console.log('[MetadataForm] Received clip-selected event');
+                console.log('[MetadataForm] Event detail:', e.detail);
                 self.loadClipIntoForm(e.detail);
             });
 
@@ -467,7 +553,22 @@
         },
 
         loadClipIntoForm: function(clip) {
-            console.log('[MetadataForm] Loading clip into form:', clip.name);
+            console.log('[MetadataForm] ========== LOADING CLIP INTO FORM ==========');
+
+            // Validate clip object
+            if (!clip) {
+                console.error('[MetadataForm] ✗ Clip is null or undefined');
+                return;
+            }
+
+            if (!clip.nodeId) {
+                console.error('[MetadataForm] ✗ Clip nodeId is missing');
+                console.error('[MetadataForm] Clip object:', clip);
+                return;
+            }
+
+            console.log('[MetadataForm] Clip name:', clip.name);
+            console.log('[MetadataForm] Clip nodeId:', clip.nodeId);
 
             // Update header
             this.elements.formClipName.textContent = clip.name;
@@ -554,15 +655,23 @@
 
         applyMetadata: function() {
             var self = this;
+            console.log('[MetadataForm] ========== APPLY METADATA ==========');
 
             if (!PanelState.currentClip) {
+                console.error('[MetadataForm] ✗ No clip selected');
                 this.showStatus('No clip selected', 'error');
                 return;
             }
 
+            console.log('[MetadataForm] Current clip:', PanelState.currentClip.name);
+            console.log('[MetadataForm] Current clip nodeId:', PanelState.currentClip.nodeId);
+
             // Build the generated name
             var generatedName = this.elements.generatedName.textContent;
+            console.log('[MetadataForm] Generated name:', generatedName);
+
             if (generatedName === '-') {
+                console.error('[MetadataForm] ✗ No fields filled in');
                 this.showStatus('Please fill in at least one field', 'error');
                 return;
             }
@@ -575,18 +684,28 @@
                 shot: this.elements.shotType.value
             };
 
+            console.log('[MetadataForm] Metadata object:', metadata);
+
             this.showStatus('Updating Premiere Pro...', 'info');
 
             // Call ExtendScript to update PP
             // Properly format the metadata object for ExtendScript using JSON.parse with single quotes
             var metadataJson = JSON.stringify(metadata);
+            console.log('[MetadataForm] Metadata JSON:', metadataJson);
+
             var script = 'EAVIngest.updateClipMetadata("' + PanelState.currentClip.nodeId + '", JSON.parse(\'' + metadataJson.replace(/'/g, "\\'") + '\'))';
+            console.log('[MetadataForm] ExtendScript to execute:', script);
 
             csInterface.evalScript(script, function(result) {
+                console.log('[MetadataForm] updateClipMetadata raw result:', result);
+
                 try {
                     var data = JSON.parse(result);
+                    console.log('[MetadataForm] updateClipMetadata parsed data:', data);
 
                     if (data.success) {
+                        console.log('[MetadataForm] ✓ Metadata updated successfully');
+                        console.log('[MetadataForm] Updated name:', data.updatedName);
                         self.showStatus('✓ Updated: ' + data.updatedName, 'success');
 
                         // Update current clip name in state
@@ -600,10 +719,12 @@
                         // Optionally auto-advance to next clip
                         // setTimeout(function() { self.navigateToNext(); }, 1000);
                     } else {
+                        console.error('[MetadataForm] ✗ Update failed:', data.error);
                         self.showStatus('Error: ' + (data.error || 'Unknown error'), 'error');
                     }
                 } catch (e) {
-                    console.error('[MetadataForm] Error applying metadata:', e);
+                    console.error('[MetadataForm] ✗ JSON Parse error:', e);
+                    console.error('[MetadataForm] Raw result was:', result);
                     self.showStatus('Error updating Premiere Pro', 'error');
                 }
             });
@@ -647,14 +768,21 @@
     // ========================================
 
     function init() {
-        console.log('[Panel] Initializing EAV Ingest Assistant...');
+        console.log('[Panel] ========================================');
+        console.log('[Panel] Initializing Components...');
+        console.log('[Panel] ========================================');
 
         // Initialize all components
+        console.log('[Panel] 1. Initializing ClipBrowser...');
         ClipBrowser.init();
+        console.log('[Panel] 2. Initializing ThumbnailViewer...');
         ThumbnailViewer.init();
+        console.log('[Panel] 3. Initializing MetadataForm...');
         MetadataForm.init();
 
-        console.log('[Panel] All components initialized');
+        console.log('[Panel] ========================================');
+        console.log('[Panel] ✓ All components initialized successfully');
+        console.log('[Panel] ========================================');
     }
 
     // Initialize when DOM is ready

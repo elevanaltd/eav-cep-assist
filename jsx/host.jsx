@@ -272,9 +272,19 @@ var EAVIngest = (function() {
 
                     nodeId: item.nodeId,
 
-                    name: item.name,
+                    name: item.name || "",
 
-                    treePath: item.treePath
+                    treePath: item.treePath || "",
+
+                    mediaPath: item.getMediaPath() || "",
+
+                    // Get existing metadata from PP fields
+
+                    tapeName: item.getProjectColumnsMetadata().Tape || "",
+
+                    description: item.getProjectColumnsMetadata().Description || "",
+
+                    shot: item.getProjectColumnsMetadata().Shot || ""
 
                 };
 
