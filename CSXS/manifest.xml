@@ -40,7 +40,7 @@
 
                 <Resources>
 
-                    <MainPath>./index.html</MainPath>
+                    <MainPath>./test-selection-detection.html</MainPath>
 
                     <ScriptPath>./jsx/host.jsx</ScriptPath>
 
