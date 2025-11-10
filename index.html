@@ -1,251 +1,595 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>EAV Ingest Assistant</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    <link rel="stylesheet" href="css/style.css">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #2b2b2b;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
 
+        .panel-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Search Bar - Full Width Top */
+        .search-section {
+            background: #1e1e1e;
+            padding: 8px 12px;
+            border-bottom: 1px solid #3a3a3a;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 6px 12px;
+            background: #383838;
+            border: 1px solid #4a4a4a;
+            border-radius: 3px;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .btn-refresh {
+            padding: 6px 12px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-refresh:hover { background: #006cc1; }
+
+        /* Main Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Clip Browser - Left 25% */
+        .clip-browser {
+            width: 25%;
+            background: #252525;
+            border-right: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .clip-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .clip-item {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            border-left: 3px solid transparent;
+        }
+
+        .clip-item:hover { background: #333333; }
+
+        .clip-item.selected {
+            background: #0078d4;
+            border-left-color: #00bcf2;
+        }
+
+        .clip-item.tagged::before {
+            content: '✓ ';
+            color: #4caf50;
+        }
+
+        /* Right Side - 75% split into thumbnail and form */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Thumbnail Area - 50% of right panel */
+        .thumbnail-area {
+            height: 50%;
+            background: #1e1e1e;
+            border-bottom: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            position: relative;
+        }
+
+        .thumbnail-img {
+            max-width: 100%;
+            max-height: calc(100% - 60px);
+            object-fit: contain;
+            display: none;
+        }
+
+        .thumbnail-img.loaded { display: block; }
+
+        .thumbnail-placeholder {
+            text-align: center;
+            color: #888;
+        }
+
+        .thumbnail-controls {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-source-monitor {
+            padding: 8px 16px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-source-monitor:hover { background: #006cc1; }
+        .btn-source-monitor:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        /* Metadata Form - 50% of right panel */
+        .metadata-form {
+            height: 50%;
+            background: #2b2b2b;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #b0b0b0;
+        }
+
+        .form-field input, .form-field select {
+            width: 100%;
+            padding: 6px 8px;
+            background: #383838;
+            border: 1px solid #4a4a4a;
+            border-radius: 3px;
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-apply {
+            flex: 1;
+            padding: 10px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-apply:hover { background: #45a049; }
+        .btn-apply:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .btn-nav {
+            padding: 8px 16px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .btn-nav:hover { background: #555; }
+        .btn-nav:disabled {
+            background: #333;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .status-msg {
+            padding: 8px 12px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .status-msg.show { display: block; }
+        .status-msg.error { background: #d32f2f; color: white; }
+        .status-msg.success { background: #4caf50; color: white; }
+        .status-msg.info { background: #0078d4; color: white; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #666; }
+    </style>
 </head>
-
 <body>
-
     <div id="app" class="panel-container">
-
-        <!-- Header with clip info -->
-
-        <div class="header">
-
-            <div class="clip-info">
-
-                <span id="clipName" class="clip-name">No clip selected</span>
-
-                <span id="clipPath" class="clip-path"></span>
-
-            </div>
-
-            <button id="refreshBtn" class="icon-btn" title="Refresh from selection">
-
-                <svg width="16" height="16" viewBox="0 0 16 16">
-
-                    <path fill="currentColor" d="M13.65 2.35C12.2 0.9 10.21 0 8 0 3.58 0 0 3.58 0 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L9 7h7V0l-2.35 2.35z"/>
-
-                </svg>
-
-            </button>
-
+        <!-- Search Bar -->
+        <div class="search-section">
+            <input type="text" id="clipSearch" class="search-input" placeholder="Search clips...">
+            <button id="refreshBtn" class="btn-refresh">Refresh</button>
+            <span id="clipCount" style="font-size: 11px; color: #888;">0 clips</span>
         </div>
 
-
-
-        <!-- Form Fields (horizontal strip layout) -->
-
-        <div class="form-strip">
-
-            <!-- ID Field (read-only, extracted from filename) -->
-
-            <div class="form-group compact">
-
-                <label for="id">ID</label>
-
-                <input type="text" id="id" readonly class="readonly-field" placeholder="Auto">
-
+        <!-- Main Content -->
+        <div class="content-area">
+            <!-- Clip Browser -->
+            <div class="clip-browser">
+                <div class="clip-list" id="clipList">
+                    <div class="thumbnail-placeholder">
+                        <p>Loading clips...</p>
+                    </div>
+                </div>
             </div>
 
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Thumbnail Area (50% height) -->
+                <div class="thumbnail-area">
+                    <div class="thumbnail-placeholder" id="thumbnailPlaceholder">
+                        <p>Select a clip to preview</p>
+                    </div>
+                    <img id="thumbnailImg" class="thumbnail-img" alt="Clip thumbnail">
+                    <div class="thumbnail-controls">
+                        <button id="openSourceBtn" class="btn-source-monitor" disabled>Open in Source Monitor</button>
+                    </div>
+                </div>
 
+                <!-- Metadata Form (50% height) -->
+                <div class="metadata-form">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>ID</label>
+                            <input type="text" id="clipId" readonly>
+                        </div>
+                        <div class="form-field">
+                            <label>Location</label>
+                            <input type="text" id="location" placeholder="e.g., kitchen">
+                        </div>
+                        <div class="form-field">
+                            <label>Subject</label>
+                            <input type="text" id="subject" placeholder="e.g., oven">
+                        </div>
+                        <div class="form-field">
+                            <label>Action</label>
+                            <input type="text" id="action" placeholder="e.g., cleaning">
+                        </div>
+                        <div class="form-field">
+                            <label>Shot Type</label>
+                            <select id="shotType">
+                                <option value="">Select...</option>
+                                <option value="WS">WS - Wide Shot</option>
+                                <option value="MID">MID - Medium Shot</option>
+                                <option value="CU">CU - Close Up</option>
+                                <option value="UNDER">UNDER - Under Shot</option>
+                                <option value="FP">FP - First Person</option>
+                                <option value="TRACK">TRACK - Tracking</option>
+                                <option value="ESTAB">ESTAB - Establishing</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <!-- Location -->
+                    <div class="form-actions">
+                        <button id="prevBtn" class="btn-nav" disabled>◀ Previous</button>
+                        <button id="applyBtn" class="btn-apply" disabled>Apply to Premiere</button>
+                        <button id="nextBtn" class="btn-nav" disabled>Next ▶</button>
+                    </div>
 
-            <div class="form-group">
-
-                <label for="location">Location</label>
-
-                <input type="text" id="location" placeholder="e.g. kitchen" list="locationList">
-
-                <datalist id="locationList">
-
-                    <option value="kitchen">
-
-                    <option value="bathroom">
-
-                    <option value="bedroom">
-
-                    <option value="living-room">
-
-                    <option value="exterior">
-
-                </datalist>
-
+                    <div id="statusMsg" class="status-msg"></div>
+                </div>
             </div>
-
-
-
-            <!-- Subject -->
-
-            <div class="form-group">
-
-                <label for="subject">Subject</label>
-
-                <input type="text" id="subject" placeholder="e.g. oven" list="subjectList">
-
-                <datalist id="subjectList">
-
-                    <option value="sink">
-
-                    <option value="oven">
-
-                    <option value="window">
-
-                    <option value="door">
-
-                    <option value="countertop">
-
-                </datalist>
-
-            </div>
-
-
-
-            <!-- Action (videos only) -->
-
-            <div class="form-group" id="actionGroup">
-
-                <label for="action">Action</label>
-
-                <input type="text" id="action" placeholder="e.g. cleaning" list="actionList">
-
-                <datalist id="actionList">
-
-                    <option value="cleaning">
-
-                    <option value="installing">
-
-                    <option value="repairing">
-
-                    <option value="painting">
-
-                    <option value="demolishing">
-
-                </datalist>
-
-            </div>
-
-
-
-            <!-- Shot Type -->
-
-            <div class="form-group">
-
-                <label for="shotType">Shot Type</label>
-
-                <select id="shotType">
-
-                    <option value="">--</option>
-
-                    <option value="WS">WS (Wide Shot)</option>
-
-                    <option value="MID">MID (Medium Shot)</option>
-
-                    <option value="CU">CU (Close Up)</option>
-
-                    <option value="UNDER">UNDER (Underslung)</option>
-
-                    <option value="FP">FP (First Person)</option>
-
-                    <option value="TRACK">TRACK (Tracking Shot)</option>
-
-                    <option value="ESTAB">ESTAB (Establishing)</option>
-
-                </select>
-
-            </div>
-
         </div>
-
-
-
-        <!-- Generated Name Preview -->
-
-        <div class="name-preview">
-
-            <label>Generated Name:</label>
-
-            <div id="generatedName" class="generated-name-text">-</div>
-
-        </div>
-
-
-
-        <!-- Metadata Tags -->
-
-        <div class="metadata-section">
-
-            <label for="metadata">Metadata Tags (comma-separated):</label>
-
-            <input type="text" id="metadata" placeholder="e.g. before, wide-angle, natural-light">
-
-        </div>
-
-
-
-        <!-- Action Bar -->
-
-        <div class="action-bar">
-
-            <div class="nav-buttons">
-
-                <button id="prevBtn" class="nav-btn">◀ Previous</button>
-
-                <button id="nextBtn" class="nav-btn">Next ▶</button>
-
-            </div>
-
-
-
-            <div class="action-buttons">
-
-                <button id="openSourceBtn" class="secondary-btn">Open in Source Monitor</button>
-
-                <button id="applyBtn" class="primary-btn">Apply to Premiere</button>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- Status Messages -->
-
-        <div id="statusMsg" class="status-msg"></div>
-
-
-
-        <!-- Phase 2: AI Analysis (hidden for now) -->
-
-        <div id="aiSection" class="ai-section" style="display: none;">
-
-            <button id="analyzeBtn" class="secondary-btn">🤖 AI Analyze</button>
-
-            <div id="aiStatus" class="ai-status"></div>
-
-        </div>
-
     </div>
 
-
-
-    <!-- Load CEP Interface Library -->
-
+    <!-- CEP Library -->
     <script type="text/javascript" src="js/CSInterface.js"></script>
 
-    <script type="text/javascript" src="js/main.js"></script>
+    <!-- Main Panel Logic -->
+    <script type="text/javascript">
+        (function() {
+            'use strict';
 
+            console.log('[INIT] Starting EAV Ingest Assistant...');
+
+            // Check if CSInterface loaded
+            if (typeof CSInterface === 'undefined') {
+                console.error('[INIT] CRITICAL: CSInterface not loaded!');
+                document.body.innerHTML = '<div style="padding:20px;color:#f44336;"><h3>ERROR: CSInterface Not Loaded</h3><p>The Adobe CEP library failed to load.</p><p>Check that <code>js/CSInterface.js</code> exists in the extension folder.</p></div>';
+                return;
+            }
+
+            console.log('[INIT] CSInterface loaded ✓');
+
+            var csInterface = new CSInterface();
+            var currentClip = null;
+            var allClips = [];
+            var currentIndex = -1;
+
+            // Get elements
+            var clipList = document.getElementById('clipList');
+            var clipSearch = document.getElementById('clipSearch');
+            var clipCount = document.getElementById('clipCount');
+            var refreshBtn = document.getElementById('refreshBtn');
+            var thumbnailImg = document.getElementById('thumbnailImg');
+            var thumbnailPlaceholder = document.getElementById('thumbnailPlaceholder');
+            var openSourceBtn = document.getElementById('openSourceBtn');
+            var prevBtn = document.getElementById('prevBtn');
+            var nextBtn = document.getElementById('nextBtn');
+            var applyBtn = document.getElementById('applyBtn');
+            var statusMsg = document.getElementById('statusMsg');
+            var clipId = document.getElementById('clipId');
+            var location = document.getElementById('location');
+            var subject = document.getElementById('subject');
+            var action = document.getElementById('action');
+            var shotType = document.getElementById('shotType');
+
+            function showStatus(msg, type) {
+                statusMsg.textContent = msg;
+                statusMsg.className = 'status-msg show ' + (type || 'info');
+                setTimeout(function() {
+                    statusMsg.className = 'status-msg';
+                }, 3000);
+            }
+
+            function loadExtendScript() {
+                console.log('[INIT] Loading ExtendScript explicitly...');
+
+                var extensionPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+                var jsxPath = extensionPath + '/jsx/host.jsx';
+
+                console.log('[INIT] Extension path:', extensionPath);
+                console.log('[INIT] JSX path:', jsxPath);
+
+                // Load host.jsx explicitly using $.evalFile
+                csInterface.evalScript('$.evalFile("' + jsxPath + '")', function(result) {
+                    console.log('[INIT] evalFile completed. Result:', result);
+
+                    // Verify EAVIngest module exists
+                    csInterface.evalScript('typeof EAVIngest', function(typeResult) {
+                        console.log('[INIT] EAVIngest type:', typeResult);
+
+                        if (typeResult === 'object') {
+                            console.log('[INIT] ✓ ExtendScript loaded successfully');
+                            showStatus('Panel initialized', 'success');
+                            loadClips();
+                        } else {
+                            console.error('[INIT] ✗ ExtendScript failed to load - EAVIngest is', typeResult);
+                            showStatus('ERROR: ExtendScript failed to load', 'error');
+                            clipList.innerHTML = '<div style="padding:20px;color:#f44336;"><strong>ExtendScript Failed</strong><p>The ExtendScript module did not load.</p><p>Check Console (Cmd+Opt+I) for errors.</p></div>';
+                        }
+                    });
+                });
+            }
+
+            function loadClips() {
+                console.log('[LOAD] Fetching clips from Premiere Pro project...');
+                clipList.innerHTML = '<div style="padding:20px;color:#888;">Loading clips from project...</div>';
+
+                csInterface.evalScript('EAVIngest.getAllProjectClips()', function(result) {
+                    console.log('[LOAD] getAllProjectClips returned:', result);
+
+                    try {
+                        var data = JSON.parse(result);
+
+                        if (data.error) {
+                            console.error('[LOAD] Error from ExtendScript:', data.error);
+                            clipList.innerHTML = '<div style="padding:20px;color:#f44336;"><strong>' + data.error + '</strong><p>Make sure a Premiere Pro project is open.</p></div>';
+                            showStatus(data.error, 'error');
+                            return;
+                        }
+
+                        allClips = data.clips || [];
+                        console.log('[LOAD] ✓ Loaded', allClips.length, 'clips');
+
+                        if (allClips.length === 0) {
+                            clipList.innerHTML = '<div style="padding:20px;color:#888;"><p>No clips found in project</p><p style="font-size:11px;">Import media to get started</p></div>';
+                        } else {
+                            renderClipList();
+                            showStatus('Loaded ' + allClips.length + ' clips', 'success');
+                        }
+
+                    } catch(e) {
+                        console.error('[LOAD] Failed to parse result:', e);
+                        console.error('[LOAD] Raw result was:', result);
+                        clipList.innerHTML = '<div style="padding:20px;color:#f44336;"><strong>Parse Error</strong><p>' + e.message + '</p></div>';
+                        showStatus('Failed to parse clip data', 'error');
+                    }
+                });
+            }
+
+            function renderClipList() {
+                if (allClips.length === 0) {
+                    clipList.innerHTML = '<div style="padding:20px;color:#888;">No clips in project</div>';
+                    clipCount.textContent = '0 clips';
+                    return;
+                }
+
+                var searchTerm = clipSearch.value.toLowerCase();
+                var filtered = allClips.filter(function(clip) {
+                    return clip.name.toLowerCase().indexOf(searchTerm) !== -1;
+                });
+
+                clipCount.textContent = filtered.length + ' clip' + (filtered.length !== 1 ? 's' : '');
+
+                clipList.innerHTML = '';
+                filtered.forEach(function(clip, idx) {
+                    var item = document.createElement('div');
+                    item.className = 'clip-item';
+                    if (clip.hasMetadata) item.classList.add('tagged');
+                    if (currentClip && clip.nodeId === currentClip.nodeId) item.classList.add('selected');
+                    item.textContent = clip.name;
+                    item.dataset.index = allClips.indexOf(clip);
+                    item.onclick = function() {
+                        selectClip(clip, parseInt(this.dataset.index));
+                    };
+                    clipList.appendChild(item);
+                });
+            }
+
+            function selectClip(clip, index) {
+                console.log('[SELECT] Selected clip:', clip.name, '(index ' + index + ')');
+                currentClip = clip;
+                currentIndex = index;
+
+                // Update selected state in list
+                renderClipList();
+
+                // Load metadata
+                clipId.value = extractIdFromName(clip.name);
+                location.value = '';
+                subject.value = '';
+                action.value = '';
+                shotType.value = '';
+
+                // Enable buttons
+                openSourceBtn.disabled = false;
+                applyBtn.disabled = false;
+                prevBtn.disabled = (index === 0);
+                nextBtn.disabled = (index === allClips.length - 1);
+
+                // Show placeholder (thumbnail extraction TBD)
+                thumbnailImg.classList.remove('loaded');
+                thumbnailPlaceholder.style.display = 'block';
+                thumbnailPlaceholder.innerHTML = '<p style="margin-bottom:8px;">Clip: <strong>' + clip.name + '</strong></p><p style="font-size:11px;color:#666;">Thumbnail extraction coming soon</p><p style="font-size:11px;color:#666;">Use "Open in Source Monitor" to preview</p>';
+            }
+
+            function extractIdFromName(name) {
+                var match = name.match(/\d{8}/);
+                return match ? match[0] : '';
+            }
+
+            // Event Listeners
+            refreshBtn.onclick = function() {
+                console.log('[ACTION] Refresh clicked');
+                loadClips();
+            };
+
+            clipSearch.oninput = function() {
+                renderClipList();
+            };
+
+            openSourceBtn.onclick = function() {
+                if (!currentClip) return;
+                console.log('[ACTION] Opening in Source Monitor:', currentClip.nodeId);
+
+                csInterface.evalScript('EAVIngest.openInSourceMonitor("' + currentClip.nodeId + '")', function(result) {
+                    console.log('[ACTION] openInSourceMonitor result:', result);
+                    var data = JSON.parse(result);
+                    if (data.success) {
+                        showStatus('Opened in Source Monitor', 'success');
+                    } else {
+                        showStatus('Failed: ' + (data.error || 'Unknown error'), 'error');
+                    }
+                });
+            };
+
+            applyBtn.onclick = function() {
+                if (!currentClip) return;
+
+                var generatedName = generateName();
+                var metadata = {
+                    name: generatedName,
+                    tapeName: clipId.value,
+                    description: subject.value,
+                    shot: shotType.value
+                };
+
+                console.log('[ACTION] Applying metadata:', metadata);
+
+                var metadataJson = JSON.stringify(metadata);
+                var escapedJson = metadataJson.replace(/"/g, '\\"');
+
+                csInterface.evalScript('EAVIngest.updateClipMetadata("' + currentClip.nodeId + '", "' + escapedJson + '")', function(result) {
+                    console.log('[ACTION] updateClipMetadata result:', result);
+                    try {
+                        var data = JSON.parse(result);
+                        if (data.success) {
+                            showStatus('✓ Metadata applied successfully', 'success');
+                            currentClip.hasMetadata = true;
+                            renderClipList();
+                        } else {
+                            showStatus('Failed: ' + (data.error || 'Unknown error'), 'error');
+                        }
+                    } catch(e) {
+                        console.error('[ACTION] Parse error:', e);
+                        showStatus('Failed to apply metadata', 'error');
+                    }
+                });
+            };
+
+            nextBtn.onclick = function() {
+                if (currentIndex < allClips.length - 1) {
+                    selectClip(allClips[currentIndex + 1], currentIndex + 1);
+                }
+            };
+
+            prevBtn.onclick = function() {
+                if (currentIndex > 0) {
+                    selectClip(allClips[currentIndex - 1], currentIndex - 1);
+                }
+            };
+
+            function generateName() {
+                var parts = [
+                    clipId.value,
+                    location.value,
+                    subject.value,
+                    action.value,
+                    shotType.value
+                ];
+                return parts.filter(function(p) { return p && p.trim(); }).join('-');
+            }
+
+            // Initialize on load
+            console.log('[INIT] Initializing panel...');
+            loadExtendScript();
+
+        })();
+    </script>
 </body>
-
 </html>
