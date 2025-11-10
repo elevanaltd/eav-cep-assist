@@ -295,15 +295,24 @@
                         var data = JSON.parse(result);
 
                         if (data.error) {
-                            // Log the error with debug info if available
+                            // Build detailed error message
                             var errorMsg = data.error;
-                            if (data.debug) {
-                                errorMsg += ' (debug: ' + JSON.stringify(data.debug) + ')';
+
+                            if (data.message) {
+                                errorMsg += ' - ' + data.message;
                             }
 
-                            // Only log if this is a NEW error state
-                            if (lastSelectedNodeId !== null || pollCount < 3) {
-                                log(errorMsg, 'info');
+                            if (data.line) {
+                                errorMsg += ' (line ' + data.line + ')';
+                            }
+
+                            if (data.debug) {
+                                errorMsg += ' [debug: ' + JSON.stringify(data.debug) + ']';
+                            }
+
+                            // Always log exceptions, but only log "no selection" on first few polls
+                            if (data.message || lastSelectedNodeId !== null || pollCount < 3) {
+                                log(errorMsg, data.message ? 'error' : 'info');
                                 lastSelectedNodeId = null;
                                 displayNoSelection();
                             }
