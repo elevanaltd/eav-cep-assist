@@ -295,9 +295,15 @@
                         var data = JSON.parse(result);
 
                         if (data.error) {
-                            // No selection or error
-                            if (lastSelectedNodeId !== null) {
-                                log('Selection cleared', 'info');
+                            // Log the error with debug info if available
+                            var errorMsg = data.error;
+                            if (data.debug) {
+                                errorMsg += ' (debug: ' + JSON.stringify(data.debug) + ')';
+                            }
+
+                            // Only log if this is a NEW error state
+                            if (lastSelectedNodeId !== null || pollCount < 3) {
+                                log(errorMsg, 'info');
                                 lastSelectedNodeId = null;
                                 displayNoSelection();
                             }

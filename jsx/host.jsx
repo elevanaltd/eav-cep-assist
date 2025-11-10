@@ -34,9 +34,51 @@ var EAVIngest = (function() {
 
             var selection = project.getSelection();
 
-            if (!selection || selection.length === 0) {
 
-                return JSON.stringify({ error: "No clips selected" });
+
+            // DEBUG: Log what getSelection() returns
+
+            var selectionType = typeof selection;
+
+            var selectionLength = selection ? selection.length : "null";
+
+
+
+            if (!selection) {
+
+                return JSON.stringify({
+
+                    error: "getSelection() returned null/undefined",
+
+                    debug: {
+
+                        selectionType: selectionType,
+
+                        hasProject: !!project
+
+                    }
+
+                });
+
+            }
+
+
+
+            if (selection.length === 0) {
+
+                return JSON.stringify({
+
+                    error: "No clips selected",
+
+                    debug: {
+
+                        selectionType: selectionType,
+
+                        selectionLength: selectionLength
+
+                    }
+
+                });
 
             }
 
