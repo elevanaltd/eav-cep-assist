@@ -578,8 +578,9 @@
             this.showStatus('Updating Premiere Pro...', 'info');
 
             // Call ExtendScript to update PP
-            var metadataJson = JSON.stringify(metadata).replace(/"/g, '\\"');
-            var script = 'EAVIngest.updateClipMetadata("' + PanelState.currentClip.nodeId + '", JSON.parse("' + metadataJson + '"))';
+            // Properly format the metadata object for ExtendScript using JSON.parse with single quotes
+            var metadataJson = JSON.stringify(metadata);
+            var script = 'EAVIngest.updateClipMetadata("' + PanelState.currentClip.nodeId + '", JSON.parse(\'' + metadataJson.replace(/'/g, "\\'") + '\'))';
 
             csInterface.evalScript(script, function(result) {
                 try {
