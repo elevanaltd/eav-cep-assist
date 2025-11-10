@@ -1,0 +1,485 @@
+================================================================================
+CEP PANEL IMPLEMENTATION FILES - COMPLETE INDEX
+EAV Ingest Assistant for Premiere Pro
+================================================================================
+
+ABSOLUTE PATHS: /home/user/eav-cep-assist/
+
+================================================================================
+1. MANIFEST & CONFIGURATION FILES
+================================================================================
+
+CSXS/manifest.xml (109 lines)
+  Purpose: CEP Extension manifest - declares plugin to Premiere Pro
+  Key Content:
+    - ExtensionBundleId: "com.elevana.eav-cep-assist"
+    - Host: PPRO version [14.0, 99.9]
+    - RequiredRuntime: CSXS 9.0
+    - MainPath: ./index.html
+    - ScriptPath: ./jsx/host.jsx
+    - Panel Geometry: 500x200px (min 400x150, max 1200x400)
+    - AutoVisible: true
+  Integration Points:
+    - Loaded by PP on startup
+    - Validated against host version
+    - Determines panel layout and menu name
+
+.debug (15 lines)
+  Purpose: Development debug configuration (overrides manifest.xml)
+  Key Content:
+    - Extension ID matching manifest
+    - Host: PPRO Port 8092
+  Usage:
+    - Enables Chrome DevTools debugging at localhost:8092
+    - Only used when PlayerDebugMode=1
+    - Remove or disable for production
+
+package.json (68 lines)
+  Purpose: Package metadata and CEP configuration
+  Key Content:
+    - name: "eav-cep-assist"
+    - version: "1.0.0"
+    - cep.id: "com.elevana.eav-cep-assist"
+    - cep.hosts: ["PPRO"]
+    - cep.minVersion: "14.0"
+    - cep.debugPort: 8092
+  Usage: npm/build tool reference, not used at runtime
+
+================================================================================
+2. EXTENDSCRIPT BRIDGE (HOST COMMUNICATION LAYER)
+================================================================================
+
+jsx/host.jsx (476 lines)
+  Purpose: ExtendScript module for Premiere Pro API calls
+  Architecture: Module Pattern (IIFE - Immediately Invoked Function Expression)
+  
+  Public Functions (return JSON):
+    ✓ getSelectedClips() 
+      Returns: { clips: [{nodeId, name, treePath, metadata, ...}] }
+      Or: { error: "message" }
+      
+    ✓ updateClipMetadata(nodeId, metadata)
+      Params: metadata = {name, tapeName, description, shot}
+      Returns: { success: true, updatedName: "..." }
+      Or: { success: false, error: "..." }
+      
+    ✓ getAllProjectClips()
+      Returns: { clips: [{nodeId, name, treePath}] }
+      Usage: Navigation data for Previous/Next buttons
+      
+    ✓ selectClip(nodeId)
+      Effect: Selects clip in Project Panel
+      Returns: { success: true/false }
+      
+    ✓ openInSourceMonitor(nodeId)
+      Effect: Opens clip in PP Source Monitor
+      Returns: { success: true/false }
+      
+    ✓ parseStructuredNaming(filename)
+      Returns: { id: "8digits", originalFilename: "..." }
+  
+  Private Functions (helpers):
+    - findProjectItemByNodeId(parentItem, nodeId) - Recursive tree search
+    - collectClipsRecursive(parentItem, clips) - Gather all clips
+  
+  Key Patterns:
+    - All functions return JSON strings (required by evalScript)
+    - Error handling with try/catch
+    - Recursive tree traversal for clip lookup
+    - nodeId as unique identifier (survives selection changes)
+    - Metadata fields: Tape, Description, Shot (survive offline)
+
+API Usage:
+  var project = app.project;
+  var selection = project.getSelection();
+  item.getProjectColumnsMetadata().Description
+  item.setProjectColumnsMetadata(["Description"], ["value"])
+  app.sourceMonitor.openProjectItem(item)
+
+================================================================================
+3. PANEL JAVASCRIPT LOGIC
+================================================================================
+
+js/CSInterface.js (1123 lines - ADOBE LIBRARY)
+  Purpose: Adobe CEP communication library
+  Key Methods (DO NOT MODIFY):
+    - CSInterface() - Constructor
+    - csInterface.evalScript(script, callback) - Execute ExtendScript
+    - csInterface.addEventListener(type, listener) - Register listeners
+  Status: Read-only library file, included for reference
+
+js/main.js (878 lines)
+  Purpose: Panel UI logic and event handling
+  Architecture: IIFE with global state variables
+  
+  Global State:
+    var csInterface = new CSInterface();
+    var currentClip = null;
+    var allProjectClips = [];
+    var currentClipIndex = -1;
+    var lastClipNodeId = null;
+    var elements = { /* 15+ cached DOM references */ };
+  
+  Initialization:
+    init()
+      ├─ setupEventListeners()
+      ├─ loadSelectedClip()
+      └─ console.log('Panel initialized')
+  
+  Core Functions:
+    
+    ✓ loadSelectedClip()
+      Calls: evalScript('EAVIngest.getSelectedClips()')
+      Flow: Parse JSON → loadClipIntoForm() → loadAllProjectClips()
+      
+    ✓ loadClipIntoForm(clip)
+      Parses: ID from filename (regex: /^(\d{8})/)
+      Parses: Components from name (format: id-location-subject-action-shotType)
+      Updates: All form fields
+      Triggers: updateGeneratedName()
+      Shows/hides: Action field (videos only)
+      
+    ✓ applyMetadata()
+      Validates: Generated name not empty
+      Builds: Metadata object {name, tapeName, description, shot}
+      Calls: evalScript with JSON parameters (escaped)
+      Shows: Success/error messages
+      
+    ✓ updateGeneratedName()
+      Reads: Form field values
+      Builds: id-location-subject-action-shotType
+      Displays: Live preview in #generatedName
+      Excludes: Hidden fields (e.g., action for images)
+      
+    ✓ checkSelectionChange() [polling]
+      Runs: Every 2 seconds via setInterval
+      Compares: newNodeId vs lastClipNodeId
+      Updates: Only if changed (avoid flicker)
+      
+    ✓ navigateToPrevious() / navigateToNext()
+      Uses: currentClipIndex and allProjectClips array
+      Calls: selectAndLoadClip(nodeId)
+      Disables: Buttons at boundaries
+      
+    ✓ selectAndLoadClip(nodeId)
+      Calls: evalScript('EAVIngest.selectClip(nodeId)')
+      Waits: 100ms for PP to update
+      Reloads: Selected clip into form
+      
+    ✓ showStatus(message, type)
+      Types: 'success', 'error', 'info'
+      Display: Updates #statusMsg element
+      Auto-hide: Success/info after 3 seconds
+      
+    ✓ openInSourceMonitor()
+      Calls: evalScript('EAVIngest.openInSourceMonitor(nodeId)')
+      Effect: Opens clip in PP Source Monitor for review
+  
+  Event Listeners:
+    - #refreshBtn → loadSelectedClip()
+    - #location, #subject, #action, #shotType → updateGeneratedName()
+    - #prevBtn → navigateToPrevious()
+    - #nextBtn → navigateToNext()
+    - #openSourceBtn → openInSourceMonitor()
+    - #applyBtn → applyMetadata()
+    - setInterval 2000ms → checkSelectionChange()
+
+  Key Patterns:
+    - Element caching (DOM refs cached at init)
+    - evalScript callbacks (async, JSON parsing)
+    - State management (clip index, selection tracking)
+    - Polling for selection changes (CEP limitation)
+    - Error handling (try/catch for JSON parsing)
+
+================================================================================
+4. USER INTERFACE
+================================================================================
+
+index.html (251 lines)
+  Purpose: Panel form layout and semantic HTML
+  Structure:
+    
+    <div class="panel-container">
+      
+      <div class="header">
+        <div class="clip-info">
+          <span id="clipName"> - Shows "No clip selected" or filename
+          <span id="clipPath"> - Shows bin path (tree location)
+        </div>
+        <button id="refreshBtn"> - Manual reload trigger
+      </div>
+      
+      <div class="form-strip"> - Horizontal field layout
+        <div class="form-group compact">
+          <input id="id" readonly> - Auto-extracted from filename
+        </div>
+        <div class="form-group">
+          <input id="location" list="locationList">
+          <datalist id="locationList"> - kitchen, bathroom, bedroom, etc.
+        </div>
+        <div class="form-group">
+          <input id="subject" list="subjectList">
+          <datalist id="subjectList"> - sink, oven, window, door, etc.
+        </div>
+        <div class="form-group" id="actionGroup"> - Video only
+          <input id="action" list="actionList">
+          <datalist id="actionList"> - cleaning, installing, repairing, etc.
+        </div>
+        <div class="form-group">
+          <select id="shotType">
+            <option value="">--</option>
+            <option value="WS">WS (Wide Shot)</option>
+            <option value="MID">MID (Medium Shot)</option>
+            <option value="CU">CU (Close Up)</option>
+            ... more shot types
+      </div>
+      
+      <div class="name-preview">
+        <label>Generated Name:</label>
+        <div id="generatedName"> - Live preview: id-loc-subj-action-shotType
+      </div>
+      
+      <div class="metadata-section">
+        <label for="metadata">Metadata Tags (comma-separated):</label>
+        <input type="text" id="metadata">
+      </div>
+      
+      <div class="action-bar">
+        <div class="nav-buttons">
+          <button id="prevBtn">◀ Previous</button>
+          <button id="nextBtn">Next ▶</button>
+        </div>
+        <div class="action-buttons">
+          <button id="openSourceBtn" class="secondary-btn">
+            Open in Source Monitor
+          </button>
+          <button id="applyBtn" class="primary-btn">
+            Apply to Premiere
+          </button>
+        </div>
+      </div>
+      
+      <div id="statusMsg" class="status-msg"></div>
+      
+      <div id="aiSection" style="display: none;">
+        <!-- Phase 2: AI Analysis (not yet implemented) -->
+      </div>
+    </div>
+  
+  Scripts included:
+    <script src="js/CSInterface.js"></script> - Adobe CEP library
+    <script src="js/main.js"></script> - Panel logic
+  
+  Key Elements for JS Binding:
+    - All form inputs have ids matching main.js element cache
+    - Datalists provide autocomplete suggestions
+    - Read-only #id field (auto-populated from filename)
+    - Conditional #actionGroup (hidden for images)
+    - Status message container with class-based styling
+
+css/style.css (714 lines)
+  Purpose: Adobe-themed styling with responsive layout
+  
+  Color Palette:
+    - Dark background: #2b2b2b
+    - Panel backgrounds: #323232, #3a3a3a
+    - Input background: #404040
+    - Input border: #505050
+    - Light text: #d0d0d0, #e0e0e0
+    - Adobe blue: #0078d4 (focus, primary button)
+    - Success green: #6bcf6b
+    - Error red: #cf6b6b
+    - Info cyan: #6b9fcf
+  
+  Layout Patterns:
+    - .panel-container: flex column, 8px gaps
+    - .form-strip: flex row wrap, responsive
+    - .form-group: flex 1 (grows), min-width 100px
+    - .form-group.compact: flex 0 0 80px (fixed ID field)
+    - .generated-name-text: monospace, cyan (#4ec9b0)
+    - @media (max-width: 500px): column layout for narrow panels
+  
+  Interactive States:
+    - input:focus → #0078d4 border, #454545 background
+    - button:hover → background lighten
+    - button:disabled → opacity 0.5, cursor not-allowed
+    - .status-msg → display: none by default
+    - .status-msg.success/error/info → display: block with colors
+  
+  Key Features:
+    - Scrollbar styling (webkit)
+    - Smooth transitions (0.15s ease)
+    - Label styling (uppercase, small, #a0a0a0)
+    - Icon button styling
+    - Disabled field styling (.readonly-field)
+
+================================================================================
+5. DOCUMENTATION
+================================================================================
+
+README.md (118 lines)
+  Quick start guide with:
+    - Feature overview (Phase 1 & 2)
+    - Installation instructions (macOS & Windows)
+    - Usage workflow
+    - Structured naming format
+    - Version info
+
+ARCHITECTURE-PATTERNS.md (1140 lines) [NEW - Generated]
+  Comprehensive architectural analysis covering:
+    - CEP panel structure & files
+    - Manifest configuration (detailed breakdown)
+    - Host communication patterns (ExtendScript bridge)
+    - Panel lifecycle & initialization
+    - UI form layout & data binding
+    - CSS styling patterns
+    - Build & packaging configuration
+    - Navigation patterns
+    - Error handling
+    - Complete workflow diagrams
+    - Best practices demonstrated
+    - Integration with Premiere Pro
+
+QUICK-REFERENCE.md (410 lines) [NEW - Generated]
+  Developer reference guide:
+    - Critical files & locations
+    - Key communication patterns
+    - Structured naming format
+    - PP API calls
+    - Installation instructions
+    - State management
+    - Panel initialization sequence
+    - User workflow
+    - Debugging tips
+    - Performance considerations
+    - Common issues & solutions
+
+docs/ADR-001-CEP-ARCHITECTURE.md (88 lines)
+  Architecture decision record:
+    - Context (why CEP vs Electron/UXP)
+    - Decision (use CEP panel)
+    - Alternatives considered
+    - Consequences (positive & negative)
+
+================================================================================
+6. FILE SIZE SUMMARY
+================================================================================
+
+jsx/host.jsx                      7.8 KB
+js/CSInterface.js                42.8 KB (Adobe library - read-only)
+js/main.js                       14.6 KB
+index.html                        5.4 KB
+css/style.css                     6.6 KB
+CSXS/manifest.xml               ~3 KB
+.debug                          ~0.2 KB
+package.json                    ~1 KB
+
+DOCUMENTATION GENERATED:
+ARCHITECTURE-PATTERNS.md         37 KB
+QUICK-REFERENCE.md              9.3 KB
+
+TOTAL PROJECT:                 ~127 KB (mostly CSInterface.js library)
+
+================================================================================
+7. COMMUNICATION FLOW DIAGRAM
+================================================================================
+
+PREMIERE PRO (C++ Host Application)
+         ↑
+         │ ExtendScript API calls
+         │ (app.project, app.sourceMonitor, etc.)
+         │
+    ┌────▼────────────────────────────────┐
+    │ ExtendScript Engine (PP Built-in)   │
+    │                                     │
+    │  jsx/host.jsx (EAVIngest module)   │
+    │  ├─ getSelectedClips()             │
+    │  ├─ updateClipMetadata()           │
+    │  ├─ getAllProjectClips()           │
+    │  ├─ selectClip()                   │
+    │  └─ openInSourceMonitor()          │
+    │                                     │
+    └────┬────────────────────────────────┘
+         │ Return JSON strings
+         │
+    ┌────▼────────────────────────────────┐
+    │ CEP Communication Bridge             │
+    │ (CSInterface.evalScript callback)   │
+    └────┬────────────────────────────────┘
+         │ Parse JSON responses
+         │
+    ┌────▼────────────────────────────────┐
+    │ Panel JavaScript Context (CEF)      │
+    │                                     │
+    │  js/main.js (Panel Logic)          │
+    │  ├─ init()                         │
+    │  ├─ loadSelectedClip()             │
+    │  ├─ applyMetadata()                │
+    │  ├─ updateGeneratedName()          │
+    │  ├─ checkSelectionChange()         │
+    │  └─ Event handlers                 │
+    │                                     │
+    │  HTML5 DOM                          │
+    │  ├─ index.html (structure)         │
+    │  ├─ css/style.css (styling)        │
+    │  └─ Form inputs/buttons            │
+    │                                     │
+    └──────────────────────────────────────┘
+              ↓
+           User UI
+         (Panel displayed
+          in PP workspace)
+
+================================================================================
+8. INSTALLATION LOCATION
+================================================================================
+
+macOS:
+  ~/Library/Application Support/Adobe/CEP/extensions/eav-cep-assist/
+  
+Windows:
+  C:\Users\[Username]\AppData\Roaming\Adobe\CEP\extensions\eav-cep-assist\
+
+Directory structure same on both platforms:
+  eav-cep-assist/
+  ├── CSXS/manifest.xml
+  ├── jsx/host.jsx
+  ├── js/
+  │   ├── CSInterface.js
+  │   └── main.js
+  ├── css/style.css
+  ├── index.html
+  ├── .debug
+  └── package.json
+
+================================================================================
+9. KEY INTEGRATION POINTS FOR INGEST-ASSISTANT
+================================================================================
+
+From /home/user/ingest-assistant (Electron app patterns):
+
+REUSABLE CODE:
+✓ AIService class structure (fetch-based API calls)
+✓ Lexicon data types (preferredTerms, excludedTerms, synonymMapping)
+✓ Metadata response parsing logic
+✓ React component state patterns
+
+ADAPTABLE CODE:
+~ ConfigManager (file I/O → UXP storage API)
+~ Type definitions (FileMetadata → ClipMetadata)
+~ UI form field naming conventions
+
+NOT REUSABLE (Different platforms):
+✗ FileManager (PP provides clips, no file scanning needed)
+✗ MetadataStore (PP project database replaces JSON)
+✗ MetadataWriter (PP metadata columns replace file writes)
+
+================================================================================
+END OF INDEX
+================================================================================
+
+Generated: 2025-11-10
+Location: /home/user/eav-cep-assist/
+Repository: https://github.com/elevanaltd/eav-cep-assist.git
+Target: Premiere Pro CEP Extension (14.0+)
+Status: Phase 1 Complete (Metadata tagging workflow)
