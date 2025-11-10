@@ -59,8 +59,10 @@
             </div>
         </aside>
 
-        <!-- CENTER PANEL: Thumbnail Viewer (40%) -->
-        <main class="thumbnail-viewer" id="thumbnailViewer">
+        <!-- RIGHT PANEL: Thumbnail Viewer (top) + Metadata Form (bottom) -->
+        <div class="right-panel-container">
+            <!-- TOP: Thumbnail Viewer -->
+            <main class="thumbnail-viewer" id="thumbnailViewer">
             <!-- Thumbnail Display -->
             <div class="thumbnail-container">
                 <div class="thumbnail-placeholder" id="thumbnailPlaceholder">
@@ -97,10 +99,10 @@
 
             <!-- Status Messages -->
             <div id="thumbnailStatus" class="thumbnail-status"></div>
-        </main>
+            </main>
 
-        <!-- RIGHT PANEL: Metadata Form (35%) -->
-        <aside class="metadata-form" id="metadataForm">
+            <!-- BOTTOM: Metadata Form -->
+            <aside class="metadata-form" id="metadataForm">
             <!-- Form Header -->
             <div class="form-header">
                 <h3>Metadata</h3>
@@ -219,7 +221,8 @@
 
             <!-- Status Messages -->
             <div id="formStatus" class="form-status"></div>
-        </aside>
+            </aside>
+        </div>
 
     </div>
 
