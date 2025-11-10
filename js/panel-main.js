@@ -52,9 +52,11 @@
         },
 
         init: function() {
-            console.log('[ClipBrowser] Initializing...');
+            console.log('[ClipBrowser] ========== INITIALIZING ==========');
+            console.log('[ClipBrowser] Starting initialization...');
 
             // Get DOM elements
+            console.log('[ClipBrowser] Getting DOM elements...');
             this.elements = {
                 searchInput: document.getElementById('clipSearch'),
                 clearSearchBtn: document.getElementById('clearSearch'),
@@ -65,12 +67,17 @@
                 clipCount: document.getElementById('clipCount'),
                 refreshBtn: document.getElementById('refreshClips')
             };
+            console.log('[ClipBrowser] ✓ DOM elements retrieved');
 
             // Set up event listeners
+            console.log('[ClipBrowser] Setting up event listeners...');
             this.setupEventListeners();
+            console.log('[ClipBrowser] ✓ Event listeners set up');
 
             // Load all clips from project
+            console.log('[ClipBrowser] About to call loadAllClips()...');
             this.loadAllClips();
+            console.log('[ClipBrowser] ✓ loadAllClips() called');
         },
 
         setupEventListeners: function() {
@@ -131,9 +138,33 @@
         loadAllClips: function() {
             var self = this;
             console.log('[ClipBrowser] ========== LOADING ALL CLIPS ==========');
+            console.log('[ClipBrowser] csInterface object:', csInterface);
+            console.log('[ClipBrowser] typeof csInterface:', typeof csInterface);
 
-            csInterface.evalScript('EAVIngest.getAllProjectClips()', function(result) {
-                console.log('[ClipBrowser] getAllProjectClips raw result:', result);
+            if (!csInterface) {
+                console.error('[ClipBrowser] ✗ csInterface is not available!');
+                self.showEmptyState('CSInterface not initialized');
+                return;
+            }
+
+            // First test if ExtendScript is available
+            console.log('[ClipBrowser] Testing ExtendScript availability...');
+            csInterface.evalScript('typeof EAVIngest', function(testResult) {
+                console.log('[ClipBrowser] typeof EAVIngest:', testResult);
+
+                if (testResult === 'undefined') {
+                    console.error('[ClipBrowser] ✗ EAVIngest is not defined in ExtendScript!');
+                    self.showEmptyState('ExtendScript not loaded');
+                    return;
+                }
+
+                console.log('[ClipBrowser] ✓ EAVIngest is available');
+                console.log('[ClipBrowser] Calling getAllProjectClips...');
+
+                csInterface.evalScript('EAVIngest.getAllProjectClips()', function(result) {
+                    console.log('[ClipBrowser] evalScript callback fired!');
+                    console.log('[ClipBrowser] getAllProjectClips raw result:', result);
+                    console.log('[ClipBrowser] result type:', typeof result);
 
                 try {
                     var data = JSON.parse(result);
@@ -180,6 +211,7 @@
                     console.error('[ClipBrowser] Raw result was:', result);
                     self.showEmptyState('Failed to load clips');
                 }
+                });
             });
         },
 
