@@ -238,15 +238,31 @@
                 var extensionPath = csInterface.getSystemPath(SystemPath.EXTENSION);
                 var jsxPath = extensionPath + '/jsx/host.jsx';
 
+                log('Extension path: ' + extensionPath, 'info');
+                log('JSX path: ' + jsxPath, 'info');
+
                 csInterface.evalScript('$.evalFile("' + jsxPath + '")', function(result) {
-                    log('ExtendScript evalFile completed', 'info');
+                    log('ExtendScript evalFile result: ' + (result || '(empty)'), 'info');
 
                     // Verify EAVIngest module exists
                     csInterface.evalScript('typeof EAVIngest', function(typeResult) {
+                        log('EAVIngest type check result: ' + typeResult, 'info');
+
                         if (typeResult === 'object') {
                             log('✓ EAVIngest module loaded successfully', 'success');
+
+                            // Test if we can call getSelectedClips
+                            csInterface.evalScript('typeof EAVIngest.getSelectedClips', function(methodType) {
+                                log('EAVIngest.getSelectedClips type: ' + methodType, 'info');
+                            });
                         } else {
                             log('✗ EAVIngest module failed to load (type: ' + typeResult + ')', 'error');
+                            log('Attempting manual load...', 'info');
+
+                            // Try loading the JSX content directly
+                            csInterface.evalScript('$.evalFile("' + jsxPath.replace(/\\/g, '/') + '")', function(retry) {
+                                log('Retry result: ' + (retry || '(empty)'), 'info');
+                            });
                         }
                     });
                 });
@@ -260,6 +276,21 @@
                 pollCount++;
 
                 csInterface.evalScript('EAVIngest.getSelectedClips()', function(result) {
+                    // Log the raw result for debugging
+                    console.log('[RAW RESULT]', result);
+
+                    // Check if result is undefined or null
+                    if (!result) {
+                        log('No result returned from ExtendScript', 'error');
+                        return;
+                    }
+
+                    // Check if result looks like an error string
+                    if (typeof result === 'string' && result.indexOf('Error') === 0) {
+                        log('ExtendScript error: ' + result, 'error');
+                        return;
+                    }
+
                     try {
                         var data = JSON.parse(result);
 
@@ -288,6 +319,7 @@
                         }
                     } catch (e) {
                         log('Parse error: ' + e.message, 'error');
+                        log('Raw result was: "' + result.substring(0, 100) + '..."', 'error');
                     }
                 });
             }
