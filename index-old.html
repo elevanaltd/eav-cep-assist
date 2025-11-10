@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>EAV Ingest Assistant</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+
+    <div id="app" class="panel-container">
+
+        <!-- Header with clip info -->
+
+        <div class="header">
+
+            <div class="clip-info">
+
+                <span id="clipName" class="clip-name">No clip selected</span>
+
+                <span id="clipPath" class="clip-path"></span>
+
+            </div>
+
+            <button id="refreshBtn" class="icon-btn" title="Refresh from selection">
+
+                <svg width="16" height="16" viewBox="0 0 16 16">
+
+                    <path fill="currentColor" d="M13.65 2.35C12.2 0.9 10.21 0 8 0 3.58 0 0 3.58 0 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L9 7h7V0l-2.35 2.35z"/>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- Form Fields (horizontal strip layout) -->
+
+        <div class="form-strip">
+
+            <!-- ID Field (read-only, extracted from filename) -->
+
+            <div class="form-group compact">
+
+                <label for="id">ID</label>
+
+                <input type="text" id="id" readonly class="readonly-field" placeholder="Auto">
+
+            </div>
+
+
+
+            <!-- Location -->
+
+            <div class="form-group">
+
+                <label for="location">Location</label>
+
+                <input type="text" id="location" placeholder="e.g. kitchen" list="locationList">
+
+                <datalist id="locationList">
+
+                    <option value="kitchen">
+
+                    <option value="bathroom">
+
+                    <option value="bedroom">
+
+                    <option value="living-room">
+
+                    <option value="exterior">
+
+                </datalist>
+
+            </div>
+
+
+
+            <!-- Subject -->
+
+            <div class="form-group">
+
+                <label for="subject">Subject</label>
+
+                <input type="text" id="subject" placeholder="e.g. oven" list="subjectList">
+
+                <datalist id="subjectList">
+
+                    <option value="sink">
+
+                    <option value="oven">
+
+                    <option value="window">
+
+                    <option value="door">
+
+                    <option value="countertop">
+
+                </datalist>
+
+            </div>
+
+
+
+            <!-- Action (videos only) -->
+
+            <div class="form-group" id="actionGroup">
+
+                <label for="action">Action</label>
+
+                <input type="text" id="action" placeholder="e.g. cleaning" list="actionList">
+
+                <datalist id="actionList">
+
+                    <option value="cleaning">
+
+                    <option value="installing">
+
+                    <option value="repairing">
+
+                    <option value="painting">
+
+                    <option value="demolishing">
+
+                </datalist>
+
+            </div>
+
+
+
+            <!-- Shot Type -->
+
+            <div class="form-group">
+
+                <label for="shotType">Shot Type</label>
+
+                <select id="shotType">
+
+                    <option value="">--</option>
+
+                    <option value="WS">WS (Wide Shot)</option>
+
+                    <option value="MID">MID (Medium Shot)</option>
+
+                    <option value="CU">CU (Close Up)</option>
+
+                    <option value="UNDER">UNDER (Underslung)</option>
+
+                    <option value="FP">FP (First Person)</option>
+
+                    <option value="TRACK">TRACK (Tracking Shot)</option>
+
+                    <option value="ESTAB">ESTAB (Establishing)</option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Generated Name Preview -->
+
+        <div class="name-preview">
+
+            <label>Generated Name:</label>
+
+            <div id="generatedName" class="generated-name-text">-</div>
+
+        </div>
+
+
+
+        <!-- Metadata Tags -->
+
+        <div class="metadata-section">
+
+            <label for="metadata">Metadata Tags (comma-separated):</label>
+
+            <input type="text" id="metadata" placeholder="e.g. before, wide-angle, natural-light">
+
+        </div>
+
+
+
+        <!-- Action Bar -->
+
+        <div class="action-bar">
+
+            <div class="nav-buttons">
+
+                <button id="prevBtn" class="nav-btn">◀ Previous</button>
+
+                <button id="nextBtn" class="nav-btn">Next ▶</button>
+
+            </div>
+
+
+
+            <div class="action-buttons">
+
+                <button id="openSourceBtn" class="secondary-btn">Open in Source Monitor</button>
+
+                <button id="applyBtn" class="primary-btn">Apply to Premiere</button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Status Messages -->
+
+        <div id="statusMsg" class="status-msg"></div>
+
+
+
+        <!-- Phase 2: AI Analysis (hidden for now) -->
+
+        <div id="aiSection" class="ai-section" style="display: none;">
+
+            <button id="analyzeBtn" class="secondary-btn">🤖 AI Analyze</button>
+
+            <div id="aiStatus" class="ai-status"></div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Load CEP Interface Library -->
+
+    <script type="text/javascript" src="js/CSInterface.js"></script>
+
+    <script type="text/javascript" src="js/main.js"></script>
+
+</body>
+
+</html>
