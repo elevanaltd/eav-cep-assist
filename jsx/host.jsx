@@ -12,6 +12,36 @@ var EAVIngest = (function() {
 
     /**
 
+     * Escape XML entities to prevent injection attacks
+
+     * @param {string} str - Raw string value
+
+     * @returns {string} XML-safe escaped string
+
+     */
+
+    function escapeXML(str) {
+
+        if (!str) return '';
+
+        return String(str)
+
+            .replace(/&/g, '&amp;')
+
+            .replace(/</g, '&lt;')
+
+            .replace(/>/g, '&gt;')
+
+            .replace(/"/g, '&quot;')
+
+            .replace(/'/g, '&apos;');
+
+    }
+
+
+
+    /**
+
      * Get currently selected project item(s) from Project Panel
 
      * Returns array of selected clips with their metadata
@@ -144,31 +174,285 @@ var EAVIngest = (function() {
 
 
 
-            // Update Tape Name field (survives offline)
+            // Update metadata via XMP
 
-            if (metadata.tapeName !== undefined) {
+            try {
 
-                item.setProjectColumnsMetadata(["Tape"], [metadata.tapeName]);
+                var xmpString = item.getXMPMetadata();
 
-            }
-
-
-
-            // Update Description field (survives offline)
-
-            if (metadata.description !== undefined) {
-
-                item.setProjectColumnsMetadata(["Description"], [metadata.description]);
-
-            }
+                $.writeln("DEBUG SAVE: Got XMP (length: " + xmpString.length + ")");
 
 
 
-            // Update Shot field (survives offline)
+                // ========== DUBLIN CORE NAMESPACE FIELDS ==========
 
-            if (metadata.shot !== undefined) {
+                // Collect all Dublin Core fields to update
 
-                item.setProjectColumnsMetadata(["Shot"], [metadata.shot]);
+                var dcFields = [];
+
+                if (metadata.description !== undefined) {
+
+                    dcFields.push({
+
+                        tag: 'dc:description',
+
+                        value: '<dc:description><rdf:Alt><rdf:li xml:lang="x-default">' + escapeXML(metadata.description) + '</rdf:li></rdf:Alt></dc:description>',
+
+                        regex: /<dc:description[^>]*>[\s\S]*?<\/dc:description>/
+
+                    });
+
+                }
+
+                if (metadata.identifier !== undefined) {
+
+                    dcFields.push({
+
+                        tag: 'dc:identifier',
+
+                        value: '<dc:identifier>' + escapeXML(metadata.identifier) + '</dc:identifier>',
+
+                        regex: /<dc:identifier[^>]*>.*?<\/dc:identifier>/
+
+                    });
+
+                }
+
+
+
+                // Update Dublin Core fields in their namespace block
+
+                if (dcFields.length > 0) {
+
+                    // Find the Dublin Core rdf:Description block
+
+                    var dcBlockMatch = xmpString.match(/<rdf:Description[^>]*xmlns:dc="http:\/\/purl\.org\/dc\/elements\/1\.1\/"[^>]*>([\s\S]*?)<\/rdf:Description>/);
+
+
+
+                    if (dcBlockMatch) {
+
+                        // DC block exists - update fields within it
+
+                        var dcBlockContent = dcBlockMatch[1];
+
+                        var dcBlockFull = dcBlockMatch[0];
+
+
+
+                        for (var i = 0; i < dcFields.length; i++) {
+
+                            var field = dcFields[i];
+
+                            if (dcBlockContent.indexOf('<' + field.tag) > -1) {
+
+                                // Field exists - replace it
+
+                                dcBlockContent = dcBlockContent.replace(field.regex, field.value);
+
+                            } else {
+
+                                // Field doesn't exist - append it
+
+                                dcBlockContent += field.value;
+
+                            }
+
+                            $.writeln("DEBUG SAVE: " + field.tag + " updated");
+
+                        }
+
+
+
+                        // Replace the entire DC block with updated content
+
+                        var newDcBlock = dcBlockFull.substring(0, dcBlockFull.lastIndexOf('</rdf:Description>')) + dcBlockContent + '</rdf:Description>';
+
+                        xmpString = xmpString.replace(dcBlockFull, newDcBlock);
+
+
+
+                    } else {
+
+                        // DC block doesn't exist - create it
+
+                        var dcBlock = '<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">';
+
+                        for (var i = 0; i < dcFields.length; i++) {
+
+                            dcBlock += dcFields[i].value;
+
+                            $.writeln("DEBUG SAVE: " + dcFields[i].tag + " created");
+
+                        }
+
+                        dcBlock += '</rdf:Description>';
+
+
+
+                        // Insert before closing </rdf:RDF>
+
+                        xmpString = xmpString.replace(/<\/rdf:RDF>/, dcBlock + '</rdf:RDF>');
+
+                    }
+
+                }
+
+
+
+                // ========== XMP NAMESPACE FIELDS ==========
+
+                // Collect all XMP fields to update
+
+                var xmpFields = [];
+
+                if (metadata.shot !== undefined) {
+
+                    xmpFields.push({
+
+                        tag: 'xmp:Shot',
+
+                        value: '<xmp:Shot>' + escapeXML(metadata.shot) + '</xmp:Shot>',
+
+                        regex: /<xmp:Shot[^>]*>.*?<\/xmp:Shot>/
+
+                    });
+
+                }
+
+                if (metadata.location !== undefined) {
+
+                    xmpFields.push({
+
+                        tag: 'xmp:Location',
+
+                        value: '<xmp:Location>' + escapeXML(metadata.location) + '</xmp:Location>',
+
+                        regex: /<xmp:Location[^>]*>.*?<\/xmp:Location>/
+
+                    });
+
+                }
+
+                if (metadata.subject !== undefined) {
+
+                    xmpFields.push({
+
+                        tag: 'xmp:Subject',
+
+                        value: '<xmp:Subject>' + escapeXML(metadata.subject) + '</xmp:Subject>',
+
+                        regex: /<xmp:Subject[^>]*>.*?<\/xmp:Subject>/
+
+                    });
+
+                }
+
+                if (metadata.action !== undefined) {
+
+                    xmpFields.push({
+
+                        tag: 'xmp:Action',
+
+                        value: '<xmp:Action>' + escapeXML(metadata.action) + '</xmp:Action>',
+
+                        regex: /<xmp:Action[^>]*>.*?<\/xmp:Action>/
+
+                    });
+
+                }
+
+
+
+                // Update XMP fields in their namespace block
+
+                if (xmpFields.length > 0) {
+
+                    // Find the XMP rdf:Description block
+
+                    var xmpBlockMatch = xmpString.match(/<rdf:Description[^>]*xmlns:xmp="http:\/\/ns\.adobe\.com\/xap\/1\.0\/"[^>]*>([\s\S]*?)<\/rdf:Description>/);
+
+
+
+                    if (xmpBlockMatch) {
+
+                        // XMP block exists - update fields within it
+
+                        var xmpBlockContent = xmpBlockMatch[1];
+
+                        var xmpBlockFull = xmpBlockMatch[0];
+
+
+
+                        for (var i = 0; i < xmpFields.length; i++) {
+
+                            var field = xmpFields[i];
+
+                            if (xmpBlockContent.indexOf('<' + field.tag) > -1) {
+
+                                // Field exists - replace it
+
+                                xmpBlockContent = xmpBlockContent.replace(field.regex, field.value);
+
+                            } else {
+
+                                // Field doesn't exist - append it
+
+                                xmpBlockContent += field.value;
+
+                            }
+
+                            $.writeln("DEBUG SAVE: " + field.tag + " updated");
+
+                        }
+
+
+
+                        // Replace the entire XMP block with updated content
+
+                        var newXmpBlock = xmpBlockFull.substring(0, xmpBlockFull.lastIndexOf('</rdf:Description>')) + xmpBlockContent + '</rdf:Description>';
+
+                        xmpString = xmpString.replace(xmpBlockFull, newXmpBlock);
+
+
+
+                    } else {
+
+                        // XMP block doesn't exist - create it
+
+                        var xmpBlock = '<rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/">';
+
+                        for (var i = 0; i < xmpFields.length; i++) {
+
+                            xmpBlock += xmpFields[i].value;
+
+                            $.writeln("DEBUG SAVE: " + xmpFields[i].tag + " created");
+
+                        }
+
+                        xmpBlock += '</rdf:Description>';
+
+
+
+                        // Insert before closing </rdf:RDF>
+
+                        xmpString = xmpString.replace(/<\/rdf:RDF>/, xmpBlock + '</rdf:RDF>');
+
+                    }
+
+                }
+
+
+
+                item.setXMPMetadata(xmpString);
+
+                $.writeln("DEBUG SAVE: XMP metadata updated");
+
+
+
+            } catch (xmpError) {
+
+                $.writeln("DEBUG SAVE ERROR: " + xmpError.toString());
 
             }
 
@@ -280,25 +564,113 @@ var EAVIngest = (function() {
 
                 var metadata = {};
 
+                // Try reading from XMP metadata instead of Project Columns
+
                 try {
 
-                    var colData = item.getProjectColumnsMetadata();
+                    var xmpString = item.getXMPMetadata();
 
-                    metadata.tapeName = colData.Tape || "";
+                    $.writeln("DEBUG: Got XMP metadata (length: " + xmpString.length + ")");
 
-                    metadata.description = colData.Description || "";
 
-                    metadata.shot = colData.Shot || "";
 
-                } catch (metaError) {
+                    // Parse XMP for Dublin Core description
 
-                    // Metadata access failed for this item, use defaults
+                    var descMatch = xmpString.match(/<dc:description[^>]*>[\s\S]*?<rdf:li[^>]*>(.*?)<\/rdf:li>/);
 
-                    metadata.tapeName = "";
+                    if (descMatch) {
+
+                        metadata.description = descMatch[1] || "";
+
+                        $.writeln("DEBUG: Found description in XMP: '" + metadata.description + "'");
+
+                    } else {
+
+                        metadata.description = "";
+
+                        $.writeln("DEBUG: No description found in XMP");
+
+                    }
+
+
+
+                    // Parse Dublin Core identifier (standard XMP field)
+
+                    var identifierMatch = xmpString.match(/<dc:identifier>(.*?)<\/dc:identifier>/);
+
+                    metadata.identifier = (identifierMatch && identifierMatch[1]) ? identifierMatch[1] : "";
+
+                    $.writeln("DEBUG: Found identifier in XMP: '" + metadata.identifier + "'");
+
+
+
+                    var shotMatch = xmpString.match(/<xmp:Shot>(.*?)<\/xmp:Shot>/);
+
+                    metadata.shot = (shotMatch && shotMatch[1]) ? shotMatch[1] : "";
+
+
+
+                    var sceneMatch = xmpString.match(/<xmp:Scene>(.*?)<\/xmp:Scene>/);
+
+                    metadata.good = (sceneMatch && sceneMatch[1]) ? sceneMatch[1] : "";
+
+
+
+                    // Parse Location, Subject, Action from XMP
+
+                    var locationMatch = xmpString.match(/<xmp:Location>(.*?)<\/xmp:Location>/);
+
+                    metadata.location = (locationMatch && locationMatch[1]) ? locationMatch[1] : "";
+
+
+
+                    var subjectMatch = xmpString.match(/<xmp:Subject>(.*?)<\/xmp:Subject>/);
+
+                    metadata.subject = (subjectMatch && subjectMatch[1]) ? subjectMatch[1] : "";
+
+
+
+                    var actionMatch = xmpString.match(/<xmp:Action>(.*?)<\/xmp:Action>/);
+
+                    metadata.action = (actionMatch && actionMatch[1]) ? actionMatch[1] : "";
+
+
+
+                    $.writeln("DEBUG FINAL XMP VALUES for " + item.name + ":");
+
+                    $.writeln("  identifier: '" + metadata.identifier + "'");
+
+                    $.writeln("  description: '" + metadata.description + "'");
+
+                    $.writeln("  shot: '" + metadata.shot + "'");
+
+                    $.writeln("  good: '" + metadata.good + "'");
+
+                    $.writeln("  location: '" + metadata.location + "'");
+
+                    $.writeln("  subject: '" + metadata.subject + "'");
+
+                    $.writeln("  action: '" + metadata.action + "'");
+
+
+
+                } catch (xmpError) {
+
+                    $.writeln("DEBUG XMP ERROR: " + xmpError.toString());
+
+                    metadata.identifier = "";
 
                     metadata.description = "";
 
                     metadata.shot = "";
+
+                    metadata.good = "";
+
+                    metadata.location = "";
+
+                    metadata.subject = "";
+
+                    metadata.action = "";
 
                 }
 
@@ -314,11 +686,19 @@ var EAVIngest = (function() {
 
                     mediaPath: item.getMediaPath() || "",
 
-                    tapeName: metadata.tapeName,
+                    identifier: metadata.identifier,
 
                     description: metadata.description,
 
-                    shot: metadata.shot
+                    shot: metadata.shot,
+
+                    good: metadata.good,
+
+                    location: metadata.location,
+
+                    subject: metadata.subject,
+
+                    action: metadata.action
 
                 });
 

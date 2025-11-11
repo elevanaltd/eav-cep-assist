@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAV Ingest Assistant - Metadata</title>
+    <link rel="stylesheet" href="css/metadata-panel.css">
+</head>
+<body>
+    <!-- Metadata Panel: Form (80%) | Debug Panel (20%) -->
+    <div id="app" class="metadata-panel-container">
+
+        <!-- LEFT: METADATA FORM (80%) -->
+        <div class="metadata-form-section">
+            <!-- Form Header -->
+            <div class="form-header">
+                <h3>Metadata Editor</h3>
+                <span id="formClipName" class="form-clip-name">No clip selected</span>
+            </div>
+
+            <!-- Form Content -->
+            <div class="form-content">
+                <!-- Top Row: Identifier (20%) | Description (70%) | Good (10%) -->
+                <div class="form-row-split">
+                    <!-- Identifier (20%) -->
+                    <div class="form-group-split" style="flex: 20;">
+                        <label for="metadataTapeName">Identifier</label>
+                        <input
+                            type="text"
+                            id="metadataTapeName"
+                            readonly
+                            class="readonly-field"
+                            placeholder="Clip identifier"
+                        />
+                    </div>
+
+                    <!-- Description (70%) -->
+                    <div class="form-group-split" style="flex: 70;">
+                        <label for="metadataDescription">Description (Metadata Tags)</label>
+                        <input
+                            type="text"
+                            id="metadataDescription"
+                            placeholder="e.g. kitchen, modern, before-renovation, wide-angle"
+                        />
+                    </div>
+
+                    <!-- Good Checkbox (10%) -->
+                    <div class="form-group-split form-group-checkbox" style="flex: 10;">
+                        <label for="metadataGood">Good</label>
+                        <input
+                            type="checkbox"
+                            id="metadataGood"
+                            class="checkbox-good"
+                        />
+                    </div>
+                </div>
+
+                <!-- Single Line: Location | Subject | Action | Shot Type -->
+                <div class="form-row">
+                    <!-- Location -->
+                    <div class="form-group-inline">
+                        <label for="metadataLocation">Location</label>
+                        <input
+                            type="text"
+                            id="metadataLocation"
+                            placeholder="e.g. kitchen"
+                            list="locationList"
+                        />
+                        <datalist id="locationList">
+                            <option value="kitchen">
+                            <option value="bathroom">
+                            <option value="bedroom">
+                            <option value="living-room">
+                            <option value="exterior">
+                        </datalist>
+                    </div>
+
+                    <!-- Subject -->
+                    <div class="form-group-inline">
+                        <label for="metadataSubject">Subject</label>
+                        <input
+                            type="text"
+                            id="metadataSubject"
+                            placeholder="e.g. oven"
+                            list="subjectList"
+                        />
+                        <datalist id="subjectList">
+                            <option value="sink">
+                            <option value="oven">
+                            <option value="window">
+                            <option value="door">
+                            <option value="countertop">
+                        </datalist>
+                    </div>
+
+                    <!-- Action (videos only) -->
+                    <div class="form-group-inline" id="actionGroup">
+                        <label for="metadataAction">Action</label>
+                        <input
+                            type="text"
+                            id="metadataAction"
+                            placeholder="e.g. cleaning"
+                            list="actionList"
+                        />
+                        <datalist id="actionList">
+                            <option value="cleaning">
+                            <option value="installing">
+                            <option value="repairing">
+                            <option value="painting">
+                            <option value="demolishing">
+                        </datalist>
+                    </div>
+
+                    <!-- Shot Type (Restricted Searchable Dropdown) -->
+                    <div class="form-group-inline">
+                        <label for="metadataShotType">Shot Type</label>
+                        <div class="searchable-dropdown">
+                            <input
+                                type="text"
+                                id="metadataShotType"
+                                placeholder="Type to search..."
+                                autocomplete="off"
+                                class="searchable-input"
+                            />
+                            <div id="shotTypeDropdown" class="dropdown-list" style="display: none;">
+                                <div class="dropdown-option" data-value="WS">WS (Wide Shot)</div>
+                                <div class="dropdown-option" data-value="MID">MID (Medium Shot)</div>
+                                <div class="dropdown-option" data-value="CU">CU (Close Up)</div>
+                                <div class="dropdown-option" data-value="UNDER">UNDER (Underslung)</div>
+                                <div class="dropdown-option" data-value="FP">FP (First Person)</div>
+                                <div class="dropdown-option" data-value="TRACK">TRACK (Tracking Shot)</div>
+                                <div class="dropdown-option" data-value="ESTAB">ESTAB (Establishing)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated Name Preview -->
+                <div class="name-preview">
+                    <label>Generated Name:</label>
+                    <div id="generatedName" class="generated-name-text">-</div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <div class="nav-buttons-row">
+                    <button id="prevBtn" class="btn-nav" disabled>◀ Previous</button>
+                    <button id="applyBtn" class="btn-primary" disabled>Apply to Premiere</button>
+                    <button id="nextBtn" class="btn-nav" disabled>Next ▶</button>
+                </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="formStatus" class="form-status"></div>
+        </div>
+
+        <!-- RIGHT: DEBUG PANEL (20%) -->
+        <div class="debug-panel-section" id="debugPanel">
+            <div class="debug-header">
+                <span class="debug-title">Diagnostics</span>
+                <button id="clearDebug" class="icon-btn-small" title="Clear log">Clear</button>
+            </div>
+            <div class="debug-content" id="debugContent">
+                <div class="debug-line">
+                    <span class="debug-time">00:00:00</span>
+                    <span class="debug-message">Metadata Panel initialized</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Load CEP Interface Library -->
+    <script type="text/javascript" src="js/CSInterface.js"></script>
+    <script type="text/javascript" src="js/metadata-panel.js"></script>
+</body>
+</html>
