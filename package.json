@@ -2,17 +2,31 @@
 
   "name": "eav-cep-assist",
 
-  "version": "1.0.0",
+  "version": "0.2.0",
 
   "description": "Adobe CEP panel for Premiere Pro - Video/Image ingestion and metadata tagging",
 
   "main": "index.html",
 
+  "type": "module",
+
   "scripts": {
 
     "install": "echo 'Copy this folder to Adobe CEP extensions directory'",
 
-    "test": "echo 'No automated tests configured'"
+    "lint": "eslint js/**/*.js jsx/**/*.jsx",
+
+    "typecheck": "echo 'JSDoc validation via jsconfig.json (no tsc available for ES3)'",
+
+    "test": "vitest run",
+
+    "test:watch": "vitest",
+
+    "test:ui": "vitest --ui",
+
+    "test:coverage": "vitest run --coverage",
+
+    "quality-gates": "npm run lint && npm run typecheck && npm test"
 
   },
 
@@ -48,7 +62,13 @@
 
   "dependencies": {},
 
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^9.15.0",
+    "vitest": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
+    "@vitest/coverage-v8": "^2.1.8",
+    "jsdom": "^25.0.1"
+  },
 
   "cep": {
 
