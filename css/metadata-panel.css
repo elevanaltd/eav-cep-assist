@@ -1,0 +1,482 @@
+/* Metadata Panel - Form (80%) | Debug Panel (20%) */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 12px;
+    color: #d0d0d0;
+    background-color: #1e1e1e;
+    overflow: hidden;
+}
+
+/* ========================================
+   MAIN CONTAINER: Horizontal Split
+   ======================================== */
+
+.metadata-panel-container {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* ========================================
+   LEFT SECTION: METADATA FORM (80%)
+   ======================================== */
+
+.metadata-form-section {
+    flex: 80%;
+    background-color: #252525;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Form Header */
+.form-header {
+    padding: 12px 16px;
+    background-color: #2b2b2b;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.form-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-clip-name {
+    font-size: 11px;
+    color: #808080;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+/* Form Content */
+.form-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #b0b0b0;
+}
+
+/* Split row for Tape Name | Description | Good (20/70/10) */
+.form-row-split {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    align-items: flex-end; /* Align inputs at bottom */
+}
+
+.form-group-split {
+    min-width: 0; /* Allow flex items to shrink */
+}
+
+.form-group-split label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #b0b0b0;
+}
+
+.form-group-split input[type="text"] {
+    width: 100%;
+    padding: 6px 8px;
+    background-color: #1e1e1e;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    color: #d0d0d0;
+    font-size: 12px;
+}
+
+.form-group-split input[type="text"]:focus {
+    outline: none;
+    border-color: #0078d4;
+}
+
+/* Checkbox styling for Good field */
+.form-group-checkbox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.checkbox-good {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #0078d4;
+}
+
+/* Single-line form row */
+.form-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.form-group-inline {
+    flex: 1;
+    min-width: 0; /* Allow flex items to shrink */
+}
+
+.form-group-inline label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #b0b0b0;
+}
+
+.form-group input[type="text"],
+.form-group select,
+.form-group-inline input[type="text"],
+.form-group-inline select {
+    width: 100%;
+    padding: 6px 8px;
+    background-color: #1e1e1e;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    color: #d0d0d0;
+    font-size: 12px;
+}
+
+.form-group input[type="text"]:focus,
+.form-group select:focus,
+.form-group-inline input[type="text"]:focus,
+.form-group-inline select:focus {
+    outline: none;
+    border-color: #0078d4;
+}
+
+.form-group input.readonly-field,
+.form-group-split input.readonly-field {
+    background-color: #2b2b2b;
+    color: #808080;
+    cursor: not-allowed;
+}
+
+.form-group small {
+    display: block;
+    font-size: 10px;
+    color: #808080;
+    margin-top: 4px;
+}
+
+/* Generated Name Preview */
+.name-preview {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #2b2b2b;
+    border-radius: 4px;
+}
+
+.name-preview label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #b0b0b0;
+}
+
+.generated-name-text {
+    font-size: 13px;
+    color: #4ec9b0;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+/* Form Actions */
+.form-actions {
+    padding: 16px;
+    background-color: #2b2b2b;
+    border-top: 1px solid #3a3a3a;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background-color: #0078d4;
+    border: none;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #005a9e;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Form Status Messages */
+.form-status {
+    padding: 8px 16px;
+    font-size: 11px;
+    text-align: center;
+    min-height: 28px;
+}
+
+.form-status.info {
+    color: #4fc3f7;
+}
+
+.form-status.success {
+    color: #4ec9b0;
+}
+
+.form-status.error {
+    color: #f48771;
+}
+
+/* ========================================
+   RIGHT SECTION: DEBUG PANEL (20%)
+   ======================================== */
+
+.debug-panel-section {
+    flex: 20%;
+    background-color: #1a1a1a;
+    border-left: 2px solid #0f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background-color: #0a0a0a;
+    border-bottom: 1px solid #0f0;
+}
+
+.debug-title {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #0f0;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.icon-btn-small {
+    padding: 2px 6px;
+    background-color: transparent;
+    border: 1px solid #0f0;
+    border-radius: 3px;
+    color: #0f0;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+}
+
+.icon-btn-small:hover {
+    background-color: #0f0;
+    color: #000;
+}
+
+.debug-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.debug-line {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 2px;
+    padding: 2px 4px;
+}
+
+.debug-line.error {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.debug-time {
+    color: #666;
+    flex-shrink: 0;
+}
+
+.debug-message {
+    color: #0f0;
+    word-break: break-word;
+}
+
+.debug-line.error .debug-message {
+    color: #f00;
+}
+
+/* ========================================
+   SCROLLBAR STYLING
+   ======================================== */
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #404040;
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #505050;
+}
+
+/* Debug panel scrollbar - green theme */
+.debug-content::-webkit-scrollbar-thumb {
+    background: #0f0;
+}
+
+.debug-content::-webkit-scrollbar-thumb:hover {
+    background: #0c0;
+}
+
+/* ========================================
+   SEARCHABLE DROPDOWN
+   ======================================== */
+
+.searchable-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.searchable-input {
+    width: 100%;
+    padding: 6px 8px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 3px;
+    color: #e0e0e0;
+    font-size: 11px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.searchable-input:focus {
+    border-color: #0078d4;
+}
+
+.dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #d0d0d0;
+    transition: background-color 0.15s;
+}
+
+.dropdown-option:hover,
+.dropdown-option.highlighted {
+    background-color: #0078d4;
+    color: #fff;
+}
+
+.dropdown-option.hidden {
+    display: none;
+}
+
+/* Scrollbar styling for dropdown */
+.dropdown-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dropdown-list::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* ========================================
+   NAVIGATION BUTTONS ROW
+   ======================================== */
+
+.nav-buttons-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-nav {
+    flex: 1;
+    padding: 8px 16px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 3px;
+    color: #e0e0e0;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-nav:hover:not(:disabled) {
+    background-color: #3a3a3a;
+    border-color: #0078d4;
+}
+
+.btn-nav:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    flex: 2; /* Make apply button wider than nav buttons */
+}

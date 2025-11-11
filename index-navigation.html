@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAV Ingest Assistant - Navigation</title>
+    <link rel="stylesheet" href="css/navigation-panel.css">
+</head>
+<body>
+    <!-- Navigation Panel: Clip List (75%) + Debug Panel (25%) -->
+    <div id="app" class="navigation-panel-container">
+
+        <!-- TOP: CLIP BROWSER (75%) -->
+        <div class="clip-browser-section">
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <input
+                    type="text"
+                    id="clipSearch"
+                    placeholder="Search clips..."
+                    aria-label="Search clips"
+                />
+                <button id="clearSearch" class="icon-btn" aria-label="Clear search">✕</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filterVideo" checked>
+                    Video
+                </label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filterImage" checked>
+                    Image
+                </label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filterHasMeta">
+                    Tagged
+                </label>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="sort-row">
+                <label for="sortBy">Sort:</label>
+                <select id="sortBy" class="sort-dropdown">
+                    <option value="name">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                    <option value="bin" selected>By Bin</option>
+                </select>
+            </div>
+
+            <!-- Clip List -->
+            <div class="clip-list" id="clipList" role="list">
+                <!-- Dynamically generated clip items will go here -->
+                <div class="clip-list-empty">
+                    <p>No project loaded</p>
+                    <p class="hint">Open a Premiere Pro project</p>
+                </div>
+            </div>
+
+            <!-- Footer with count -->
+            <div class="clip-browser-footer">
+                <span id="clipCount">0 clips</span>
+                <button id="refreshClips" class="icon-btn" title="Refresh clips">
+                    <svg width="14" height="14" viewBox="0 0 16 16">
+                        <path fill="currentColor" d="M13.65 2.35C12.2 0.9 10.21 0 8 0 3.58 0 0 3.58 0 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L9 7h7V0l-2.35 2.35z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- BOTTOM: DEBUG PANEL (25%) -->
+        <div class="debug-panel-section" id="debugPanel">
+            <div class="debug-header">
+                <span class="debug-title">Diagnostics</span>
+                <button id="clearDebug" class="icon-btn-small" title="Clear log">Clear</button>
+            </div>
+            <div class="debug-content" id="debugContent">
+                <div class="debug-line">
+                    <span class="debug-time">00:00:00</span>
+                    <span class="debug-message">Navigation Panel initialized</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Load CEP Interface Library -->
+    <script type="text/javascript" src="js/CSInterface.js"></script>
+    <script type="text/javascript" src="js/navigation-panel.js"></script>
+</body>
+</html>
