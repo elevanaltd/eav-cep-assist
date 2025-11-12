@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES3",
+    "module": "none",
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "strict": false,
+    "esModuleInterop": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": []
+  },
+  "include": [
+    "jsx/**/*.jsx",
+    "jsx/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "test",
+    "js"
+  ]
+}

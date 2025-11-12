@@ -495,6 +495,16 @@
 
                     if (data.success) {
                         addDebug('[MetadataForm] ✓ Updated: ' + data.updatedName);
+
+                        // Display ExtendScript debug info
+                        if (data.debug && data.debug.length > 0) {
+                            addDebug('[ExtendScript Debug] ===== START =====');
+                            for (var i = 0; i < data.debug.length; i++) {
+                                addDebug('[ExtendScript] ' + data.debug[i]);
+                            }
+                            addDebug('[ExtendScript Debug] ===== END =====');
+                        }
+
                         self.showStatus('✓ Updated: ' + data.updatedName, 'success');
 
                         // Update current clip name in state
