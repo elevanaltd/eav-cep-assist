@@ -12,6 +12,38 @@ var EAVIngest = (function() {
 
     /**
 
+     * Log to file for debugging (when console not available)
+
+     */
+
+    function logToFile(message) {
+
+        try {
+
+            var logFile = new File(Folder.desktop + '/eav-cep-debug.txt');
+
+            logFile.open('a'); // append mode
+
+            logFile.writeln(new Date().toISOString() + ' - ' + message);
+
+            logFile.close();
+
+        } catch (e) {
+
+            // Silently fail if file write errors
+
+        }
+
+        // Also write to console (if available)
+
+        $.writeln(message);
+
+    }
+
+
+
+    /**
+
      * Escape XML entities to prevent injection attacks
 
      * @param {string} str - Raw string value
@@ -140,6 +172,8 @@ var EAVIngest = (function() {
 
     function updateClipMetadata(nodeId, metadata) {
 
+        var debugLog = []; // Collect debug messages to return to CEP panel
+
         var project = app.project;
 
         if (!project) {
@@ -180,7 +214,19 @@ var EAVIngest = (function() {
 
                 var xmpString = item.getXMPMetadata();
 
-                $.writeln("DEBUG SAVE: Got XMP (length: " + xmpString.length + ")");
+                debugLog.push("Got XMP (length: " + xmpString.length + ")");
+
+                debugLog.push("Incoming metadata:");
+
+                debugLog.push("  description: '" + metadata.description + "'");
+
+                debugLog.push("  location: '" + metadata.location + "'");
+
+                debugLog.push("  subject: '" + metadata.subject + "'");
+
+                debugLog.push("  action: '" + metadata.action + "'");
+
+                debugLog.push("  shot: '" + metadata.shot + "'");
 
 
 
@@ -212,7 +258,7 @@ var EAVIngest = (function() {
 
                         value: '<dc:identifier>' + escapeXML(metadata.identifier) + '</dc:identifier>',
 
-                        regex: /<dc:identifier[^>]*>.*?<\/dc:identifier>/
+                        regex: /<dc:identifier[^>]*>[\s\S]*?<\/dc:identifier>/
 
                     });
 
@@ -248,17 +294,33 @@ var EAVIngest = (function() {
 
                                 // Field exists - replace it
 
+                                debugLog.push(field.tag + " FOUND, replacing...");
+
+                                var beforeReplace = dcBlockContent;
+
                                 dcBlockContent = dcBlockContent.replace(field.regex, field.value);
+
+                                if (beforeReplace === dcBlockContent) {
+
+                                    debugLog.push("ERROR: " + field.tag + " regex did NOT match!");
+
+                                } else {
+
+                                    debugLog.push(field.tag + " successfully replaced");
+
+                                }
 
                             } else {
 
                                 // Field doesn't exist - append it
 
+                                debugLog.push(field.tag + " NOT FOUND, appending...");
+
                                 dcBlockContent += field.value;
 
                             }
 
-                            $.writeln("DEBUG SAVE: " + field.tag + " updated");
+                            debugLog.push(field.tag + " updated");
 
                         }
 
@@ -266,7 +328,13 @@ var EAVIngest = (function() {
 
                         // Replace the entire DC block with updated content
 
-                        var newDcBlock = dcBlockFull.substring(0, dcBlockFull.lastIndexOf('</rdf:Description>')) + dcBlockContent + '</rdf:Description>';
+                        // Extract just the opening tag (everything up to first '>')
+
+                        var openingTagEnd = dcBlockFull.indexOf('>') + 1;
+
+                        var openingTag = dcBlockFull.substring(0, openingTagEnd);
+
+                        var newDcBlock = openingTag + dcBlockContent + '</rdf:Description>';
 
                         xmpString = xmpString.replace(dcBlockFull, newDcBlock);
 
@@ -300,63 +368,37 @@ var EAVIngest = (function() {
 
 
 
-                // ========== XMP NAMESPACE FIELDS ==========
+                // ========== XMPDM NAMESPACE FIELDS (IA COMPATIBILITY) ==========
 
-                // Collect all XMP fields to update
+                // Build combined shotName and structured LogComment
 
-                var xmpFields = [];
+                var xmpDmFields = [];
 
-                if (metadata.shot !== undefined) {
 
-                    xmpFields.push({
 
-                        tag: 'xmp:Shot',
+                // Build shotName: location-subject-action-shotType (or without action for images)
 
-                        value: '<xmp:Shot>' + escapeXML(metadata.shot) + '</xmp:Shot>',
+                if (metadata.location && metadata.subject && metadata.shot) {
 
-                        regex: /<xmp:Shot[^>]*>.*?<\/xmp:Shot>/
+                    var shotName = metadata.location + '-' + metadata.subject;
 
-                    });
+                    if (metadata.action) {
 
-                }
+                        shotName += '-' + metadata.action;
 
-                if (metadata.location !== undefined) {
+                    }
 
-                    xmpFields.push({
+                    shotName += '-' + metadata.shot;
 
-                        tag: 'xmp:Location',
 
-                        value: '<xmp:Location>' + escapeXML(metadata.location) + '</xmp:Location>',
 
-                        regex: /<xmp:Location[^>]*>.*?<\/xmp:Location>/
+                    xmpDmFields.push({
 
-                    });
+                        tag: 'xmpDM:shotName',
 
-                }
+                        value: '<xmpDM:shotName>' + escapeXML(shotName) + '</xmpDM:shotName>',
 
-                if (metadata.subject !== undefined) {
-
-                    xmpFields.push({
-
-                        tag: 'xmp:Subject',
-
-                        value: '<xmp:Subject>' + escapeXML(metadata.subject) + '</xmp:Subject>',
-
-                        regex: /<xmp:Subject[^>]*>.*?<\/xmp:Subject>/
-
-                    });
-
-                }
-
-                if (metadata.action !== undefined) {
-
-                    xmpFields.push({
-
-                        tag: 'xmp:Action',
-
-                        value: '<xmp:Action>' + escapeXML(metadata.action) + '</xmp:Action>',
-
-                        regex: /<xmp:Action[^>]*>.*?<\/xmp:Action>/
+                        regex: /<xmpDM:shotName[^>]*>[\s\S]*?<\/xmpDM:shotName>/
 
                     });
 
@@ -364,79 +406,129 @@ var EAVIngest = (function() {
 
 
 
-                // Update XMP fields in their namespace block
+                // Build logComment: location=X, subject=Y, action=Z, shotType=W
 
-                if (xmpFields.length > 0) {
+                if (metadata.location !== undefined && metadata.subject !== undefined && metadata.shot !== undefined) {
 
-                    // Find the XMP rdf:Description block
+                    var logComment = 'location=' + escapeXML(metadata.location || '') +
 
-                    var xmpBlockMatch = xmpString.match(/<rdf:Description[^>]*xmlns:xmp="http:\/\/ns\.adobe\.com\/xap\/1\.0\/"[^>]*>([\s\S]*?)<\/rdf:Description>/);
+                                   ', subject=' + escapeXML(metadata.subject || '') +
 
+                                   ', action=' + escapeXML(metadata.action || '') +
 
-
-                    if (xmpBlockMatch) {
-
-                        // XMP block exists - update fields within it
-
-                        var xmpBlockContent = xmpBlockMatch[1];
-
-                        var xmpBlockFull = xmpBlockMatch[0];
+                                   ', shotType=' + escapeXML(metadata.shot || '');
 
 
 
-                        for (var i = 0; i < xmpFields.length; i++) {
+                    xmpDmFields.push({
 
-                            var field = xmpFields[i];
+                        tag: 'xmpDM:logComment',
 
-                            if (xmpBlockContent.indexOf('<' + field.tag) > -1) {
+                        value: '<xmpDM:logComment>' + logComment + '</xmpDM:logComment>',
+
+                        regex: /<xmpDM:logComment[^>]*>[\s\S]*?<\/xmpDM:logComment>/
+
+                    });
+
+                }
+
+
+
+                // Update xmpDM fields in their namespace block
+
+                if (xmpDmFields.length > 0) {
+
+                    // Find the xmpDM rdf:Description block
+
+                    var xmpDmBlockMatch = xmpString.match(/<rdf:Description[^>]*xmlns:xmpDM="http:\/\/ns\.adobe\.com\/xmp\/1\.0\/DynamicMedia\/"[^>]*>([\s\S]*?)<\/rdf:Description>/);
+
+
+
+                    if (xmpDmBlockMatch) {
+
+                        // xmpDM block exists - update fields within it
+
+                        var xmpDmBlockContent = xmpDmBlockMatch[1];
+
+                        var xmpDmBlockFull = xmpDmBlockMatch[0];
+
+
+
+                        for (var i = 0; i < xmpDmFields.length; i++) {
+
+                            var field = xmpDmFields[i];
+
+                            if (xmpDmBlockContent.indexOf('<' + field.tag) > -1) {
 
                                 // Field exists - replace it
 
-                                xmpBlockContent = xmpBlockContent.replace(field.regex, field.value);
+                                debugLog.push(field.tag + " FOUND, replacing...");
+
+                                var beforeReplace = xmpDmBlockContent;
+
+                                xmpDmBlockContent = xmpDmBlockContent.replace(field.regex, field.value);
+
+                                if (beforeReplace === xmpDmBlockContent) {
+
+                                    debugLog.push("ERROR: " + field.tag + " regex did NOT match!");
+
+                                } else {
+
+                                    debugLog.push(field.tag + " successfully replaced");
+
+                                }
 
                             } else {
 
                                 // Field doesn't exist - append it
 
-                                xmpBlockContent += field.value;
+                                debugLog.push(field.tag + " NOT FOUND, appending...");
+
+                                xmpDmBlockContent += field.value;
 
                             }
 
-                            $.writeln("DEBUG SAVE: " + field.tag + " updated");
+                            debugLog.push(field.tag + " updated");
 
                         }
 
 
 
-                        // Replace the entire XMP block with updated content
+                        // Replace the entire xmpDm block with updated content
 
-                        var newXmpBlock = xmpBlockFull.substring(0, xmpBlockFull.lastIndexOf('</rdf:Description>')) + xmpBlockContent + '</rdf:Description>';
+                        // Extract just the opening tag (everything up to first '>')
 
-                        xmpString = xmpString.replace(xmpBlockFull, newXmpBlock);
+                        var openingTagEnd = xmpDmBlockFull.indexOf('>') + 1;
+
+                        var openingTag = xmpDmBlockFull.substring(0, openingTagEnd);
+
+                        var newXmpDmBlock = openingTag + xmpDmBlockContent + '</rdf:Description>';
+
+                        xmpString = xmpString.replace(xmpDmBlockFull, newXmpDmBlock);
 
 
 
                     } else {
 
-                        // XMP block doesn't exist - create it
+                        // xmpDm block doesn't exist - create it
 
-                        var xmpBlock = '<rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/">';
+                        var xmpDmBlock = '<rdf:Description rdf:about="" xmlns:xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/">';
 
-                        for (var i = 0; i < xmpFields.length; i++) {
+                        for (var i = 0; i < xmpDmFields.length; i++) {
 
-                            xmpBlock += xmpFields[i].value;
+                            xmpDmBlock += xmpDmFields[i].value;
 
-                            $.writeln("DEBUG SAVE: " + xmpFields[i].tag + " created");
+                            $.writeln("DEBUG SAVE: " + xmpDmFields[i].tag + " created");
 
                         }
 
-                        xmpBlock += '</rdf:Description>';
+                        xmpDmBlock += '</rdf:Description>';
 
 
 
                         // Insert before closing </rdf:RDF>
 
-                        xmpString = xmpString.replace(/<\/rdf:RDF>/, xmpBlock + '</rdf:RDF>');
+                        xmpString = xmpString.replace(/<\/rdf:RDF>/, xmpDmBlock + '</rdf:RDF>');
 
                     }
 
@@ -446,13 +538,13 @@ var EAVIngest = (function() {
 
                 item.setXMPMetadata(xmpString);
 
-                $.writeln("DEBUG SAVE: XMP metadata updated");
+                logToFile("DEBUG SAVE: XMP metadata updated successfully");
 
 
 
             } catch (xmpError) {
 
-                $.writeln("DEBUG SAVE ERROR: " + xmpError.toString());
+                logToFile("DEBUG SAVE ERROR: " + xmpError.toString());
 
             }
 
@@ -462,7 +554,9 @@ var EAVIngest = (function() {
 
                 success: true,
 
-                updatedName: item.name
+                updatedName: item.name,
+
+                debug: debugLog
 
             });
 
@@ -604,35 +698,79 @@ var EAVIngest = (function() {
 
 
 
-                    var shotMatch = xmpString.match(/<xmp:Shot>(.*?)<\/xmp:Shot>/);
+                    // Parse xmpDM:logComment for structured components (IA compatibility)
 
-                    metadata.shot = (shotMatch && shotMatch[1]) ? shotMatch[1] : "";
+                    var logCommentMatch = xmpString.match(/<xmpDM:logComment>(.*?)<\/xmpDM:logComment>/);
+
+                    if (logCommentMatch) {
+
+                        var logComment = logCommentMatch[1];
+
+                        $.writeln("DEBUG: Found logComment: '" + logComment + "'");
+
+
+
+                        // Parse location=X, subject=Y, action=Z, shotType=W
+
+                        var locationMatch = logComment.match(/location=([^,]*)/);
+
+                        metadata.location = (locationMatch && locationMatch[1]) ? locationMatch[1].replace(/^\s+|\s+$/g, '') : "";
+
+
+
+                        var subjectMatch = logComment.match(/subject=([^,]*)/);
+
+                        metadata.subject = (subjectMatch && subjectMatch[1]) ? subjectMatch[1].replace(/^\s+|\s+$/g, '') : "";
+
+
+
+                        var actionMatch = logComment.match(/action=([^,]*)/);
+
+                        metadata.action = (actionMatch && actionMatch[1]) ? actionMatch[1].replace(/^\s+|\s+$/g, '') : "";
+
+
+
+                        var shotTypeMatch = logComment.match(/shotType=([^,]*)/);
+
+                        metadata.shot = (shotTypeMatch && shotTypeMatch[1]) ? shotTypeMatch[1].replace(/^\s+|\s+$/g, '') : "";
+
+                    } else {
+
+                        // Fallback: Try legacy individual XMP fields for backward compatibility
+
+                        $.writeln("DEBUG: LogComment not found, using legacy XMP fields");
+
+
+
+                        var shotMatch = xmpString.match(/<xmp:Shot>(.*?)<\/xmp:Shot>/);
+
+                        metadata.shot = (shotMatch && shotMatch[1]) ? shotMatch[1] : "";
+
+
+
+                        var locationMatch = xmpString.match(/<xmp:Location>(.*?)<\/xmp:Location>/);
+
+                        metadata.location = (locationMatch && locationMatch[1]) ? locationMatch[1] : "";
+
+
+
+                        var subjectMatch = xmpString.match(/<xmp:Subject>(.*?)<\/xmp:Subject>/);
+
+                        metadata.subject = (subjectMatch && subjectMatch[1]) ? subjectMatch[1] : "";
+
+
+
+                        var actionMatch = xmpString.match(/<xmp:Action>(.*?)<\/xmp:Action>/);
+
+                        metadata.action = (actionMatch && actionMatch[1]) ? actionMatch[1] : "";
+
+                    }
 
 
 
                     var sceneMatch = xmpString.match(/<xmp:Scene>(.*?)<\/xmp:Scene>/);
 
                     metadata.good = (sceneMatch && sceneMatch[1]) ? sceneMatch[1] : "";
-
-
-
-                    // Parse Location, Subject, Action from XMP
-
-                    var locationMatch = xmpString.match(/<xmp:Location>(.*?)<\/xmp:Location>/);
-
-                    metadata.location = (locationMatch && locationMatch[1]) ? locationMatch[1] : "";
-
-
-
-                    var subjectMatch = xmpString.match(/<xmp:Subject>(.*?)<\/xmp:Subject>/);
-
-                    metadata.subject = (subjectMatch && subjectMatch[1]) ? subjectMatch[1] : "";
-
-
-
-                    var actionMatch = xmpString.match(/<xmp:Action>(.*?)<\/xmp:Action>/);
-
-                    metadata.action = (actionMatch && actionMatch[1]) ? actionMatch[1] : "";
 
 
 
