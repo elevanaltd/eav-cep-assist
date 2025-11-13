@@ -80,6 +80,26 @@
     }
 
     // ========================================
+    // SECURITY: String escaping for evalScript
+    // ========================================
+
+    /**
+     * Escape a string for safe use in evalScript string concatenation
+     * Prevents code injection by escaping quotes and backslashes
+     * @param {string} str - The string to escape
+     * @returns {string} - Escaped string safe for evalScript
+     */
+    function escapeForEvalScript(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/\\/g, '\\\\')  // Escape backslashes first
+            .replace(/"/g, '\\"')     // Escape double quotes
+            .replace(/'/g, "\\'")     // Escape single quotes
+            .replace(/\n/g, '\\n')    // Escape newlines
+            .replace(/\r/g, '\\r');   // Escape carriage returns
+    }
+
+    // ========================================
     // COMPONENT: CLIP BROWSER
     // ========================================
 
@@ -577,7 +597,9 @@
         openInSourceMonitor: function(nodeId) {
             addDebug('[ClipBrowser] Opening in Source Monitor: ' + nodeId);
 
-            csInterface.evalScript('EAVIngest.openInSourceMonitor("' + nodeId + '")', function(result) {
+            // SECURITY: Escape nodeId to prevent code injection
+            var escapedNodeId = escapeForEvalScript(nodeId);
+            csInterface.evalScript('EAVIngest.openInSourceMonitor("' + escapedNodeId + '")', function(result) {
                 try {
                     var data = JSON.parse(result);
 
