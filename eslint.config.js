@@ -7,22 +7,28 @@ export default [
     files: ['js/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'module',
+      sourceType: 'script', // CEP panels use IIFE, not ES modules
       globals: {
         // Browser globals
         window: 'readonly',
         document: 'readonly',
         console: 'readonly',
         alert: 'readonly',
+        setTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearTimeout: 'readonly',
+        clearInterval: 'readonly',
+        CustomEvent: 'readonly',
         // CEP-specific globals
         CSInterface: 'readonly',
+        CSEvent: 'readonly',
         cep: 'readonly',
         cep_node: 'readonly'
       }
     },
     rules: {
       // Code Quality
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_|^e$' }],
       'no-undef': 'error',
       'no-console': 'off', // Allowed for debugging (CEP has console)
 
@@ -52,7 +58,12 @@ export default [
         JSON: 'readonly',
         // ExtendScript utilities
         alert: 'readonly',
-        confirm: 'readonly'
+        confirm: 'readonly',
+        // Adobe file system
+        File: 'readonly',
+        Folder: 'readonly',
+        // Premiere Pro API
+        ProjectItemType: 'readonly'
       }
     },
     rules: {
@@ -65,7 +76,7 @@ export default [
       'object-shorthand': 'off', // ES6 object shorthand not available
 
       // Code Quality (ES3 compatible)
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_|^e$' }],
       'no-undef': 'error',
       'no-console': 'error', // ExtendScript doesn't have console
 

@@ -1,0 +1,65 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main, feat/**]
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # GATE 1: Lint (BLOCKING)
+      - name: Lint JavaScript
+        run: npm run lint
+
+      # GATE 2: TypeCheck (placeholder until JSDoc validation implemented)
+      - name: TypeCheck
+        run: npm run typecheck
+
+      # GATE 3: Unit Tests (BLOCKING)
+      - name: Run tests
+        run: npm test
+
+      # GATE 4: Coverage Validation (BLOCKING - 50% threshold)
+      - name: Enforce coverage thresholds
+        run: npm run test:coverage
+
+      # GATE 5: Build Verification (ensure required files exist)
+      - name: Verify deployment files
+        run: |
+          echo "Checking required files for deployment..."
+          test -f js/metadata-panel.js || (echo "❌ Missing js/metadata-panel.js" && exit 1)
+          test -f js/navigation-panel.js || (echo "❌ Missing js/navigation-panel.js" && exit 1)
+          test -f jsx/host.jsx || (echo "❌ Missing jsx/host.jsx" && exit 1)
+          test -f CSXS/manifest-metadata.xml || (echo "❌ Missing CSXS/manifest-metadata.xml" && exit 1)
+          test -f CSXS/manifest-navigation.xml || (echo "❌ Missing CSXS/manifest-navigation.xml" && exit 1)
+          test -f index-metadata.html || (echo "❌ Missing index-metadata.html" && exit 1)
+          test -f index-navigation.html || (echo "❌ Missing index-navigation.html" && exit 1)
+          echo "✓ All deployment files present"
+
+      # GATE 6: Security Scanning (detect unsafe evalScript patterns)
+      - name: Security scan for code injection
+        run: |
+          echo "Scanning for unsafe evalScript patterns..."
+          if grep -n "evalScript.*nodeId" js/*.js; then
+            echo "⚠️  WARNING: Found potential code injection pattern (nodeId concatenation in evalScript)"
+            echo "Review js/metadata-panel.js:490 for sanitization"
+            # Non-blocking warning for now - will block in Phase 4
+          else
+            echo "✓ No obvious code injection patterns detected"
+          fi
