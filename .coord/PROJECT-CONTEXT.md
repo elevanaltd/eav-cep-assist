@@ -5,7 +5,7 @@
 ## 🌐 Ecosystem Position
 
 **For complete pipeline positioning (where we fit in EAV production workflow):**
-→ **[`.coord/ECOSYSTEM-POSITION.md`](.coord/ECOSYSTEM-POSITION.md)**
+→ **[`ECOSYSTEM-POSITION.md`](ECOSYSTEM-POSITION.md)**
 
 **Pipeline Step:** 7 of 10 | **Role:** Ingestion gateway (raw footage → structured metadata) | **Upstream:** Ingest Assistant | **Downstream:** Edit Web
 
@@ -19,16 +19,30 @@
 
 ## Tech Stack
 - **Framework:** Adobe CEP APIs
-- **Frontend:** HTML, CSS, JavaScript/TypeScript
-- **Integration:** Premiere Pro Project Panel metadata
-- **Communication:** CSInterface (CEP ↔ Premiere Pro)
+- **Frontend:** HTML, CSS, JavaScript
+- **ExtendScript:** ES3 (Premiere Pro scripting layer)
+- **XMP Metadata:** Direct XMP read/write via item.getXMPMetadata() / item.setXMPMetadata()
+- **Communication:** CSInterface (CEP ↔ ExtendScript)
 
 ## Key Features
-- **Metadata Tagging:** Location, Subject, Action, Shot Type fields
-- **Structured Naming:** `{location}-{subject}-{action}-{shotType}` format
-- **XMP Integration:** Read pre-tagged metadata from Ingest Assistant
-- **Premiere Pro Fields:** Write to Name, Tape Name, Description, Shot
-- **Batch Operations:** Tag multiple clips simultaneously
+
+### Metadata Tagging & XMP Integration
+- **Structured Fields:** Location, Subject, Action, Shot Type
+- **Naming Convention:** {location}-{subject}-{action}-{shotType} format
+- **XMP Read/Write:**
+  - xmpDM:shotName → Combined name (maps to PP Shot field)
+  - xmpDM:LogComment → Structured key=value pairs (e.g., location=kitchen, subject=oven, shotType=ESTAB)
+  - dc:description → Keywords/tags (Dublin Core standard)
+- **IA Compatibility:** Reads/writes same XMP fields as Ingest Assistant (bidirectional workflow)
+- **Premiere Pro Integration:** Updates clip Name in project panel
+
+### ML Feedback Loop
+- **PP Edits Tracking:** Writes .ingest-metadata-pp.json to original media folder
+- **Side-by-side Comparison:** Lives alongside .ingest-metadata.json (IA original)
+- **Schema Compatibility:** Identical JSON format for easy diffing
+- **ML Training:** Compare AI predictions vs. human corrections
+- **Audit Trail:** Tracks modifiedAt, modifiedBy for each edit
+- **Documentation:** See docs/002-DOC-ML-FEEDBACK-LOOP.md
 
 ## Current State
 
@@ -56,8 +70,9 @@
 - **Ingest Assistant:** `/Volumes/HestAI-Projects/ingest-assistant/.coord/ECOSYSTEM-POSITION.md`
 
 **This Project:**
-- **Ecosystem Position:** `.coord/ECOSYSTEM-POSITION.md` (detailed pipeline positioning)
+- **Ecosystem Position:** ECOSYSTEM-POSITION.md (detailed pipeline positioning)
+- **ML Feedback Loop:** docs/002-DOC-ML-FEEDBACK-LOOP.md
 
 ---
 
-**LAST UPDATED:** 2025-11-10
+**LAST UPDATED:** 2025-11-12

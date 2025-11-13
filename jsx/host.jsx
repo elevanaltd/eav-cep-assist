@@ -406,7 +406,7 @@ var EAVIngest = (function() {
 
 
 
-                // Build logComment: location=X, subject=Y, action=Z, shotType=W
+                // Build LogComment: location=X, subject=Y, action=Z, shotType=W
 
                 if (metadata.location !== undefined && metadata.subject !== undefined && metadata.shot !== undefined) {
 
@@ -422,11 +422,11 @@ var EAVIngest = (function() {
 
                     xmpDmFields.push({
 
-                        tag: 'xmpDM:logComment',
+                        tag: 'xmpDM:LogComment',
 
-                        value: '<xmpDM:logComment>' + logComment + '</xmpDM:logComment>',
+                        value: '<xmpDM:LogComment>' + logComment + '</xmpDM:LogComment>',
 
-                        regex: /<xmpDM:logComment[^>]*>[\s\S]*?<\/xmpDM:logComment>/
+                        regex: /<xmpDM:LogComment[^>]*>[\s\S]*?<\/xmpDM:LogComment>/
 
                     });
 
@@ -538,13 +538,201 @@ var EAVIngest = (function() {
 
                 item.setXMPMetadata(xmpString);
 
-                logToFile("DEBUG SAVE: XMP metadata updated successfully");
+                debugLog.push("XMP metadata updated successfully");
 
 
 
             } catch (xmpError) {
 
-                logToFile("DEBUG SAVE ERROR: " + xmpError.toString());
+                debugLog.push("XMP ERROR: " + xmpError.toString());
+
+            }
+
+
+
+            // ========== WRITE PP EDITS JSON ==========
+
+            // Write PP edits to original folder for ML feedback loop
+
+            try {
+
+                var mediaPath = item.getMediaPath();
+
+                if (mediaPath) {
+
+                    // Extract directory and filename
+
+                    var lastSlash = mediaPath.lastIndexOf('/');
+
+                    var dirPath = mediaPath.substring(0, lastSlash);
+
+                    var filename = mediaPath.substring(lastSlash + 1);
+
+                    var filenameNoExt = filename.replace(/\.[^.]+$/, '');
+
+
+
+                    // Read existing .ingest-metadata.json (if exists)
+
+                    var iaJsonPath = dirPath + '/.ingest-metadata.json';
+
+                    var iaJsonFile = new File(iaJsonPath);
+
+                    var iaData = {};
+
+                    if (iaJsonFile.exists) {
+
+                        iaJsonFile.open('r');
+
+                        var iaJsonContent = iaJsonFile.read();
+
+                        iaJsonFile.close();
+
+                        try {
+
+                            iaData = JSON.parse(iaJsonContent);
+
+                        } catch (parseError) {
+
+                            debugLog.push("Warning: Could not parse existing IA JSON");
+
+                        }
+
+                    }
+
+
+
+                    // Build PP edits entry (matches IA format)
+
+                    var fileId = metadata.identifier ? metadata.identifier.replace(/\.[^.]+$/, '') : filenameNoExt;
+
+                    var iaEntry = iaData[fileId] || {};
+
+
+
+                    var ppEditsEntry = {};
+
+                    ppEditsEntry[fileId] = {
+
+                        // File Identification (preserve from IA)
+
+                        id: fileId,
+
+                        originalFilename: iaEntry.originalFilename || filename,
+
+                        currentFilename: filename,
+
+                        filePath: mediaPath,
+
+                        extension: iaEntry.extension || filename.substring(filename.lastIndexOf('.')),
+
+                        fileType: iaEntry.fileType || 'video',
+
+
+
+                        // Core Metadata (from PP edits)
+
+                        mainName: metadata.location + '-' + metadata.subject + (metadata.action ? '-' + metadata.action : '') + '-' + metadata.shot,
+
+                        keywords: metadata.description ? metadata.description.split(',').map(function(k) { return k.replace(/^\s+|\s+$/g, ''); }) : [],
+
+
+
+                        // Structured Components
+
+                        location: metadata.location || '',
+
+                        subject: metadata.subject || '',
+
+                        action: metadata.action || '',
+
+                        shotType: metadata.shot || '',
+
+
+
+                        // Processing State (preserve from IA)
+
+                        processedByAI: iaEntry.processedByAI || false,
+
+
+
+                        // Audit Trail
+
+                        createdAt: iaEntry.createdAt || new Date().toISOString(),
+
+                        createdBy: iaEntry.createdBy || 'unknown',
+
+                        modifiedAt: new Date().toISOString(),
+
+                        modifiedBy: 'cep-panel',
+
+                        version: '1.0.0'
+
+                    };
+
+
+
+                    // Write to .ingest-metadata-pp.json
+
+                    var ppJsonPath = dirPath + '/.ingest-metadata-pp.json';
+
+                    var ppJsonFile = new File(ppJsonPath);
+
+
+
+                    // Read existing PP edits (if any)
+
+                    var existingPpData = { _schema: '2.0' };
+
+                    if (ppJsonFile.exists) {
+
+                        ppJsonFile.open('r');
+
+                        var existingContent = ppJsonFile.read();
+
+                        ppJsonFile.close();
+
+                        try {
+
+                            existingPpData = JSON.parse(existingContent);
+
+                        } catch (e) {
+
+                            existingPpData = { _schema: '2.0' };
+
+                        }
+
+                    }
+
+
+
+                    // Merge this entry
+
+                    existingPpData[fileId] = ppEditsEntry[fileId];
+
+
+
+                    // Write back
+
+                    ppJsonFile.open('w');
+
+                    ppJsonFile.write(JSON.stringify(existingPpData, null, 2));
+
+                    ppJsonFile.close();
+
+
+
+                    debugLog.push("PP edits JSON written: " + ppJsonPath);
+
+                } else {
+
+                    debugLog.push("Warning: No media path, skipping PP edits JSON");
+
+                }
+
+            } catch (jsonError) {
+
+                debugLog.push("PP edits JSON error: " + jsonError.toString());
 
             }
 
@@ -700,13 +888,13 @@ var EAVIngest = (function() {
 
                     // Parse xmpDM:logComment for structured components (IA compatibility)
 
-                    var logCommentMatch = xmpString.match(/<xmpDM:logComment>(.*?)<\/xmpDM:logComment>/);
+                    var logCommentMatch = xmpString.match(/<xmpDM:LogComment>(.*?)<\/xmpDM:LogComment>/);
 
                     if (logCommentMatch) {
 
                         var logComment = logCommentMatch[1];
 
-                        $.writeln("DEBUG: Found logComment: '" + logComment + "'");
+                        $.writeln("DEBUG: Found LogComment: '" + logComment + "'");
 
 
 
