@@ -113,7 +113,8 @@ export default [
       '.github/**',
       'docs/**',
       '.coord/**',
-      '*.md'
+      '*.md',
+      'js/CSInterface.js'  // Third-party Adobe CEP library (vendor code)
     ]
   }
 ];
