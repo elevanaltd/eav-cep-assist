@@ -68,6 +68,22 @@ User clicks clip in Navigation Panel
 2. **JavaScript (CEP):** `js/metadata-panel.js`, `js/navigation-panel.js`, `js/CSInterface.js`
 3. **ExtendScript (Premiere Pro):** `jsx/host.jsx` (XMP read/write, Project Panel interaction)
 
+
+### **Metadata Strategy (Shared with ingest-assistant)**
+
+This project uses a **shared XMP metadata strategy** with `ingest-assistant` (Electron desktop app). Both tools write **identical XMP fields** to video files, ensuring metadata consistency across the video production workflow.
+
+**See:** [`ingest-assistant/.coord/docs/000001-DOC-METADATA-STRATEGY-SHARED.md`](../ingest-assistant/.coord/docs/000001-DOC-METADATA-STRATEGY-SHARED.md) for complete field specifications, namespace rationale, and implementation details.
+
+**Key XMP Fields Written:**
+- `xmpDm:shotName` - Combined entity mapping to PP Shot field (survives proxy workflows)
+- `xmpDM:LogComment` - Structured key=value pairs for CEP panel parsing (**CRITICAL:** Capital 'C' in LogComment)
+- `dc:description` - Human description or keywords (universal compatibility)
+
+**Technology:** XMPScript API (Adobe ExtendScript) via `jsx/host.jsx` (lines 371-535)
+
+**⚠️ KNOWN BUG (Pre-XMPScript Migration):** Current regex implementation uses `xmpDm:logComment` (lowercase 'c') instead of `xmpDM:LogComment` (capital 'C'). This writes to a DIFFERENT field than ingest-assistant, breaking metadata alignment. Fix required during XMPScript SDK migration.
+
 ---
 
 ## 🚀 Deployment Workflow
@@ -175,6 +191,102 @@ cd /Volumes/HestAI-Projects/eav-cep-assist
 - **Cause:** `getAllProjectClips()` error or no clips in project
 - **Debug:** ExtendScript console shows `getAllProjectClips failed`
 - **Also Check:** Navigation Panel console for `[ClipBrowser] ✓ Loaded X clips`
+
+---
+
+## 🔄 ML Feedback Loop (PP Edits Tracking)
+
+The CEP panel writes **two outputs** when "Apply to Premiere" is clicked:
+
+### **1. XMP Metadata (Embedded in File)**
+- `xmpDM:shotName` → Combined name for PP Shot field
+- `xmpDM:logComment` → Structured key=value pairs
+- `dc:description` → Keywords/tags
+
+### **2. PP Edits JSON (Original Folder)**
+Writes `.ingest-metadata-pp.json` to the original media folder for ML feedback:
+
+**File Location:**
+```
+/Volumes/EAV_Video_RAW/Berkeley/EAV036/shoot1-20251103/
+├── EA001932.MOV
+├── .ingest-metadata.json          ← IA original (AI-generated)
+└── .ingest-metadata-pp.json       ← PP edits (human-corrected)
+```
+
+**JSON Format (Matches IA Schema 2.0):**
+```json
+{
+  "_schema": "2.0",
+  "EA001932": {
+    "id": "EA001932",
+    "originalFilename": "EA001932.MOV",
+    "currentFilename": "EA001932.MOV",
+    "filePath": "/Volumes/EAV_Video_RAW/.../EA001932.MOV",
+    "extension": ".MOV",
+    "fileType": "video",
+
+    "mainName": "hallway-front-door-safety-chain-CU",
+    "keywords": ["door", "chain", "lock"],
+
+    "location": "hallway",
+    "subject": "front-door",
+    "action": "safety-chain",
+    "shotType": "CU",
+
+    "processedByAI": true,
+
+    "createdAt": "2025-11-12T10:00:00.000Z",
+    "createdBy": "ingest-assistant",
+    "modifiedAt": "2025-11-12T15:30:00.000Z",
+    "modifiedBy": "cep-panel",
+    "version": "1.0.0"
+  }
+}
+```
+
+### **Workflow Integration:**
+
+1. **IA processes files** → Writes `.ingest-metadata.json` (AI-generated)
+2. **Import to PP** → Metadata survives via XMP
+3. **Editor reviews** → Corrects metadata via CEP panel
+4. **CEP writes edits** → Updates `.ingest-metadata-pp.json` (human-corrected)
+5. **Compare JSONs** → Generate diff for ML training
+6. **Feed back to model** → Improve AI prompts/accuracy
+
+**Implementation:** `jsx/host.jsx:553-737` (PP edits JSON writer)
+
+### **Comparison Script Example:**
+
+```bash
+#!/bin/bash
+# compare-metadata.sh - Generate diff for ML training
+
+FOLDER="/Volumes/EAV_Video_RAW/Berkeley/EAV036/shoot1-20251103"
+IA_JSON="$FOLDER/.ingest-metadata.json"
+PP_JSON="$FOLDER/.ingest-metadata-pp.json"
+
+jq -s '
+  .[0] as $ia | .[1] as $pp |
+  ($ia | keys) as $ids |
+  $ids | map({
+    id: .,
+    changes: (
+      if ($ia[.].location != $pp[.].location) then
+        {field: "location", ia: $ia[.].location, pp: $pp[.].location}
+      elif ($ia[.].subject != $pp[.].subject) then
+        {field: "subject", ia: $ia[.].subject, pp: $pp[.].subject}
+      elif ($ia[.].action != $pp[.].action) then
+        {field: "action", ia: $ia[.].action, pp: $pp[.].action}
+      elif ($ia[.].shotType != $pp[.].shotType) then
+        {field: "shotType", ia: $ia[.].shotType, pp: $pp[.].shotType}
+      else null end
+    )
+  }) | map(select(.changes != null))
+' "$IA_JSON" "$PP_JSON"
+```
+
+**Debug:** Check diagnostics panel for `[ExtendScript] PP edits JSON written: /path/to/.ingest-metadata-pp.json`
 
 ---
 
