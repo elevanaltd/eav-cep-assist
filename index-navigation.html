@@ -49,6 +49,18 @@
                 </select>
             </div>
 
+            <!-- Batch Selection Controls -->
+            <div class="batch-controls">
+                <div class="batch-selection">
+                    <button id="selectAll" class="batch-btn-small">Select All</button>
+                    <button id="selectNone" class="batch-btn-small">Clear</button>
+                    <span id="selectedCount" class="selected-count">0 selected</span>
+                </div>
+                <button id="batchApply" class="batch-apply-btn" disabled title="Apply XMP metadata to selected clips in Premiere Pro (Cmd+Shift+A)">
+                    <span class="batch-icon">⚡</span> Batch Apply to Premiere
+                </button>
+            </div>
+
             <!-- Clip List -->
             <div class="clip-list" id="clipList" role="list">
                 <!-- Dynamically generated clip items will go here -->

@@ -7,7 +7,7 @@ export default [
     files: ['js/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'module',
+      sourceType: 'script', // CEP panels use IIFE, not ES modules
       globals: {
         // Browser globals
         window: 'readonly',
@@ -125,7 +125,7 @@ export default [
       'docs/**',
       '.coord/**',
       '*.md',
-      'js/CSInterface.js'  // Adobe vendor library (do not lint)
+      'js/CSInterface.js'  // Third-party Adobe CEP library (vendor code)
     ]
   }
 ];

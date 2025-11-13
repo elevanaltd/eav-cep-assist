@@ -68,6 +68,26 @@
   }
 
   // ========================================
+  // SECURITY: String escaping for evalScript
+  // ========================================
+
+  /**
+     * Escape a string for safe use in evalScript string concatenation
+     * Prevents code injection by escaping quotes and backslashes
+     * @param {string} str - The string to escape
+     * @returns {string} - Escaped string safe for evalScript
+     */
+  function escapeForEvalScript(str) {
+    if (!str) {return '';}
+    return String(str)
+      .replace(/\\/g, '\\\\')  // Escape backslashes first
+      .replace(/"/g, '\\"')     // Escape double quotes
+      .replace(/'/g, '\\\'')     // Escape single quotes
+      .replace(/\n/g, '\\n')    // Escape newlines
+      .replace(/\r/g, '\\r');   // Escape carriage returns
+  }
+
+  // ========================================
   // COMPONENT: METADATA FORM
   // ========================================
 
@@ -486,8 +506,11 @@
       this.showStatus('Updating Premiere Pro...', 'info');
 
       // Call ExtendScript to update PP
+      // SECURITY: Escape nodeId to prevent code injection
       const metadataJson = JSON.stringify(metadata);
-      const script = 'EAVIngest.updateClipMetadata("' + currentClip.nodeId + '", JSON.parse(\'' + metadataJson.replace(/'/g, '\\\'') + '\'))';
+      const escapedNodeId = escapeForEvalScript(currentClip.nodeId);
+      const escapedMetadataJson = metadataJson.replace(/'/g, '\\\'');
+      const script = 'EAVIngest.updateClipMetadata("' + escapedNodeId + '", JSON.parse(\'' + escapedMetadataJson + '\'))';
 
       csInterface.evalScript(script, function(result) {
         try {

@@ -18,7 +18,8 @@
     filterVideo: true,         // Show videos
     filterImage: true,         // Show images
     filterHasMeta: false,      // Show only tagged clips
-    sortBy: 'bin'              // Sort order: 'name', 'name-desc', 'bin'
+    sortBy: 'bin',             // Sort order: 'name', 'name-desc', 'bin'
+    selectedClips: []          // Array of nodeIds for batch operations
   };
 
   // Initialize CSInterface
@@ -80,6 +81,26 @@
   }
 
   // ========================================
+  // SECURITY: String escaping for evalScript
+  // ========================================
+
+  /**
+     * Escape a string for safe use in evalScript string concatenation
+     * Prevents code injection by escaping quotes and backslashes
+     * @param {string} str - The string to escape
+     * @returns {string} - Escaped string safe for evalScript
+     */
+  function escapeForEvalScript(str) {
+    if (!str) {return '';}
+    return String(str)
+      .replace(/\\/g, '\\\\')  // Escape backslashes first
+      .replace(/"/g, '\\"')     // Escape double quotes
+      .replace(/'/g, '\\\'')     // Escape single quotes
+      .replace(/\n/g, '\\n')    // Escape newlines
+      .replace(/\r/g, '\\r');   // Escape carriage returns
+  }
+
+  // ========================================
   // COMPONENT: CLIP BROWSER
   // ========================================
 
@@ -110,7 +131,11 @@
         sortBy: document.getElementById('sortBy'),
         clipList: document.getElementById('clipList'),
         clipCount: document.getElementById('clipCount'),
-        refreshBtn: document.getElementById('refreshClips')
+        refreshBtn: document.getElementById('refreshClips'),
+        selectAll: document.getElementById('selectAll'),
+        selectNone: document.getElementById('selectNone'),
+        selectedCount: document.getElementById('selectedCount'),
+        batchApply: document.getElementById('batchApply')
       };
       addDebug('[ClipBrowser] ✓ DOM elements retrieved');
 
@@ -169,6 +194,29 @@
         self.loadAllClips();
       });
 
+      // Batch selection controls
+      this.elements.selectAll.addEventListener('click', function() {
+        self.selectAllClips();
+      });
+
+      this.elements.selectNone.addEventListener('click', function() {
+        self.clearSelection();
+      });
+
+      this.elements.batchApply.addEventListener('click', function() {
+        self.batchApplyToPremiere();
+      });
+
+      // Keyboard shortcut: Cmd+Shift+A for batch apply
+      document.addEventListener('keydown', function(e) {
+        if (e.metaKey && e.shiftKey && e.key === 'A') {
+          e.preventDefault();
+          if (PanelState.selectedClips.length > 0) {
+            self.batchApplyToPremiere();
+          }
+        }
+      });
+
       // Clip list click handling (event delegation)
       this.elements.clipList.addEventListener('click', function(e) {
         // Ignore clicks on bin headers
@@ -176,9 +224,21 @@
           return;
         }
 
-        const clipItem = e.target.closest('.clip-item');
+        // Handle checkbox clicks
+        if (e.target.classList.contains('clip-checkbox')) {
+          var clipItem = e.target.closest('.clip-item');
+          if (clipItem) {
+            var nodeId = clipItem.getAttribute('data-clip-id');
+            self.toggleClipSelection(nodeId);
+            e.stopPropagation(); // Don't trigger clip selection
+          }
+          return;
+        }
+
+        // Handle clip selection (clicking anywhere else on the clip item)
+        var clipItem = e.target.closest('.clip-item');
         if (clipItem) {
-          const nodeId = clipItem.getAttribute('data-clip-id');
+          var nodeId = clipItem.getAttribute('data-clip-id');
           self.selectClip(nodeId);
         }
       });
@@ -328,6 +388,7 @@
         if (!clip.nodeId) {return '';}
 
         const isSelected = PanelState.currentClip && clip.nodeId === PanelState.currentClip.nodeId;
+        const isChecked = PanelState.selectedClips.indexOf(clip.nodeId) !== -1;
         const hasMetadata = clip.shot || clip.description || clip.identifier;
         const statusIcon = hasMetadata ? '✓' : '•';
         const statusClass = hasMetadata ? 'tagged' : 'untagged';
@@ -338,9 +399,12 @@
         // Escape clip name for XSS prevention
         const safeName = escapeHTML(clip.name || 'Unknown');
 
-        return '<div class="clip-item' + inBinClass + (isSelected ? ' selected' : '') + '" ' +
+        return '<div class="clip-item' + inBinClass +
+                       (isSelected ? ' selected' : '') +
+                       (isChecked ? ' checked' : '') + '" ' +
                        'data-clip-id="' + clip.nodeId + '" ' +
                        'role="listitem" tabindex="0">' +
+                       '<input type="checkbox" class="clip-checkbox" ' + (isChecked ? 'checked' : '') + '>' +
                        '<span class="status-icon ' + statusClass + '">' + statusIcon + '</span>' +
                        '<span class="clip-name" title="' + safeName + '">' + safeName + '</span>' +
                        '</div>';
@@ -353,6 +417,9 @@
         return !item.isBinHeader;
       }).length;
       this.elements.clipCount.textContent = clipCount + ' clip' + (clipCount === 1 ? '' : 's');
+
+      // Update selection UI
+      this.updateSelectionUI();
     },
 
     getFilteredClips: function() {
@@ -577,7 +644,9 @@
     openInSourceMonitor: function(nodeId) {
       addDebug('[ClipBrowser] Opening in Source Monitor: ' + nodeId);
 
-      csInterface.evalScript('EAVIngest.openInSourceMonitor("' + nodeId + '")', function(result) {
+      // SECURITY: Escape nodeId to prevent code injection
+      const escapedNodeId = escapeForEvalScript(nodeId);
+      csInterface.evalScript('EAVIngest.openInSourceMonitor("' + escapedNodeId + '")', function(result) {
         try {
           const data = JSON.parse(result);
 
@@ -592,12 +661,149 @@
       });
     },
 
+    toggleClipSelection: function(nodeId) {
+      const index = PanelState.selectedClips.indexOf(nodeId);
+      if (index === -1) {
+        // Add to selection
+        PanelState.selectedClips.push(nodeId);
+        addDebug('[ClipBrowser] ✓ Clip selected for batch: ' + nodeId);
+      } else {
+        // Remove from selection
+        PanelState.selectedClips.splice(index, 1);
+        addDebug('[ClipBrowser] Clip deselected: ' + nodeId);
+      }
+      this.render(); // Re-render to update checkboxes and UI
+    },
+
+    selectAllClips: function() {
+      const filteredClips = this.getFilteredClips();
+      PanelState.selectedClips = filteredClips.map(function(clip) {
+        return clip.nodeId;
+      });
+      addDebug('[ClipBrowser] ✓ Selected all clips: ' + PanelState.selectedClips.length);
+      this.render();
+    },
+
+    clearSelection: function() {
+      const count = PanelState.selectedClips.length;
+      PanelState.selectedClips = [];
+      addDebug('[ClipBrowser] Selection cleared: ' + count + ' clips');
+      this.render();
+    },
+
+    updateSelectionUI: function() {
+      const count = PanelState.selectedClips.length;
+      this.elements.selectedCount.textContent = count + ' selected';
+      this.elements.batchApply.disabled = (count === 0);
+    },
+
+    batchApplyToPremiere: function() {
+      const self = this;
+      const selectedCount = PanelState.selectedClips.length;
+
+      if (selectedCount === 0) {
+        addDebug('[ClipBrowser] ✗ No clips selected for batch apply', true);
+        return;
+      }
+
+      addDebug('[ClipBrowser] ⚡ Starting batch apply: ' + selectedCount + ' clips');
+
+      // Disable batch apply button and show processing state
+      this.elements.batchApply.disabled = true;
+      this.elements.batchApply.classList.add('processing');
+      this.elements.batchApply.innerHTML = '<span class="batch-icon">⏳</span> Processing...';
+
+      // Get clip data for all selected clips
+      const selectedClipData = PanelState.selectedClips.map(function(nodeId) {
+        return PanelState.allClips.find(function(clip) {
+          return clip.nodeId === nodeId;
+        });
+      }).filter(function(clip) {
+        return clip !== null; // Remove any nulls
+      });
+
+      let processedCount = 0;
+      let errorCount = 0;
+
+      // Process each clip sequentially
+      function processNextClip(index) {
+        if (index >= selectedClipData.length) {
+          // All done!
+          addDebug('[ClipBrowser] ✓ Batch apply complete: ' +
+                             processedCount + ' succeeded, ' + errorCount + ' failed');
+
+          // Reset button state
+          self.elements.batchApply.classList.remove('processing');
+          self.elements.batchApply.innerHTML = '<span class="batch-icon">⚡</span> Batch Apply to Premiere';
+          self.elements.batchApply.disabled = false;
+
+          // Clear selection
+          self.clearSelection();
+
+          // Refresh clip list to show updated names
+          self.loadAllClips();
+          return;
+        }
+
+        const clip = selectedClipData[index];
+        addDebug('[ClipBrowser] Processing (' + (index + 1) + '/' + selectedClipData.length + '): ' + clip.name);
+
+        // Update progress in button
+        self.elements.batchApply.innerHTML =
+                    '<span class="batch-icon">⏳</span> Processing ' + (index + 1) + '/' + selectedClipData.length;
+
+        // Build metadata object from clip's existing XMP data
+        const metadata = {
+          name: clip.shot ? (clip.location + '-' + clip.subject + '-' + clip.action + '-' + clip.shot).replace(/^-+|-+$/g, '') : clip.name,
+          identifier: clip.identifier || clip.name,
+          description: clip.description || '',
+          shot: clip.shot || '',
+          good: clip.good || 'false',
+          location: clip.location || '',
+          subject: clip.subject || '',
+          action: clip.action || ''
+        };
+
+        // Call ExtendScript to update Premiere
+        const metadataJson = JSON.stringify(metadata);
+        const escapedNodeId = escapeForEvalScript(clip.nodeId);
+        const escapedMetadataJson = metadataJson.replace(/'/g, '\\\'');
+        const script = 'EAVIngest.updateClipMetadata("' + escapedNodeId + '", JSON.parse(\'' + escapedMetadataJson + '\'))';
+
+        csInterface.evalScript(script, function(result) {
+          try {
+            const data = JSON.parse(result);
+
+            if (data.success) {
+              processedCount++;
+              addDebug('[ClipBrowser] ✓ Applied: ' + data.updatedName);
+            } else {
+              errorCount++;
+              addDebug('[ClipBrowser] ✗ Failed: ' + data.error, true);
+            }
+          } catch (e) {
+            errorCount++;
+            addDebug('[ClipBrowser] ✗ Error: ' + e.message, true);
+          }
+
+          // Process next clip after a small delay to avoid overwhelming Premiere
+          setTimeout(function() {
+            processNextClip(index + 1);
+          }, 100); // 100ms delay between clips
+        });
+      }
+
+      // Start processing
+      processNextClip(0);
+    },
+
     showEmptyState: function(message) {
       this.elements.clipList.innerHTML =
                 '<div class="clip-list-empty">' +
                 '<p>' + message + '</p>' +
                 '</div>';
       this.elements.clipCount.textContent = '0 clips';
+      this.updateSelectionUI(); // Update selection UI even when empty
     }
   };
 

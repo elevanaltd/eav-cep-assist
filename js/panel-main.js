@@ -23,6 +23,26 @@ function addDiagnostic(message, isError) {
 
 addDiagnostic('✓ Panel-main.js executing...');
 
+// ========================================
+// SECURITY: String escaping for evalScript
+// ========================================
+
+/**
+ * Escape a string for safe use in evalScript string concatenation
+ * Prevents code injection by escaping quotes and backslashes
+ * @param {string} str - The string to escape
+ * @returns {string} - Escaped string safe for evalScript
+ */
+function escapeForEvalScript(str) {
+  if (!str) {return '';}
+  return String(str)
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/"/g, '\\"')     // Escape double quotes
+    .replace(/'/g, '\\\'')     // Escape single quotes
+    .replace(/\n/g, '\\n')    // Escape newlines
+    .replace(/\r/g, '\\r');   // Escape carriage returns
+}
+
 (function() {
   'use strict';
 
@@ -428,7 +448,9 @@ addDiagnostic('✓ Panel-main.js executing...');
       this.showStatus('Opening in Source Monitor...', 'info');
       console.log('[ThumbnailViewer] Calling openInSourceMonitor with nodeId:', clip.nodeId);
 
-      csInterface.evalScript('EAVIngest.openInSourceMonitor("' + clip.nodeId + '")', function(result) {
+      // SECURITY: Escape nodeId to prevent code injection
+      const escapedNodeId = escapeForEvalScript(clip.nodeId);
+      csInterface.evalScript('EAVIngest.openInSourceMonitor("' + escapedNodeId + '")', function(result) {
         console.log('[ThumbnailViewer] openInSourceMonitor raw result:', result);
 
         try {
@@ -497,7 +519,9 @@ addDiagnostic('✓ Panel-main.js executing...');
 
       console.log('[ThumbnailViewer] Opening in Source Monitor:', PanelState.currentClip.name);
 
-      csInterface.evalScript('EAVIngest.openInSourceMonitor("' + PanelState.currentClip.nodeId + '")', function(result) {
+      // SECURITY: Escape nodeId to prevent code injection
+      const escapedNodeId = escapeForEvalScript(PanelState.currentClip.nodeId);
+      csInterface.evalScript('EAVIngest.openInSourceMonitor("' + escapedNodeId + '")', function(result) {
         try {
           const data = JSON.parse(result);
 

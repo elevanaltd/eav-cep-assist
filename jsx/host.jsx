@@ -20,7 +20,14 @@ var EAVIngest = (function() {
 
     try {
 
-      var logFile = new File(Folder.desktop + '/eav-cep-debug.txt');
+      // Use user data directory instead of desktop for privacy
+      // Creates ~/.debug/ directory if it doesn't exist
+      var debugDir = new Folder(Folder.userData.parent.fsName + '/.debug');
+      if (!debugDir.exists) {
+        debugDir.create();
+      }
+
+      var logFile = new File(debugDir.fsName + '/eav-cep-debug.txt');
 
       logFile.open('a'); // append mode
 
