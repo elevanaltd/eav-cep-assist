@@ -130,6 +130,78 @@ body {
     border-color: #0078d4;
 }
 
+/* Batch Controls */
+.batch-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background-color: #2b2b2b;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.batch-selection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.batch-btn-small {
+    padding: 4px 8px;
+    background-color: #3a3a3a;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    color: #d0d0d0;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background-color 0.15s;
+}
+
+.batch-btn-small:hover {
+    background-color: #404040;
+}
+
+.selected-count {
+    font-size: 11px;
+    color: #808080;
+    padding-left: 4px;
+    font-weight: 500;
+}
+
+.batch-apply-btn {
+    padding: 6px 12px;
+    background-color: #0078d4;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.15s;
+}
+
+.batch-apply-btn:hover:not(:disabled) {
+    background-color: #0063b1;
+}
+
+.batch-apply-btn:disabled {
+    background-color: #404040;
+    color: #808080;
+    cursor: not-allowed;
+}
+
+.batch-apply-btn.processing {
+    background-color: #ffa500;
+}
+
+.batch-icon {
+    font-size: 14px;
+}
+
 /* Bin Headers */
 .bin-header {
     padding: 8px 12px;
@@ -196,6 +268,21 @@ body {
 
 .clip-item.selected:hover {
     background-color: #0d5a8f;
+}
+
+.clip-item.checked {
+    background-color: #2d4a2d;
+}
+
+.clip-item.checked:hover {
+    background-color: #345334;
+}
+
+.clip-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
 .status-icon {
