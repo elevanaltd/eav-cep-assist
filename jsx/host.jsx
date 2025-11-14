@@ -861,7 +861,23 @@ var EAVIngest = (function() {
 
           $.writeln('DEBUG: Got XMP metadata (length: ' + xmpString.length + ')');
 
+          // DIAGNOSTIC: Show snippet of XMP to debug console
+          var xmpSnippet = xmpString.substring(0, 500);
+          $.writeln('DEBUG XMP SNIPPET: ' + xmpSnippet);
 
+          // DIAGNOSTIC: Pass XMP snippet to CEP panel diagnostics (since console doesn't work)
+          metadata.xmpSnippet = xmpSnippet;
+
+          // DIAGNOSTIC: Search for LogComment anywhere in XMP (case-insensitive)
+          var logCommentIndex = xmpString.toLowerCase().indexOf('logcomment');
+          if (logCommentIndex !== -1) {
+            // Found it! Extract 200 chars around it for debugging
+            var start = Math.max(0, logCommentIndex - 50);
+            var end = Math.min(xmpString.length, logCommentIndex + 150);
+            metadata.logCommentContext = xmpString.substring(start, end);
+          } else {
+            metadata.logCommentContext = 'NOT_FOUND_IN_XMP_STRING';
+          }
 
           // Parse XMP for Dublin Core description
 
@@ -894,8 +910,15 @@ var EAVIngest = (function() {
 
 
           // Parse xmpDM:logComment for structured components (IA compatibility)
-
-          var logCommentMatch = xmpString.match(/<xmpDM:LogComment>(.*?)<\/xmpDM:LogComment>/);
+          // NOTE: Premiere Pro returns XMP as ELEMENTS, and IA writes lowercase 'logComment'
+          var logCommentMatch = xmpString.match(/<xmpDM:logComment>(.*?)<\/xmpDM:logComment>/);
+          metadata.regexAttempt = 'lowercase-c-element'; // DIAGNOSTIC
+          if (!logCommentMatch) {
+            // Fallback: Try capital C for CEP Panel-written XMP
+            $.writeln('DEBUG: logComment (lowercase c) not found, trying capital C...');
+            logCommentMatch = xmpString.match(/<xmpDM:LogComment>(.*?)<\/xmpDM:LogComment>/);
+            metadata.regexAttempt = 'capital-C-element'; // DIAGNOSTIC
+          }
 
           if (logCommentMatch) {
 
@@ -903,7 +926,9 @@ var EAVIngest = (function() {
 
             $.writeln('DEBUG: Found LogComment: \'' + logComment + '\'');
 
-
+            // DIAGNOSTIC: Return raw logComment so it shows in CEP diagnostic panel
+            metadata.rawLogComment = logComment;
+            metadata.regexAttempt = metadata.regexAttempt + '-MATCHED'; // DIAGNOSTIC
 
             // Parse location=X, subject=Y, action=Z, shotType=W
 
@@ -934,6 +959,9 @@ var EAVIngest = (function() {
             // Fallback: Try legacy individual XMP fields for backward compatibility
 
             $.writeln('DEBUG: LogComment not found, using legacy XMP fields');
+            // DIAGNOSTIC: Show we didn't find it
+            metadata.rawLogComment = 'NOT_FOUND_IN_XMP';
+            metadata.regexAttempt = metadata.regexAttempt + '-NO_MATCH'; // DIAGNOSTIC
 
 
 
@@ -991,6 +1019,12 @@ var EAVIngest = (function() {
 
           $.writeln('DEBUG XMP ERROR: ' + xmpError.toString());
 
+          // DIAGNOSTIC: Pass error to CEP panel diagnostics
+          metadata.xmpSnippet = 'ERROR: ' + xmpError.toString();
+          metadata.regexAttempt = 'ERROR_BEFORE_REGEX';
+          metadata.rawLogComment = 'ERROR: ' + xmpError.toString();
+          metadata.logCommentContext = 'ERROR: ' + xmpError.toString();
+
           metadata.identifier = '';
 
           metadata.description = '';
@@ -1031,7 +1065,16 @@ var EAVIngest = (function() {
 
           subject: metadata.subject,
 
-          action: metadata.action
+          action: metadata.action,
+
+          // DIAGNOSTIC fields for debugging
+          rawLogComment: metadata.rawLogComment || 'NOT_SET',
+
+          regexAttempt: metadata.regexAttempt || 'NOT_SET',
+
+          xmpSnippet: metadata.xmpSnippet || 'NOT_SET',
+
+          logCommentContext: metadata.logCommentContext || 'NOT_SET'
 
         });
 
