@@ -16,6 +16,8 @@
 
     "lint": "eslint js/**/*.js jsx/**/*.jsx",
 
+    "validate:es3": "bash scripts/validate-es3-enforcement.sh",
+
     "typecheck": "tsc --noEmit",
 
     "test": "vitest run",
@@ -26,7 +28,7 @@
 
     "test:coverage": "vitest run --coverage",
 
-    "quality-gates": "npm run lint && npm run typecheck && npm test"
+    "quality-gates": "npm run lint && npm run validate:es3 && npm run typecheck && npm test"
 
   },
 

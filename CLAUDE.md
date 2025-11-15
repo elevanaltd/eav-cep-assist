@@ -337,15 +337,24 @@ The project includes test files to prove enforcement works:
 - **`jsx/test-es3-violations.jsx`** - Parser-level rejection (const, let, arrow, template literals)
 - **`jsx/test-es3-rule-violations.jsx`** - Rule-level detection (console, ==, missing braces)
 
-**Run manually to verify enforcement:**
+**Automated Validation (runs in CI):**
 ```bash
-npm run lint jsx/test-es3-violations.jsx        # Should show parser error
-npm run lint jsx/test-es3-rule-violations.jsx   # Should show 15+ rule errors
+npm run validate:es3
+# ✓ Parser correctly rejects ES6+ syntax
+# ✓ ESLint rules caught 16 violations (expected 10+)
 ```
 
-**Note:** These files are excluded from `npm run quality-gates` via:
+**Manual Verification:**
+```bash
+npx eslint --no-ignore jsx/test-es3-violations.jsx        # Should show parser error
+npx eslint --no-ignore jsx/test-es3-rule-violations.jsx   # Should show 15+ rule errors
+```
+
+**Note:** Test files are excluded from production linting via:
 - `eslint.config.js` → `ignores: ['jsx/test-es3-*.jsx']`
 - `tsconfig.json` → `exclude: ['jsx/test-es3-*.jsx']`
+
+BUT validation runs EXPLICITLY in quality gates via `npm run validate:es3` (ensures enforcement proof runs every CI build).
 
 ### **Common Violations & Fixes**
 
@@ -383,12 +392,15 @@ var processClip = function(clip) {
 All ExtendScript changes MUST pass:
 ```bash
 npm run quality-gates
-# ✓ lint     - No ES6+ syntax (parser + rules)
-# ✓ typecheck - TypeScript validation (ES5 target)
-# ✓ test     - Unit + integration tests
+# ✓ lint        - No ES6+ syntax in production code (parser + rules)
+# ✓ validate:es3 - Proof that ES3 enforcement catches violations
+# ✓ typecheck    - TypeScript validation (ES5 target)
+# ✓ test         - Unit + integration tests
 ```
 
-**Last Updated:** 2025-11-15 (B2.0 ES3 validation)
+**Critical:** The `validate:es3` gate explicitly runs intentional violation files with `--no-ignore` to prove enforcement works. If this gate fails, it means ESLint is NOT catching ES3 violations (regression detected).
+
+**Last Updated:** 2025-11-15 (B2.0 ES3 validation - code review corrections)
 
 ---
 
