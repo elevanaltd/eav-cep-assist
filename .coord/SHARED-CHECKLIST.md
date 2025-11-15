@@ -189,9 +189,11 @@
 ## ISSUE TRACKING
 
 **Active Issues:**
-- Issue #2: Navigation Panel sorting ✅ FIXED
-- Issue #3: Tape Name XMP persistence ✅ FIXED
-- Issue #4: XMP namespace corruption ✅ FIXED
+- [x] Issue #2: Navigation Panel sorting ✅ FIXED
+- [x] Issue #3: Tape Name XMP persistence ✅ FIXED
+- [x] Issue #4: XMP namespace corruption ✅ FIXED
+- [x] LogComment parsing (element vs attribute format) ✅ FIXED (2025-11-14)
+- [ ] Issue #32: Offline metadata workflow ⊗ Project Columns API research ⊗ CRITICAL
 
 **Future Issues:**
 - (Track new issues in GitHub Issues or `.coord/workflow-docs/ISSUES-LOG.md`)
