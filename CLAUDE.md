@@ -290,6 +290,108 @@ jq -s '
 
 ---
 
+## ⚙️ ES3 Enforcement & Constraints
+
+### **Why ES3?**
+Adobe ExtendScript is based on **ECMAScript 3** (ES3, circa 1999). Modern JavaScript features (ES6+, from 2015) are **NOT supported** and will cause runtime errors in Premiere Pro.
+
+### **Automated Enforcement**
+This project uses **two-layer enforcement** to prevent ES6+ syntax from reaching production:
+
+#### **1. Parser-Level Rejection (ESLint)**
+- **Config:** `eslint.config.js` sets `ecmaVersion: 3` for `jsx/*.jsx` files
+- **Behavior:** ES6+ syntax **fails parsing** immediately (strongest enforcement)
+- **Example:**
+  ```bash
+  npm run lint jsx/test-es3-violations.jsx
+  # Error: Parsing error: Unexpected token FORBIDDEN_CONST
+  ```
+
+#### **2. Type Checking (TypeScript)**
+- **Config:** `tsconfig.json` sets `target: "ES5"` (superset of ES3)
+- **Behavior:** Catches type errors and ES6+ constructs
+- **Example:**
+  ```bash
+  npm run typecheck
+  # Error: Cannot find name 'console'
+  ```
+
+### **Forbidden ES6+ Constructs**
+
+| **ES6+ Feature** | **ES3 Replacement** |
+|------------------|---------------------|
+| `const x = 1;` | `var x = 1;` |
+| `let x = 1;` | `var x = 1;` |
+| `() => {}` | `function() {}` |
+| `` `template ${x}` `` | `'string ' + x` |
+| `{a, b} = obj` | `var a = obj.a; var b = obj.b;` |
+| `[a, b] = arr` | `var a = arr[0]; var b = arr[1];` |
+| `func(x = 'default')` | `function func(x) { x = x \|\| 'default'; }` |
+| `[...arr1, ...arr2]` | `arr1.concat(arr2)` |
+| `console.log()` | (Not available - ExtendScript has no console) |
+| `Array.forEach()` | `for (var i = 0; i < arr.length; i++)` |
+
+### **Validation Test Files**
+The project includes test files to prove enforcement works:
+
+- **`jsx/test-es3-violations.jsx`** - Parser-level rejection (const, let, arrow, template literals)
+- **`jsx/test-es3-rule-violations.jsx`** - Rule-level detection (console, ==, missing braces)
+
+**Run manually to verify enforcement:**
+```bash
+npm run lint jsx/test-es3-violations.jsx        # Should show parser error
+npm run lint jsx/test-es3-rule-violations.jsx   # Should show 15+ rule errors
+```
+
+**Note:** These files are excluded from `npm run quality-gates` via:
+- `eslint.config.js` → `ignores: ['jsx/test-es3-*.jsx']`
+- `tsconfig.json` → `exclude: ['jsx/test-es3-*.jsx']`
+
+### **Common Violations & Fixes**
+
+#### **❌ WRONG (ES6+):**
+```javascript
+const selectedClip = app.project.activeSequence.videoTracks[0].clips[0];
+var processClip = (clip) => {
+  return `Processing ${clip.name}`;
+};
+```
+
+#### **✓ CORRECT (ES3):**
+```javascript
+var selectedClip = app.project.activeSequence.videoTracks[0].clips[0];
+var processClip = function(clip) {
+  return 'Processing ' + clip.name;
+};
+```
+
+### **Debugging ES3 Violations**
+
+1. **Lint fails with "Unexpected token" → Parser-level rejection**
+   - Fix: Replace ES6+ syntax with ES3 equivalent
+   - Verify: `npm run lint jsx/your-file.jsx`
+
+2. **TypeScript error "Cannot find name 'X'" → Undefined global**
+   - Check: Is `X` defined in ExtendScript globals? (See `eslint.config.js` lines 54-67)
+   - Fix: Add to `globals` if legitimate Adobe API
+
+3. **Premiere Pro runtime error → Syntax passed linting but fails at runtime**
+   - **ESCALATE** - This indicates a gap in ES3 enforcement
+   - Report to holistic-orchestrator for tooling fix
+
+### **Quality Gate Requirements**
+All ExtendScript changes MUST pass:
+```bash
+npm run quality-gates
+# ✓ lint     - No ES6+ syntax (parser + rules)
+# ✓ typecheck - TypeScript validation (ES5 target)
+# ✓ test     - Unit + integration tests
+```
+
+**Last Updated:** 2025-11-15 (B2.0 ES3 validation)
+
+---
+
 ## 📚 Documentation Structure
 
 - **`CLAUDE.md`** ← You are here (operational guide for AI)
