@@ -34,58 +34,62 @@ describe('QE DOM Payload Structure (Characterization)', () => {
       expect(fixture.length).toBeGreaterThan(0);
     });
 
-    it('should contain required clip properties', () => {
+    it('should contain required clip properties for ALL clips', () => {
       const fixture = loadFixture('qe-dom-offline.json');
-      const firstClip = fixture[0];
 
-      // Core identification properties
-      expect(firstClip).toHaveProperty('nodeId');
-      expect(firstClip).toHaveProperty('name');
-      expect(firstClip).toHaveProperty('treePath');
-      expect(firstClip).toHaveProperty('mediaPath');
+      // CODE REVIEW: Iterate ALL clips, not just first (previously only checked fixture[0])
+      fixture.forEach((clip, index) => {
+        // Core identification properties
+        expect(clip, `clip[${index}]`).toHaveProperty('nodeId');
+        expect(clip, `clip[${index}]`).toHaveProperty('name');
+        expect(clip, `clip[${index}]`).toHaveProperty('treePath');
+        expect(clip, `clip[${index}]`).toHaveProperty('mediaPath');
 
-      // Metadata properties (from XMP parsing)
-      expect(firstClip).toHaveProperty('identifier');
-      expect(firstClip).toHaveProperty('description');
-      expect(firstClip).toHaveProperty('shot');
-      expect(firstClip).toHaveProperty('good');
-      expect(firstClip).toHaveProperty('location');
-      expect(firstClip).toHaveProperty('subject');
-      expect(firstClip).toHaveProperty('action');
+        // Metadata properties (from XMP parsing)
+        expect(clip, `clip[${index}]`).toHaveProperty('identifier');
+        expect(clip, `clip[${index}]`).toHaveProperty('description');
+        expect(clip, `clip[${index}]`).toHaveProperty('shot');
+        expect(clip, `clip[${index}]`).toHaveProperty('good');
+        expect(clip, `clip[${index}]`).toHaveProperty('location');
+        expect(clip, `clip[${index}]`).toHaveProperty('subject');
+        expect(clip, `clip[${index}]`).toHaveProperty('action');
 
-      // Diagnostic properties (debugging aids)
-      expect(firstClip).toHaveProperty('rawLogComment');
-      expect(firstClip).toHaveProperty('regexAttempt');
-      expect(firstClip).toHaveProperty('xmpSnippet');
-      expect(firstClip).toHaveProperty('logCommentContext');
-      expect(firstClip).toHaveProperty('availableColumns');
+        // Diagnostic properties (debugging aids)
+        expect(clip, `clip[${index}]`).toHaveProperty('rawLogComment');
+        expect(clip, `clip[${index}]`).toHaveProperty('regexAttempt');
+        expect(clip, `clip[${index}]`).toHaveProperty('xmpSnippet');
+        expect(clip, `clip[${index}]`).toHaveProperty('logCommentContext');
+        expect(clip, `clip[${index}]`).toHaveProperty('availableColumns');
+      });
     });
 
-    it('should have correct property types', () => {
+    it('should have correct property types for ALL clips', () => {
       const fixture = loadFixture('qe-dom-offline.json');
-      const firstClip = fixture[0];
 
-      // String properties
-      expect(typeof firstClip.nodeId).toBe('string');
-      expect(typeof firstClip.name).toBe('string');
-      expect(typeof firstClip.treePath).toBe('string');
-      expect(typeof firstClip.mediaPath).toBe('string');
+      // CODE REVIEW: Iterate ALL clips, not just first
+      fixture.forEach((clip, index) => {
+        // String properties
+        expect(typeof clip.nodeId, `clip[${index}].nodeId`).toBe('string');
+        expect(typeof clip.name, `clip[${index}].name`).toBe('string');
+        expect(typeof clip.treePath, `clip[${index}].treePath`).toBe('string');
+        expect(typeof clip.mediaPath, `clip[${index}].mediaPath`).toBe('string');
 
-      // Metadata strings (may be empty but must be strings)
-      expect(typeof firstClip.identifier).toBe('string');
-      expect(typeof firstClip.description).toBe('string');
-      expect(typeof firstClip.shot).toBe('string');
-      expect(typeof firstClip.good).toBe('string');
-      expect(typeof firstClip.location).toBe('string');
-      expect(typeof firstClip.subject).toBe('string');
-      expect(typeof firstClip.action).toBe('string');
+        // Metadata strings (may be empty but must be strings)
+        expect(typeof clip.identifier, `clip[${index}].identifier`).toBe('string');
+        expect(typeof clip.description, `clip[${index}].description`).toBe('string');
+        expect(typeof clip.shot, `clip[${index}].shot`).toBe('string');
+        expect(typeof clip.good, `clip[${index}].good`).toBe('string');
+        expect(typeof clip.location, `clip[${index}].location`).toBe('string');
+        expect(typeof clip.subject, `clip[${index}].subject`).toBe('string');
+        expect(typeof clip.action, `clip[${index}].action`).toBe('string');
 
-      // Diagnostic strings
-      expect(typeof firstClip.rawLogComment).toBe('string');
-      expect(typeof firstClip.regexAttempt).toBe('string');
-      expect(typeof firstClip.xmpSnippet).toBe('string');
-      expect(typeof firstClip.logCommentContext).toBe('string');
-      expect(typeof firstClip.availableColumns).toBe('string');
+        // Diagnostic strings
+        expect(typeof clip.rawLogComment, `clip[${index}].rawLogComment`).toBe('string');
+        expect(typeof clip.regexAttempt, `clip[${index}].regexAttempt`).toBe('string');
+        expect(typeof clip.xmpSnippet, `clip[${index}].xmpSnippet`).toBe('string');
+        expect(typeof clip.logCommentContext, `clip[${index}].logCommentContext`).toBe('string');
+        expect(typeof clip.availableColumns, `clip[${index}].availableColumns`).toBe('string');
+      });
     });
 
     it('should preserve XMP diagnostic fields for debugging', () => {
@@ -100,11 +104,43 @@ describe('QE DOM Payload Structure (Characterization)', () => {
       expect(firstClip.rawLogComment).toBeDefined();
       // Should be 'NOT_FOUND_IN_XMP' or actual structured data like 'location=X, subject=Y'
     });
+
+    it('should cover all diagnostic parsing path variants', () => {
+      const fixture = loadFixture('qe-dom-offline.json');
+
+      // CODE REVIEW: Collect all diagnostic variants to ensure fixtures cover parsing branches
+      const regexAttempts = new Set(fixture.map(clip => clip.regexAttempt));
+      const availableColumnsVariants = new Set(fixture.map(clip => clip.availableColumns));
+
+      // Ensure fixtures contain at least SOME diversity in parsing paths
+      // (Exact coverage depends on real capture, but synthetic should show variety)
+      expect(regexAttempts.size, 'Fixtures should show multiple regexAttempt paths').toBeGreaterThan(1);
+
+      // Document which variants exist for debugging
+      const variantSummary = {
+        regexAttempts: Array.from(regexAttempts),
+        availableColumnsVariants: Array.from(availableColumnsVariants),
+      };
+
+      // Log for manual verification (helps understand fixture coverage)
+      console.log('Diagnostic variant coverage:', variantSummary);
+
+      // After manual capture, fixtures SHOULD include:
+      // - lowercase-c-element-MATCHED (IA-generated metadata)
+      // - capital-C-element-MATCHED (CEP panel-written metadata)
+      // - lowercase-c-element-NO_MATCH (no logComment found)
+      // - NO_DIRECT_ACCESS (QE DOM columns unavailable)
+      // This test will PASS with synthetic but SHOULD be enhanced post-capture
+    });
   });
 
   describe('Online Scenario (Network Media)', () => {
-    it('should match expected getAllProjectClips() structure', () => {
-      // Online scenario may have different media paths but identical structure
+    // CODE REVIEW: Skip online tests until real network media capture
+    // Current implementation is symlink to offline, provides zero signal
+    it.skip('should match expected getAllProjectClips() structure (TODO: real network capture)', () => {
+      // TODO: Execute manual capture with network media project
+      // Currently qe-dom-online.json is symlink to offline fixture
+      // See test/manual/002-CAPTURE-QE-DOM-PAYLOADS.md for instructions
       const fixture = loadFixture('qe-dom-online.json');
 
       expect(fixture).toBeDefined();
@@ -112,7 +148,8 @@ describe('QE DOM Payload Structure (Characterization)', () => {
       expect(fixture.length).toBeGreaterThan(0);
     });
 
-    it('should have identical structure to offline scenario', () => {
+    it.skip('should have identical structure to offline scenario (TODO: real network capture)', () => {
+      // TODO: After real network media capture, validate structure matches
       const offlineFixture = loadFixture('qe-dom-offline.json');
       const onlineFixture = loadFixture('qe-dom-online.json');
 
@@ -128,7 +165,7 @@ describe('QE DOM Payload Structure (Characterization)', () => {
     it('should handle clips with no metadata gracefully', () => {
       const fixture = loadFixture('qe-dom-offline.json');
 
-      // Find a clip with empty metadata (if any)
+      // CODE REVIEW: Enforce edge case exists in fixtures (don't short-circuit)
       const emptyMetadataClip = fixture.find(clip =>
         clip.identifier === '' &&
         clip.description === '' &&
@@ -137,27 +174,32 @@ describe('QE DOM Payload Structure (Characterization)', () => {
         clip.action === ''
       );
 
-      // If we have such a clip, validate it still has required structure
-      if (emptyMetadataClip) {
-        expect(emptyMetadataClip).toHaveProperty('nodeId');
-        expect(emptyMetadataClip).toHaveProperty('name');
-        expect(emptyMetadataClip.rawLogComment).toBe('NOT_FOUND_IN_XMP');
-      }
+      // MANDATORY: Fixture MUST contain empty metadata clip for regression coverage
+      expect(emptyMetadataClip, 'Fixture must contain at least one clip with no metadata (regression test)').toBeDefined();
+
+      // Validate empty clip still has required structure
+      expect(emptyMetadataClip).toHaveProperty('nodeId');
+      expect(emptyMetadataClip).toHaveProperty('name');
+      expect(emptyMetadataClip.rawLogComment).toBe('NOT_FOUND_IN_XMP');
     });
 
     it('should handle XMP parsing errors gracefully', () => {
       const fixture = loadFixture('qe-dom-offline.json');
 
-      // Find a clip with XMP errors (if any)
+      // CODE REVIEW: This edge case may not exist in synthetic fixtures
+      // Skip enforcement until real capture (where errors might occur)
       const errorClip = fixture.find(clip =>
         clip.xmpSnippet && clip.xmpSnippet.startsWith('ERROR:')
       );
 
-      // If we have error clips, validate they still have required structure
+      // If error clips exist, validate structure (but don't enforce presence yet)
       if (errorClip) {
         expect(errorClip).toHaveProperty('nodeId');
         expect(errorClip).toHaveProperty('name');
         expect(errorClip.regexAttempt).toBe('ERROR_BEFORE_REGEX');
+      } else {
+        // Log for manual review - real capture might produce error clips
+        console.log('INFO: No XMP parsing errors in fixtures (may change after real capture)');
       }
     });
   });
