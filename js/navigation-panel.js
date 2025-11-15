@@ -339,6 +339,7 @@
                 addDebug('[ClipBrowser] rawLogComment: "' + (firstClip.rawLogComment || 'EMPTY') + '"');
                 addDebug('[ClipBrowser] regexAttempt: "' + (firstClip.regexAttempt || 'EMPTY') + '"');
                 addDebug('[ClipBrowser] logCommentContext: "' + (firstClip.logCommentContext || 'EMPTY') + '"');
+                addDebug('[ClipBrowser] availableColumns: "' + (firstClip.availableColumns || 'EMPTY') + '"');
                 addDebug('[ClipBrowser] xmpSnippet: "' + (firstClip.xmpSnippet || 'EMPTY').substring(0, 200) + '..."');
                 addDebug('[ClipBrowser] good: "' + (firstClip.good || 'EMPTY') + '"');
                 addDebug('[ClipBrowser] shot: "' + (firstClip.shot || 'EMPTY') + '"');

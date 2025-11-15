@@ -121,6 +121,15 @@ var EAVIngest = (function() {
 
       if (item.type === ProjectItemType.CLIP || item.type === ProjectItemType.FILE) {
 
+        // DIAGNOSTIC: Test Project Columns access in getSelectedClips() context
+        var projectCols = item.getProjectColumnsMetadata();
+        var colTest = 'Tape=' + (projectCols.Tape || 'NONE') +
+                      ' | Desc=' + (projectCols.Description || 'NONE') +
+                      ' | Shot=' + (projectCols.Shot || 'NONE') +
+                      ' | LogComment(space)=' + (projectCols['Log Comment'] || 'NONE') +
+                      ' | LogComment(noSpace)=' + (projectCols.LogComment || 'NONE');
+        $.writeln('DEBUG getSelectedClips() PROJECT COLUMNS: ' + colTest);
+
         clips.push({
 
           nodeId: item.nodeId,
@@ -133,11 +142,14 @@ var EAVIngest = (function() {
 
           // Get existing metadata from PP fields
 
-          tapeName: item.getProjectColumnsMetadata().Tape || '',
+          tapeName: projectCols.Tape || '',
 
-          description: item.getProjectColumnsMetadata().Description || '',
+          description: projectCols.Description || '',
 
-          shot: item.getProjectColumnsMetadata().Shot || '',
+          shot: projectCols.Shot || '',
+
+          // DIAGNOSTIC: Test if we can read Log Comment
+          logCommentFromColumn: projectCols['Log Comment'] || projectCols.LogComment || 'NO_COLUMN_ACCESS',
 
           // File info
 
@@ -853,6 +865,53 @@ var EAVIngest = (function() {
 
         var metadata = {};
 
+        // DIAGNOSTIC: Test direct access to known Project Column names
+        try {
+
+          var projectCols = item.getProjectColumnsMetadata();
+
+          // Try direct access to known columns
+          var directAccess = [];
+
+          if (projectCols.Tape !== undefined) {
+            directAccess.push('Tape=' + projectCols.Tape);
+          }
+
+          if (projectCols.Description !== undefined) {
+            directAccess.push('Desc=' + projectCols.Description);
+          }
+
+          if (projectCols.Shot !== undefined) {
+            directAccess.push('Shot=' + projectCols.Shot);
+          }
+
+          // Try "Log Comment" with different variations
+          if (projectCols['Log Comment'] !== undefined) {
+            directAccess.push('LogComment(space)=' + projectCols['Log Comment']);
+          }
+
+          if (projectCols.LogComment !== undefined) {
+            directAccess.push('LogComment(noSpace)=' + projectCols.LogComment);
+          }
+
+          if (projectCols.Comment !== undefined) {
+            directAccess.push('Comment=' + projectCols.Comment);
+          }
+
+          if (projectCols['Shot Name'] !== undefined) {
+            directAccess.push('ShotName(space)=' + projectCols['Shot Name']);
+          }
+
+          metadata.availableColumns = directAccess.length > 0 ? directAccess.join(' | ') : 'NO_DIRECT_ACCESS';
+
+          $.writeln('DEBUG PROJECT COLUMNS DIRECT ACCESS: ' + metadata.availableColumns);
+
+        } catch (colError) {
+
+          metadata.availableColumns = 'ERROR: ' + colError.toString();
+
+        }
+
         // Try reading from XMP metadata instead of Project Columns
 
         try {
@@ -1074,7 +1133,9 @@ var EAVIngest = (function() {
 
           xmpSnippet: metadata.xmpSnippet || 'NOT_SET',
 
-          logCommentContext: metadata.logCommentContext || 'NOT_SET'
+          logCommentContext: metadata.logCommentContext || 'NOT_SET',
+
+          availableColumns: metadata.availableColumns || 'NOT_SET'
 
         });
 

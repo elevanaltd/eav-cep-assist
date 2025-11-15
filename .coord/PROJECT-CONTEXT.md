@@ -44,21 +44,33 @@
 - **Audit Trail:** Tracks modifiedAt, modifiedBy for each edit
 - **Documentation:** See docs/002-DOC-ML-FEEDBACK-LOOP.md
 
-## Current State
+## Current Focus
+METADATA::LogComment_parsing→online_workflows_fixed→Issue_#32_RESOLVED✅
+ARCHITECTURE::XMP-First_validated→POC_passed→B2_refactor_ready
 
-### Active Development
-- **Phase:** Early development (prototype/MVP)
-- **Integration:** Standalone tool (no database)
-- **Deployment:** Adobe Extension Manager (manual install)
+## Key Decisions
+- [2025-11-14] XMP_FORMAT→element_format[vs attribute_format]→Premiere_returns_<tag>value</tag>≠tag="value"
+- [2025-11-14] OFFLINE_WORKFLOWS→XMP-First_architecture→ADR-003_APPROVED→POC_validated_all_tests_passed
+- [2025-11-14] Issue_#32_RESOLVED→getProjectMetadata()_API_confirmed→9877_chars_XMP_in_project→offline_safe
 
-### Future Integration (Phase 2)
-- **Database:** Supabase connection to EAV monorepo
-- **Read:** `shots` table from Scenes Web (shot planning context)
-- **Write:** Tagged clip metadata back to `shots` table
-- **AI Enhancement:** Computer vision auto-suggestions within panel
+## Active Work
+- [x] XMP::LogComment_parsing→fixed→online_works
+- [x] RESEARCH::offline_metadata_access→XMP-First_validated→ADR-003_approved
+- [ ] B2::XMP-First_refactor→4_days_estimated→implementation-lead_handoff_ready
+- [ ] B1::workspace_setup→quality_gates_pending
 
-## Quality Gates Status
-- TBD (project in early development)
+## Failed Approaches (This Session)
+- ❌ attribute_regex→assumed_from_ExifTool→Premiere_uses_elements→switched_to_element_format
+- ❌ QE_DOM_getProjectColumnsMetadata()→unreliable_offline→REPLACED_BY→XMP-First_architecture✅
+
+## Next Milestone
+B2 Phase: XMP-First refactor (4 days) → Replace QE DOM with official APIs → Offline workflows enabled
+
+## Recent User Feedback
+> "The purpose of the metadata panel is for users to review the metadata against the photos to do QC and amend where wrong. It is vital." (offline workflow requirement)
+
+---
+Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ## Related Documentation
 
