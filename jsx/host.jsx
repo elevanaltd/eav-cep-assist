@@ -122,6 +122,7 @@ var EAVIngest = (function() {
       if (item.type === ProjectItemType.CLIP || item.type === ProjectItemType.FILE) {
 
         // DIAGNOSTIC: Test Project Columns access in getSelectedClips() context
+        /** @type {*} */
         var projectCols = item.getProjectColumnsMetadata();
         var colTest = 'Tape=' + (projectCols.Tape || 'NONE') +
                       ' | Desc=' + (projectCols.Description || 'NONE') +

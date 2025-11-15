@@ -8,24 +8,25 @@
 
 ### B1.1: Quality Gates Configuration
 
-**Status:** 🔴 Not Started
+**Status:** ✅ Complete (2025-11-15)
 
-- [ ] ESLint for JavaScript (CEP panels: `js/*.js`)
-  - [ ] Create `eslint.config.js` (or `.eslintrc.js`)
-  - [ ] Configure for browser environment (Chromium/CEP)
-  - [ ] Add npm script: `npm run lint`
-  - [ ] Verify: `npm run lint` runs without errors
-- [ ] JSDoc for ExtendScript (ES3: `jsx/host.jsx`)
-  - [ ] Create `jsconfig.json` (JSDoc type checking)
-  - [ ] Document ES3 constraints (no arrow functions, const, template literals)
-  - [ ] Add npm script: `npm run typecheck` (JSDoc validation)
-  - [ ] Verify: ExtendScript functions have JSDoc annotations
-- [ ] Test Infrastructure Decision
-  - [ ] Evaluate test frameworks (Vitest? Mocha? CEP compatibility?)
-  - [ ] Document testing strategy (see ADR-001)
-  - [ ] Create test directory structure (`test/unit/`, `test/integration/`)
-  - [ ] Add npm script: `npm test`
-  - [ ] Create example test (smoke test for CSInterface)
+- [x] ESLint for JavaScript (CEP panels: `js/*.js`)
+  - [x] Create `eslint.config.js` (flat config format, ESLint 9.39.1)
+  - [x] Configure for browser environment (Chromium/CEP) + ExtendScript ES3
+  - [x] Add npm script: `npm run lint`
+  - [x] Verify: `npm run lint` runs with 0 errors (8 warnings acceptable)
+- [x] JSDoc for ExtendScript (ES3: `jsx/host.jsx`)
+  - [x] Create `tsconfig.json` + `jsconfig.json` (TypeScript 5.9.3)
+  - [x] Create `types/extendscript.d.ts` (ExtendScript API definitions)
+  - [x] Document ES3 constraints via type definitions
+  - [x] Add npm script: `npm run typecheck` (TypeScript validation)
+  - [x] Verify: ExtendScript typecheck passes (0 errors)
+- [x] Test Infrastructure Decision
+  - [x] Test framework: Vitest 2.1.8 (already configured)
+  - [x] Testing strategy: Unit tests (Vitest) + Manual tests (Premiere Pro)
+  - [x] Test directory structure exists (`test/unit/`, `test/integration/`)
+  - [x] Add npm script: `npm test`
+  - [x] Verify: 6 tests passing (smoke.test.js + cep-events.test.js)
 
 ### B1.2: Coordination Documentation
 
@@ -127,10 +128,10 @@
 **B1 phase is complete when ALL of the following are true:**
 
 ### Quality Gates Operational
-- [ ] `npm run lint` executes (ESLint configured, 0 errors on existing code)
-- [ ] `npm run typecheck` executes (JSDoc validation configured)
-- [ ] `npm test` executes (test framework chosen, at least 1 smoke test passes)
-- [ ] All quality gate scripts in `scripts/` directory functional
+- [x] `npm run lint` executes (ESLint 9.39.1, 0 errors, 8 warnings)
+- [x] `npm run typecheck` executes (TypeScript 5.9.3, 0 errors)
+- [x] `npm test` executes (Vitest 2.1.8, 6 tests passing)
+- [x] `npm run quality-gates` executes all gates successfully
 
 ### Documentation Complete
 - [ ] ADR-001: Prototype→Production strategy documented
