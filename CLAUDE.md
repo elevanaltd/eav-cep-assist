@@ -296,7 +296,7 @@ jq -s '
 Adobe ExtendScript is based on **ECMAScript 3** (ES3, circa 1999). Modern JavaScript features (ES6+, from 2015) are **NOT supported** and will cause runtime errors in Premiere Pro.
 
 ### **Automated Enforcement**
-This project uses **two-layer enforcement** to prevent ES6+ syntax from reaching production:
+This project uses **three-layer enforcement** to prevent ES6+ syntax from reaching production:
 
 #### **1. Parser-Level Rejection (ESLint)**
 - **Config:** `eslint.config.js` sets `ecmaVersion: 3` for `jsx/*.jsx` files
