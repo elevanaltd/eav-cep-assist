@@ -303,17 +303,30 @@ This project uses **two-layer enforcement** to prevent ES6+ syntax from reaching
 - **Behavior:** ES6+ syntax **fails parsing** immediately (strongest enforcement)
 - **Example:**
   ```bash
-  npm run lint jsx/test-es3-violations.jsx
-  # Error: Parsing error: Unexpected token FORBIDDEN_CONST
+  npm run lint
+  # Error: Parsing error: Unexpected token FORBIDDEN_CONST (if ES6+ detected)
   ```
 
-#### **2. Type Checking (TypeScript)**
-- **Config:** `tsconfig.json` sets `target: "ES5"` (superset of ES3)
-- **Behavior:** Catches type errors and ES6+ constructs
+#### **2. Regression Detection (Validation Script)**
+- **Script:** `scripts/validate-es3-enforcement.sh`
+- **Behavior:** Proves ESLint catches violations by testing intentional ES6+ files
+- **Runs in:** `npm run quality-gates` (automated CI validation)
+- **Example:**
+  ```bash
+  npm run validate:es3
+  # ✓ Parser correctly rejects ES6+ syntax
+  # ✓ ESLint rules caught 16 violations
+  ```
+
+#### **3. Type Checking (TypeScript)**
+- **Config:** `tsconfig.json` sets `target: "ES5"` (for transpilation guidance)
+- **Behavior:** Catches **undefined globals** and type errors (NOT ES6+ syntax enforcement)
+- **Note:** TypeScript ACCEPTS ES6 syntax when targeting ES5 (it transpiles, doesn't reject)
 - **Example:**
   ```bash
   npm run typecheck
-  # Error: Cannot find name 'console'
+  # Error: Cannot find name 'console' (undefined global)
+  # (Does NOT reject const/let/arrow - those would transpile)
   ```
 
 ### **Forbidden ES6+ Constructs**
@@ -392,13 +405,18 @@ var processClip = function(clip) {
 All ExtendScript changes MUST pass:
 ```bash
 npm run quality-gates
-# ✓ lint        - No ES6+ syntax in production code (parser + rules)
-# ✓ validate:es3 - Proof that ES3 enforcement catches violations
-# ✓ typecheck    - TypeScript validation (ES5 target)
+# ✓ lint        - Production code ES3 compliance (parser rejects ES6+)
+# ✓ validate:es3 - Regression detection (proves ESLint catches violations)
+# ✓ typecheck    - Undefined globals + type errors (NOT ES6+ enforcement)
 # ✓ test         - Unit + integration tests
 ```
 
-**Critical:** The `validate:es3` gate explicitly runs intentional violation files with `--no-ignore` to prove enforcement works. If this gate fails, it means ESLint is NOT catching ES3 violations (regression detected).
+**Enforcement Hierarchy:**
+1. **Primary:** ESLint parser (`ecmaVersion: 3`) rejects ES6+ syntax in production code
+2. **Validation:** `validate:es3` script proves enforcement works by testing violation files
+3. **Supplementary:** TypeScript catches undefined globals (e.g., `console` in ExtendScript)
+
+**Critical:** If `validate:es3` fails, it means ESLint is NOT catching ES3 violations (regression detected). TypeScript does NOT enforce ES3 compliance - it only provides type hints.
 
 **Last Updated:** 2025-11-15 (B2.0 ES3 validation - code review corrections)
 
