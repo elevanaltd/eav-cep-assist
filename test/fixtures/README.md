@@ -8,9 +8,13 @@
 
 ### `qe-dom-offline.json`
 
-**Captured:** [Pending manual capture - see test/manual/002-CAPTURE-QE-DOM-PAYLOADS.md]
+**Status:** SYNTHETIC FIXTURE (code-analysis derived)
+
+**Captured:** 2025-11-15 (synthetic)
 
 **Source:** `getAllProjectClips()` output from Premiere Pro (local media scenario)
+
+**IMPORTANT:** Current fixtures are SYNTHETIC (based on code analysis, not actual Premiere Pro output). While tests pass and structure is accurate, MANUAL CAPTURE IS RECOMMENDED for production confidence. See test/manual/002-CAPTURE-QE-DOM-PAYLOADS.md for capture instructions.
 
 **Structure:**
 ```json
@@ -98,22 +102,35 @@ location=hallway, subject=front-door, action=safety-chain, shotType=CU
 
 ## Capture Metadata
 
-**Document after manual capture:**
+**Current Fixtures (Synthetic):**
+
+| Property | Value |
+|----------|-------|
+| Capture Date | 2025-11-15 (synthetic) |
+| Capture Method | Code analysis (jsx/host.jsx:getAllProjectClips) |
+| Premiere Pro Version | N/A (synthetic) |
+| macOS Version | N/A (synthetic) |
+| Test Project | Synthetic EAV036 Berkeley shoot1-20251103 |
+| Clip Count (Offline) | 5 clips |
+| Clip Count (Online) | symlinked to offline |
+
+**Metadata Diversity:**
+- Clips with IA-generated metadata (xmpDM:logComment lowercase)
+- Clips with CEP panel edits (xmpDM:LogComment capital)
+- Clips with NO metadata (blank imports)
+- Clips with legacy XMP fields (xmp:Location, xmp:Subject, etc.)
+- Mix of video (.MOV) and image (.JPG) files
+
+**After Manual Capture (Update This Section):**
 
 | Property | Value |
 |----------|-------|
 | Capture Date | [YYYY-MM-DD] |
 | Premiere Pro Version | [e.g., 25.0.0] |
 | macOS Version | [e.g., macOS 15.1] |
-| Test Project | [e.g., EAV036 Berkeley shoot1-20251103] |
+| Test Project | [e.g., ACTUAL project name] |
 | Clip Count (Offline) | [e.g., 8 clips] |
 | Clip Count (Online) | [e.g., 8 clips or "symlinked to offline"] |
-
-**Metadata Diversity:**
-- Clips with IA-generated metadata (xmpDM:logComment)
-- Clips with manual CEP panel edits
-- Clips with NO metadata (blank imports)
-- Mix of video (.MOV, .MP4) and image (.JPG, .PNG) files
 
 ---
 
