@@ -19,7 +19,8 @@
     filterImage: true,         // Show images
     filterHasMeta: false,      // Show only tagged clips
     sortBy: 'bin',             // Sort order: 'name', 'name-desc', 'bin'
-    selectedClips: []          // Array of nodeIds for batch operations
+    selectedClips: [],         // Array of nodeIds for batch operations
+    expandedBins: {}           // Bin collapse state (undefined/false = collapsed, true = expanded)
   };
 
   // Initialize CSInterface
@@ -219,16 +220,19 @@
 
       // Clip list click handling (event delegation)
       this.elements.clipList.addEventListener('click', function(e) {
-        // Ignore clicks on bin headers
-        if (e.target.closest('.bin-header')) {
+        // Handle bin header clicks (expand/collapse)
+        const binHeader = e.target.closest('.bin-header');
+        if (binHeader) {
+          const binName = binHeader.getAttribute('data-bin-path');
+          self.toggleBin(binName);
           return;
         }
 
         // Handle checkbox clicks
         if (e.target.classList.contains('clip-checkbox')) {
-          var clipItem = e.target.closest('.clip-item');
+          const clipItem = e.target.closest('.clip-item');
           if (clipItem) {
-            var nodeId = clipItem.getAttribute('data-clip-id');
+            const nodeId = clipItem.getAttribute('data-clip-id');
             self.toggleClipSelection(nodeId);
             e.stopPropagation(); // Don't trigger clip selection
           }
@@ -236,9 +240,9 @@
         }
 
         // Handle clip selection (clicking anywhere else on the clip item)
-        var clipItem = e.target.closest('.clip-item');
+        const clipItem = e.target.closest('.clip-item');
         if (clipItem) {
-          var nodeId = clipItem.getAttribute('data-clip-id');
+          const nodeId = clipItem.getAttribute('data-clip-id');
           self.selectClip(nodeId);
         }
       });
@@ -381,8 +385,10 @@
         if (item.isBinHeader) {
           // binPath is now just the bin name (e.g., "shoot1-20251024" or "Other")
           const binName = escapeHTML(item.binPath);
-          return '<div class="bin-header" data-bin-path="' + binName + '">' +
-                           binName +
+          const arrow = item.isExpanded ? '▼' : '►';
+          const collapsedClass = item.isExpanded ? '' : ' collapsed';
+          return '<div class="bin-header' + collapsedClass + '" data-bin-path="' + binName + '">' +
+                           arrow + ' ' + binName +
                            '</div>';
         }
 
@@ -486,7 +492,6 @@
     groupByBin: function(clips) {
       // Group clips by bin name extracted from treePath
       const grouped = {};
-      const self = this;
 
       clips.forEach(function(clip) {
         let binName = 'Other'; // Default for clips without bin
@@ -526,22 +531,29 @@
       // Flatten to array with bin headers
       const result = [];
       sortedBinNames.forEach(function(binName) {
+        // Check if bin is expanded
+        const isExpanded = PanelState.expandedBins[binName] === true;
+
         // Add bin header
         result.push({
           isBinHeader: true,
-          binPath: binName // Just the bin name, not full path
+          binPath: binName, // Just the bin name, not full path
+          isExpanded: isExpanded
         });
 
-        // Sort clips within bin alphabetically
-        const binClips = grouped[binName];
-        binClips.sort(function(a, b) {
-          return a.name.localeCompare(b.name);
-        });
+        // Only add clips if bin is expanded
+        if (isExpanded) {
+          // Sort clips within bin alphabetically
+          const binClips = grouped[binName];
+          binClips.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+          });
 
-        // Add clips
-        binClips.forEach(function(clip) {
-          result.push(clip);
-        });
+          // Add clips
+          binClips.forEach(function(clip) {
+            result.push(clip);
+          });
+        }
       });
 
       return result;
@@ -678,6 +690,17 @@
         addDebug('[ClipBrowser] Clip deselected: ' + nodeId);
       }
       this.render(); // Re-render to update checkboxes and UI
+    },
+
+    toggleBin: function(binName) {
+      // Toggle bin expanded state (undefined or false → true, true → false)
+      const currentState = PanelState.expandedBins[binName] || false;
+      PanelState.expandedBins[binName] = !currentState;
+
+      const newState = PanelState.expandedBins[binName] ? 'expanded' : 'collapsed';
+      addDebug('[ClipBrowser] Bin "' + binName + '" ' + newState);
+
+      this.render(); // Re-render to show/hide clips
     },
 
     selectAllClips: function() {
