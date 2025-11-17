@@ -214,6 +214,9 @@ body {
     cursor: pointer;
     user-select: none;
     transition: background-color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .bin-header:hover {
@@ -222,6 +225,19 @@ body {
 
 .bin-header.collapsed {
     opacity: 0.7;
+}
+
+/* Bin Checkbox */
+.bin-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Indeterminate checkbox styling (via JavaScript) */
+.bin-checkbox[data-indeterminate="true"] {
+    opacity: 0.6;
 }
 
 /* Clip items under bins */

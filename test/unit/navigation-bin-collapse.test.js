@@ -83,16 +83,18 @@ describe('Navigation Panel - Bin Expand/Collapse', () => {
       const result = [];
 
       sortedBinNames.forEach(function(binName) {
+        const binClips = grouped[binName];
+
         // Add bin header
         result.push({
           isBinHeader: true,
           binPath: binName,
-          isExpanded: expandedBins[binName] === true // NEW: Track expanded state
+          isExpanded: expandedBins[binName] === true,
+          clipCount: binClips.length  // NEW: Include clip count
         });
 
         // Only add clips if bin is expanded
         if (expandedBins[binName] === true) {
-          const binClips = grouped[binName];
           binClips.sort(function(a, b) {
             return a.name.localeCompare(b.name);
           });
@@ -107,10 +109,11 @@ describe('Navigation Panel - Bin Expand/Collapse', () => {
     };
 
     // Mock bin header rendering (HTML generation)
-    renderBinHeader = function(binPath, isExpanded) {
+    renderBinHeader = function(binPath, isExpanded, clipCount) {
       const arrow = isExpanded ? '▼' : '►';
+      const displayName = binPath + (clipCount !== undefined ? ' (' + clipCount + ')' : '');
       return '<div class="bin-header' + (isExpanded ? '' : ' collapsed') + '" data-bin-path="' + binPath + '">' +
-        arrow + ' ' + binPath +
+        arrow + ' ' + displayName +
         '</div>';
     };
   });
@@ -280,6 +283,186 @@ describe('Navigation Panel - Bin Expand/Collapse', () => {
       // Should treat undefined as empty object (all collapsed)
       const clips = result.filter(item => !item.isBinHeader);
       expect(clips).toHaveLength(0);
+    });
+  });
+
+  describe('Bin Clip Count', () => {
+    it('should include clip count in bin header', () => {
+      const result = groupByBin(mockClips, {});
+      const headers = result.filter(item => item.isBinHeader);
+
+      // Check each bin has clipCount property
+      expect(headers[0].binPath).toBe('Stock');
+      expect(headers[0].clipCount).toBe(1);
+
+      expect(headers[1].binPath).toBe('shoot1-20251103');
+      expect(headers[1].clipCount).toBe(2);
+
+      expect(headers[2].binPath).toBe('shoot2-20251104');
+      expect(headers[2].clipCount).toBe(1);
+    });
+
+    it('should show clip count even when bin is collapsed', () => {
+      const result = groupByBin(mockClips, {}); // All collapsed
+
+      const header = result.find(item => item.isBinHeader && item.binPath === 'shoot1-20251103');
+      expect(header.isExpanded).toBe(false);
+      expect(header.clipCount).toBe(2); // Count still present
+    });
+
+    it('should render clip count in brackets', () => {
+      const html = renderBinHeader('shoot1-20251103', false, 12);
+      expect(html).toContain('shoot1-20251103 (12)');
+    });
+  });
+
+  describe('Bin-level Checkbox', () => {
+    beforeEach(() => {
+      // Mock selected clips state
+      mockPanelState.selectedClips = [];
+
+      // Enhanced groupByBin to include checkbox state
+      groupByBin = function(clips, expandedBins, selectedClips) {
+        const grouped = {};
+
+        if (!expandedBins) {
+          expandedBins = {};
+        }
+
+        if (!selectedClips) {
+          selectedClips = [];
+        }
+
+        clips.forEach(function(clip) {
+          let binName = 'Other';
+
+          if (clip.treePath) {
+            let parts = clip.treePath.split('\\');
+            parts = parts.filter(function(p) { return p.length > 0; });
+
+            if (parts.length >= 3) {
+              binName = parts[1];
+            }
+          }
+
+          if (!grouped[binName]) {
+            grouped[binName] = [];
+          }
+          grouped[binName].push(clip);
+        });
+
+        const sortedBinNames = Object.keys(grouped).sort();
+        const result = [];
+
+        sortedBinNames.forEach(function(binName) {
+          const binClips = grouped[binName];
+          const binClipIds = binClips.map(function(clip) { return clip.nodeId; });
+
+          // Calculate checkbox state
+          const selectedInBin = binClipIds.filter(function(id) {
+            return selectedClips.indexOf(id) !== -1;
+          }).length;
+
+          const checkboxState = selectedInBin === 0 ? 'unchecked' :
+                               selectedInBin === binClipIds.length ? 'checked' :
+                               'indeterminate';
+
+          // Add bin header
+          result.push({
+            isBinHeader: true,
+            binPath: binName,
+            isExpanded: expandedBins[binName] === true,
+            clipCount: binClips.length,
+            checkboxState: checkboxState,
+            clipNodeIds: binClipIds
+          });
+
+          // Only add clips if bin is expanded
+          if (expandedBins[binName] === true) {
+            binClips.sort(function(a, b) {
+              return a.name.localeCompare(b.name);
+            });
+
+            binClips.forEach(function(clip) {
+              result.push(clip);
+            });
+          }
+        });
+
+        return result;
+      };
+
+      // Enhanced renderBinHeader to support checkbox
+      renderBinHeader = function(binPath, isExpanded, clipCount, checkboxState) {
+        const arrow = isExpanded ? '▼' : '►';
+        const displayName = binPath + (clipCount !== undefined ? ' (' + clipCount + ')' : '');
+
+        let checkboxHtml = '';
+        if (checkboxState) {
+          const isChecked = checkboxState === 'checked';
+          const isIndeterminate = checkboxState === 'indeterminate';
+          checkboxHtml = '<input type="checkbox" class="bin-checkbox" ' +
+                        (isChecked ? 'checked' : '') +
+                        (isIndeterminate ? ' data-indeterminate="true"' : '') +
+                        '> ';
+        }
+
+        return '<div class="bin-header' + (isExpanded ? '' : ' collapsed') + '" data-bin-path="' + binPath + '">' +
+          checkboxHtml + arrow + ' ' + displayName +
+          '</div>';
+      };
+    });
+
+    it('should calculate unchecked state when no clips selected', () => {
+      const result = groupByBin(mockClips, {}, []);
+      const header = result.find(item => item.isBinHeader && item.binPath === 'shoot1-20251103');
+
+      expect(header.checkboxState).toBe('unchecked');
+      expect(header.clipNodeIds).toEqual(['clip-1', 'clip-2']);
+    });
+
+    it('should calculate checked state when all clips selected', () => {
+      const result = groupByBin(mockClips, {}, ['clip-1', 'clip-2']);
+      const header = result.find(item => item.isBinHeader && item.binPath === 'shoot1-20251103');
+
+      expect(header.checkboxState).toBe('checked');
+    });
+
+    it('should calculate indeterminate state when some clips selected', () => {
+      const result = groupByBin(mockClips, {}, ['clip-1']); // Only first clip
+      const header = result.find(item => item.isBinHeader && item.binPath === 'shoot1-20251103');
+
+      expect(header.checkboxState).toBe('indeterminate');
+    });
+
+    it('should render checkbox with correct state', () => {
+      const uncheckedHtml = renderBinHeader('shoot1-20251103', true, 2, 'unchecked');
+      expect(uncheckedHtml).toContain('class="bin-checkbox"');
+      expect(uncheckedHtml).not.toContain('checked');
+
+      const checkedHtml = renderBinHeader('shoot1-20251103', true, 2, 'checked');
+      expect(checkedHtml).toContain('checked');
+
+      const indeterminateHtml = renderBinHeader('shoot1-20251103', true, 2, 'indeterminate');
+      expect(indeterminateHtml).toContain('data-indeterminate="true"');
+    });
+
+    it('should include all clip nodeIds for toggle operation', () => {
+      const result = groupByBin(mockClips, {}, []);
+      const header = result.find(item => item.isBinHeader && item.binPath === 'shoot1-20251103');
+
+      expect(header.clipNodeIds).toHaveLength(2);
+      expect(header.clipNodeIds).toContain('clip-1');
+      expect(header.clipNodeIds).toContain('clip-2');
+    });
+
+    it('should calculate state correctly when bin is collapsed', () => {
+      // Bin collapsed, but some clips selected
+      const result = groupByBin(mockClips, {}, ['clip-1']);
+      const header = result.find(item => item.isBinHeader && item.binPath === 'shoot1-20251103');
+
+      expect(header.isExpanded).toBe(false);
+      expect(header.checkboxState).toBe('indeterminate');
     });
   });
 });
