@@ -211,13 +211,33 @@ body {
     font-weight: bold;
     font-size: 11px;
     color: #e0e0e0;
-    cursor: default;
+    cursor: pointer;
     user-select: none;
+    transition: background-color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.bin-header::before {
-    content: '📁 ';
-    margin-right: 6px;
+.bin-header:hover {
+    background-color: #404040;
+}
+
+.bin-header.collapsed {
+    opacity: 0.7;
+}
+
+/* Bin Checkbox */
+.bin-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Indeterminate checkbox styling (via JavaScript) */
+.bin-checkbox[data-indeterminate="true"] {
+    opacity: 0.6;
 }
 
 /* Clip items under bins */

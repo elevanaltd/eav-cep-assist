@@ -16,7 +16,9 @@
 
     "lint": "eslint js/**/*.js jsx/**/*.jsx",
 
-    "typecheck": "echo 'JSDoc validation via jsconfig.json (no tsc available for ES3)'",
+    "validate:es3": "bash scripts/validate-es3-enforcement.sh",
+
+    "typecheck": "tsc --noEmit",
 
     "test": "vitest run",
 
@@ -26,7 +28,7 @@
 
     "test:coverage": "vitest run --coverage",
 
-    "quality-gates": "npm run lint && npm run typecheck && npm test"
+    "quality-gates": "npm run lint && npm run validate:es3 && npm run typecheck && npm test"
 
   },
 
@@ -60,14 +62,20 @@
 
   "license": "PROPRIETARY",
 
-  "dependencies": {},
-
   "devDependencies": {
-    "eslint": "^9.15.0",
-    "vitest": "^2.1.8",
-    "@vitest/ui": "^2.1.8",
+
     "@vitest/coverage-v8": "^2.1.8",
-    "jsdom": "^25.0.1"
+
+    "@vitest/ui": "^2.1.8",
+
+    "eslint": "^9.15.0",
+
+    "jsdom": "^25.0.1",
+
+    "typescript": "^5.9.3",
+
+    "vitest": "^2.1.8"
+
   },
 
   "cep": {
@@ -76,7 +84,11 @@
 
     "version": "1.0.0",
 
-    "hosts": ["PPRO"],
+    "hosts": [
+
+      "PPRO"
+
+    ],
 
     "minVersion": "14.0",
 
@@ -85,3 +97,4 @@
   }
 
 }
+

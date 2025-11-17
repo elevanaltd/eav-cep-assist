@@ -19,7 +19,8 @@
     filterImage: true,         // Show images
     filterHasMeta: false,      // Show only tagged clips
     sortBy: 'bin',             // Sort order: 'name', 'name-desc', 'bin'
-    selectedClips: []          // Array of nodeIds for batch operations
+    selectedClips: [],         // Array of nodeIds for batch operations
+    expandedBins: {}           // Bin collapse state (undefined/false = collapsed, true = expanded)
   };
 
   // Initialize CSInterface
@@ -219,16 +220,30 @@
 
       // Clip list click handling (event delegation)
       this.elements.clipList.addEventListener('click', function(e) {
-        // Ignore clicks on bin headers
-        if (e.target.closest('.bin-header')) {
+        // Handle bin checkbox clicks (must come before bin header handling)
+        if (e.target.classList.contains('bin-checkbox')) {
+          const binHeader = e.target.closest('.bin-header');
+          if (binHeader) {
+            const binName = binHeader.getAttribute('data-bin-path');
+            self.toggleBinSelection(binName);
+            e.stopPropagation(); // Don't trigger bin expand/collapse
+          }
           return;
         }
 
-        // Handle checkbox clicks
+        // Handle bin header clicks (expand/collapse)
+        const binHeader = e.target.closest('.bin-header');
+        if (binHeader) {
+          const binName = binHeader.getAttribute('data-bin-path');
+          self.toggleBin(binName);
+          return;
+        }
+
+        // Handle clip checkbox clicks
         if (e.target.classList.contains('clip-checkbox')) {
-          var clipItem = e.target.closest('.clip-item');
+          const clipItem = e.target.closest('.clip-item');
           if (clipItem) {
-            var nodeId = clipItem.getAttribute('data-clip-id');
+            const nodeId = clipItem.getAttribute('data-clip-id');
             self.toggleClipSelection(nodeId);
             e.stopPropagation(); // Don't trigger clip selection
           }
@@ -236,9 +251,9 @@
         }
 
         // Handle clip selection (clicking anywhere else on the clip item)
-        var clipItem = e.target.closest('.clip-item');
+        const clipItem = e.target.closest('.clip-item');
         if (clipItem) {
-          var nodeId = clipItem.getAttribute('data-clip-id');
+          const nodeId = clipItem.getAttribute('data-clip-id');
           self.selectClip(nodeId);
         }
       });
@@ -381,8 +396,19 @@
         if (item.isBinHeader) {
           // binPath is now just the bin name (e.g., "shoot1-20251024" or "Other")
           const binName = escapeHTML(item.binPath);
-          return '<div class="bin-header" data-bin-path="' + binName + '">' +
-                           binName +
+          const arrow = item.isExpanded ? '▼' : '►';
+          const collapsedClass = item.isExpanded ? '' : ' collapsed';
+          const displayName = binName + ' (' + item.clipCount + ')';
+
+          // Checkbox state
+          const isChecked = item.checkboxState === 'checked';
+          const isIndeterminate = item.checkboxState === 'indeterminate';
+          const checkboxHtml = '<input type="checkbox" class="bin-checkbox" ' +
+                              (isChecked ? 'checked' : '') +
+                              (isIndeterminate ? ' data-indeterminate="true"' : '') + '> ';
+
+          return '<div class="bin-header' + collapsedClass + '" data-bin-path="' + binName + '">' +
+                           checkboxHtml + arrow + ' ' + displayName +
                            '</div>';
         }
 
@@ -416,6 +442,12 @@
       }).join('');
 
       this.elements.clipList.innerHTML = html;
+
+      // Set indeterminate state on bin checkboxes (must be done via JavaScript, not HTML)
+      const indeterminateCheckboxes = this.elements.clipList.querySelectorAll('.bin-checkbox[data-indeterminate="true"]');
+      indeterminateCheckboxes.forEach(function(checkbox) {
+        checkbox.indeterminate = true;
+      });
 
       // Count actual clips (exclude bin headers)
       const clipCount = sortedClips.filter(function(item) {
@@ -486,7 +518,6 @@
     groupByBin: function(clips) {
       // Group clips by bin name extracted from treePath
       const grouped = {};
-      const self = this;
 
       clips.forEach(function(clip) {
         let binName = 'Other'; // Default for clips without bin
@@ -526,22 +557,43 @@
       // Flatten to array with bin headers
       const result = [];
       sortedBinNames.forEach(function(binName) {
+        const binClips = grouped[binName];
+        const binClipIds = binClips.map(function(clip) { return clip.nodeId; });
+
+        // Check if bin is expanded
+        const isExpanded = PanelState.expandedBins[binName] === true;
+
+        // Calculate checkbox state
+        const selectedInBin = binClipIds.filter(function(id) {
+          return PanelState.selectedClips.indexOf(id) !== -1;
+        }).length;
+
+        const checkboxState = selectedInBin === 0 ? 'unchecked' :
+          selectedInBin === binClipIds.length ? 'checked' :
+            'indeterminate';
+
         // Add bin header
         result.push({
           isBinHeader: true,
-          binPath: binName // Just the bin name, not full path
+          binPath: binName, // Just the bin name, not full path
+          isExpanded: isExpanded,
+          clipCount: binClips.length,
+          checkboxState: checkboxState,
+          clipNodeIds: binClipIds
         });
 
-        // Sort clips within bin alphabetically
-        const binClips = grouped[binName];
-        binClips.sort(function(a, b) {
-          return a.name.localeCompare(b.name);
-        });
+        // Only add clips if bin is expanded
+        if (isExpanded) {
+          // Sort clips within bin alphabetically
+          binClips.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+          });
 
-        // Add clips
-        binClips.forEach(function(clip) {
-          result.push(clip);
-        });
+          // Add clips
+          binClips.forEach(function(clip) {
+            result.push(clip);
+          });
+        }
       });
 
       return result;
@@ -678,6 +730,58 @@
         addDebug('[ClipBrowser] Clip deselected: ' + nodeId);
       }
       this.render(); // Re-render to update checkboxes and UI
+    },
+
+    toggleBin: function(binName) {
+      // Toggle bin expanded state (undefined or false → true, true → false)
+      const currentState = PanelState.expandedBins[binName] || false;
+      PanelState.expandedBins[binName] = !currentState;
+
+      const newState = PanelState.expandedBins[binName] ? 'expanded' : 'collapsed';
+      addDebug('[ClipBrowser] Bin "' + binName + '" ' + newState);
+
+      this.render(); // Re-render to show/hide clips
+    },
+
+    toggleBinSelection: function(binName) {
+      // Find all clips in this bin
+      const binClips = PanelState.allClips.filter(function(clip) {
+        if (!clip.treePath) {
+          return binName === 'Other';
+        }
+
+        const parts = clip.treePath.split('\\').filter(function(p) { return p.length > 0; });
+        const clipBinName = parts.length >= 3 ? parts[1] : 'Other';
+        return clipBinName === binName;
+      });
+
+      const binClipIds = binClips.map(function(clip) { return clip.nodeId; });
+
+      // Check current selection state
+      const selectedInBin = binClipIds.filter(function(id) {
+        return PanelState.selectedClips.indexOf(id) !== -1;
+      }).length;
+
+      if (selectedInBin === binClipIds.length) {
+        // All selected → deselect all
+        binClipIds.forEach(function(id) {
+          const index = PanelState.selectedClips.indexOf(id);
+          if (index !== -1) {
+            PanelState.selectedClips.splice(index, 1);
+          }
+        });
+        addDebug('[ClipBrowser] Bin "' + binName + '" deselected (' + binClipIds.length + ' clips)');
+      } else {
+        // Some or none selected → select all
+        binClipIds.forEach(function(id) {
+          if (PanelState.selectedClips.indexOf(id) === -1) {
+            PanelState.selectedClips.push(id);
+          }
+        });
+        addDebug('[ClipBrowser] Bin "' + binName + '" selected (' + binClipIds.length + ' clips)');
+      }
+
+      this.render(); // Re-render to update checkboxes
     },
 
     selectAllClips: function() {

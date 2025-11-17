@@ -178,10 +178,19 @@
         }
       });
 
-      // Form field changes - update preview
-      this.elements.location.addEventListener('input', function() { self.updateGeneratedName(); });
-      this.elements.subject.addEventListener('input', function() { self.updateGeneratedName(); });
-      this.elements.action.addEventListener('input', function() { self.updateGeneratedName(); });
+      // Form field changes - update preview + enforce kebab-case (no spaces)
+      this.elements.location.addEventListener('input', function(e) {
+        self.enforceKebabCase(e.target);
+        self.updateGeneratedName();
+      });
+      this.elements.subject.addEventListener('input', function(e) {
+        self.enforceKebabCase(e.target);
+        self.updateGeneratedName();
+      });
+      this.elements.action.addEventListener('input', function(e) {
+        self.enforceKebabCase(e.target);
+        self.updateGeneratedName();
+      });
 
       // Setup searchable dropdown for Shot Type
       this.setupSearchableDropdown();
@@ -446,6 +455,19 @@
       }
 
       return components;
+    },
+
+    enforceKebabCase: function(inputElement) {
+      // Replace spaces with hyphens in real-time (kebab-case enforcement)
+      const cursorPos = inputElement.selectionStart;
+      const oldValue = inputElement.value;
+      const newValue = oldValue.replace(/ /g, '-');
+
+      if (oldValue !== newValue) {
+        inputElement.value = newValue;
+        // Restore cursor position
+        inputElement.setSelectionRange(cursorPos, cursorPos);
+      }
     },
 
     updateGeneratedName: function() {

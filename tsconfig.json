@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "none",
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "strict": false,
+    "esModuleInterop": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES5"],
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictNullChecks": false
+  },
+  "include": [
+    "jsx/**/*.jsx",
+    "jsx/**/*.js",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "test",
+    "js",
+    "jsx/test-es3-*.jsx"
+  ]
+}
