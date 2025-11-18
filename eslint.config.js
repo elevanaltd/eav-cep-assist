@@ -126,7 +126,7 @@ export default [
       '.coord/**',
       '*.md',
       'js/CSInterface.js',  // Third-party Adobe CEP library (vendor code)
-      'jsx/test-es3-*.jsx'  // ES3 violation test files (intentional errors for validation)
+      'jsx/test-*.jsx'      // ALL test files (ES3 validation tests + diagnostic scripts)
     ]
   }
 ];

@@ -16,7 +16,7 @@ var EAVIngest = (function() {
 
      */
 
-  function logToFile(message) {
+  function _logToFile(message) {
 
     try {
 
@@ -612,7 +612,7 @@ var EAVIngest = (function() {
 
               iaData = JSON.parse(iaJsonContent);
 
-            } catch (parseError) {
+            } catch (_parseError) {
 
               debugLog.push('Warning: Could not parse existing IA JSON');
 
