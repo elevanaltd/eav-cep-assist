@@ -439,6 +439,65 @@ var EAVIngest = (function() {
 
 
   /**
+   * CEP Panel Wrapper: Read JSON metadata by nodeId
+   * @param {String} nodeId - Premiere Pro clip node ID
+   * @returns {String} JSON string or "null"
+   */
+  function readJSONMetadataByNodeId(nodeId) {
+    try {
+      var project = app.project;
+      if (!project) {
+        $.writeln('ERROR: No active project');
+        return 'null';
+      }
+
+      // Find clip by nodeId
+      var clip = findProjectItemByNodeId(project.rootItem, nodeId);
+      if (!clip) {
+        $.writeln('ERROR: Clip not found for nodeId: ' + nodeId);
+        return 'null';
+      }
+
+      // Call Track A function with clip object
+      return readJSONMetadata(clip);
+    } catch (e) {
+      $.writeln('ERROR in readJSONMetadataByNodeId: ' + e.message);
+      return 'null';
+    }
+  }
+
+  /**
+   * CEP Panel Wrapper: Write JSON metadata by nodeId
+   * @param {String} nodeId - Premiere Pro clip node ID
+   * @param {String} updatesJSON - JSON string of updates
+   * @returns {String} 'true' or 'false'
+   */
+  function writeJSONMetadataByNodeId(nodeId, updatesJSON) {
+    try {
+      var project = app.project;
+      if (!project) {
+        $.writeln('ERROR: No active project');
+        return 'false';
+      }
+
+      // Find clip by nodeId
+      var clip = findProjectItemByNodeId(project.rootItem, nodeId);
+      if (!clip) {
+        $.writeln('ERROR: Clip not found for nodeId: ' + nodeId);
+        return 'false';
+      }
+
+      // Call Track A function with clip object
+      return writeJSONMetadata(clip, updatesJSON);
+    } catch (e) {
+      $.writeln('ERROR in writeJSONMetadataByNodeId: ' + e.message);
+      return 'false';
+    }
+  }
+
+
+
+  /**
 
      * Update PP project item metadata fields
 
@@ -1805,6 +1864,10 @@ var EAVIngest = (function() {
     readJSONMetadata: readJSONMetadata,
 
     writeJSONMetadata: writeJSONMetadata,
+
+    readJSONMetadataByNodeId: readJSONMetadataByNodeId,
+
+    writeJSONMetadataByNodeId: writeJSONMetadataByNodeId,
 
     getAllProjectClips: getAllProjectClips,
 

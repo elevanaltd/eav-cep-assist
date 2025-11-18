@@ -352,6 +352,7 @@
     },
 
     loadClipIntoForm: function(clip) {
+      const self = this;
       addDebug('[MetadataForm] Loading clip: ' + (clip ? clip.name : 'null'));
 
       // Validate clip object
@@ -367,65 +368,157 @@
 
       currentClip = clip;
 
-      // DEBUG: Show entire clip object structure
-      addDebug('[MetadataForm] === CLIP OBJECT DEBUG ===');
-      addDebug('[MetadataForm] clip.name: "' + (clip.name || 'EMPTY') + '"');
-      addDebug('[MetadataForm] clip.identifier: "' + (clip.identifier || 'EMPTY') + '"');
-      addDebug('[MetadataForm] clip.description: "' + (clip.description || 'EMPTY') + '"');
-      addDebug('[MetadataForm] clip.good: "' + (clip.good || 'EMPTY') + '"');
-      addDebug('[MetadataForm] clip.shot: "' + (clip.shot || 'EMPTY') + '"');
-      addDebug('[MetadataForm] clip.location: "' + (clip.location || 'EMPTY') + '"');
-      addDebug('[MetadataForm] clip.subject: "' + (clip.subject || 'EMPTY') + '"');
-      addDebug('[MetadataForm] clip.action: "' + (clip.action || 'EMPTY') + '"');
-      addDebug('[MetadataForm] === END DEBUG ===');
-
       // Update header
       this.elements.formClipName.textContent = clip.name;
 
-      // Load Identifier from Dublin Core (or fall back to clip name)
-      const identifierValue = clip.identifier || clip.name || '';
-      this.elements.identifier.value = identifierValue;
-      addDebug('[MetadataForm] → Identifier set to: "' + identifierValue + '"');
+      // Call Track A readJSONMetadataByNodeId (wrapper accepts nodeId string)
+      const escapedNodeId = escapeForEvalScript(clip.nodeId);
+      const script = 'EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '")';
 
-      // Load Description field
-      const descriptionValue = clip.description || '';
-      this.elements.description.value = descriptionValue;
-      addDebug('[MetadataForm] → Description set to: "' + descriptionValue + '"');
+      csInterface.evalScript(script, function(jsonString) {
+        addDebug('[MetadataForm] JSON response: ' + (jsonString || 'null'));
 
-      // Load Good checkbox (check if 'true' string or true boolean)
-      const goodValue = (clip.good === 'true' || clip.good === true);
-      this.elements.good.checked = goodValue;
-      addDebug('[MetadataForm] → Good checkbox set to: ' + goodValue);
+        // Handle JSON not found (offline scenario or no metadata file)
+        if (jsonString === 'null' || !jsonString || jsonString.trim() === '') {
+          addDebug('[MetadataForm] ✗ Metadata file not found', true);
+          self.showError('Metadata file not found. Clip may be offline or not processed by Ingest Assistant.');
+          self.clearFormFields();
+          return;
+        }
 
-      // Load Location, Subject, Action, Shot Type from XMP (with fallback to filename parsing)
-      if (clip.location || clip.subject || clip.action || clip.shot) {
-        // XMP data exists - use it directly
-        this.elements.location.value = clip.location || '';
-        this.elements.subject.value = clip.subject || '';
-        this.elements.action.value = clip.action || '';
-        this.elements.shotType.value = clip.shot || '';
-        addDebug('[MetadataForm] → Loaded from XMP metadata');
-      } else {
-        // Fallback: Parse from filename for clips without XMP metadata
-        const components = this.parseStructuredComponents(clip.name);
-        this.elements.location.value = components.location || '';
-        this.elements.subject.value = components.subject || '';
-        this.elements.action.value = components.action || '';
-        this.elements.shotType.value = components.shotType || '';
-        addDebug('[MetadataForm] → Parsed from filename (no XMP data)');
+        try {
+          // Parse JSON response
+          const metadata = JSON.parse(jsonString);
+          addDebug('[MetadataForm] ✓ Parsed JSON metadata');
+
+          // Populate form fields from JSON
+          self.elements.location.value = metadata.location || '';
+          self.elements.subject.value = metadata.subject || '';
+          self.elements.action.value = metadata.action || '';
+          self.elements.shotType.value = metadata.shotType || '';
+
+          // Handle keywords array (join with commas for display)
+          const keywordsDisplay = (metadata.keywords || []).join(', ');
+          self.elements.description.value = keywordsDisplay;
+          addDebug('[MetadataForm] → Keywords: "' + keywordsDisplay + '"');
+
+          // Set identifier (Tape Name from JSON or fall back to clip name)
+          const identifierValue = metadata.originalFilename || metadata.id || clip.name || '';
+          self.elements.identifier.value = identifierValue;
+          addDebug('[MetadataForm] → Identifier: "' + identifierValue + '"');
+
+          // Load Good checkbox (currently not in Schema R1.1, default to false)
+          self.elements.good.checked = false;
+
+          // Display computed shotName (read-only field - will be added to HTML)
+          const shotNameDisplay = metadata.shotName || self.computeShotNameLocally(metadata);
+          const shotNameElement = document.getElementById('shotNameDisplay');
+          if (shotNameElement) {
+            shotNameElement.value = shotNameDisplay;
+          }
+          addDebug('[MetadataForm] → shotName: "' + shotNameDisplay + '"');
+
+          // Show lock indicator if folder completed
+          if (metadata._completed || (metadata.lockedFields && metadata.lockedFields.length > 0)) {
+            self.showLockIndicator(metadata.lockedBy, metadata.lockedAt);
+          } else {
+            self.hideLockIndicator();
+          }
+
+          // Show/hide action field based on type (heuristic: video files have action)
+          const isVideo = /\.(mov|mp4|mxf|avi)$/i.test(clip.mediaPath);
+          self.elements.actionGroup.style.display = isVideo ? 'block' : 'none';
+
+          // Update generated name preview
+          self.updateGeneratedName();
+
+          // Enable apply button
+          self.elements.applyBtn.disabled = false;
+
+          addDebug('[MetadataForm] ✓ Clip loaded into form');
+
+        } catch (e) {
+          addDebug('[MetadataForm] ✗ JSON parse error: ' + e.message, true);
+          self.showError('Failed to parse metadata: ' + e.message);
+          console.error('JSON parse error:', e);
+        }
+      });
+    },
+
+    computeShotNameLocally: function(metadata) {
+      // Client-side computation matching ExtendScript logic
+      const parts = [];
+      if (metadata.location) {parts.push(metadata.location);}
+      if (metadata.subject) {parts.push(metadata.subject);}
+      if (metadata.action) {parts.push(metadata.action);}
+      if (metadata.shotType) {parts.push(metadata.shotType);}
+
+      const baseName = parts.join('-');
+      if (metadata.shotNumber) {
+        return baseName + '-#' + metadata.shotNumber;
+      }
+      return baseName;
+    },
+
+    clearFormFields: function() {
+      this.elements.location.value = '';
+      this.elements.subject.value = '';
+      this.elements.action.value = '';
+      this.elements.shotType.value = '';
+      this.elements.description.value = '';
+      this.elements.identifier.value = '';
+      this.elements.good.checked = false;
+
+      const shotNameElement = document.getElementById('shotNameDisplay');
+      if (shotNameElement) {
+        shotNameElement.value = '';
       }
 
-      // Show/hide action field based on type (heuristic: video files have action)
-      const isVideo = /\.(mov|mp4|mxf|avi)$/i.test(clip.mediaPath);
-      this.elements.actionGroup.style.display = isVideo ? 'block' : 'none';
-
-      // Update generated name preview
       this.updateGeneratedName();
+      this.elements.applyBtn.disabled = true;
+      addDebug('[MetadataForm] → Form fields cleared');
+    },
 
-      // Enable apply button
-      this.elements.applyBtn.disabled = false;
+    showError: function(message) {
+      let errorDiv = document.getElementById('errorMessage');
+      if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'errorMessage';
+        errorDiv.style.cssText = 'background:#ffebee; color:#c62828; padding:10px; margin:10px 0; border-radius:4px;';
+        const formContent = document.querySelector('.form-content');
+        if (formContent) {
+          formContent.insertBefore(errorDiv, formContent.firstChild);
+        }
+      }
+      errorDiv.textContent = '✗ ' + message;
+      errorDiv.style.display = 'block';
 
-      addDebug('[MetadataForm] ✓ Clip loaded into form');
+      // Auto-hide after 5 seconds
+      setTimeout(function() {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    },
+
+    showLockIndicator: function(lockedBy, lockedAt) {
+      const indicator = document.getElementById('lockIndicator');
+      if (indicator) {
+        const lockedBySpan = document.getElementById('lockedBy');
+        const lockedAtSpan = document.getElementById('lockedAt');
+        if (lockedBySpan) {
+          lockedBySpan.textContent = lockedBy || 'unknown';
+        }
+        if (lockedAtSpan) {
+          lockedAtSpan.textContent = lockedAt || 'unknown time';
+        }
+        indicator.style.display = 'block';
+      }
+    },
+
+    hideLockIndicator: function() {
+      const indicator = document.getElementById('lockIndicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
     },
 
     parseStructuredComponents: function(name) {
@@ -503,76 +596,119 @@
         return;
       }
 
-      // Build the generated name
-      const generatedName = this.elements.generatedName.textContent;
+      // Collect form values
+      const location = this.elements.location.value.trim();
+      const subject = this.elements.subject.value.trim();
+      const action = this.elements.action.value.trim();
+      const shotType = this.elements.shotType.value;
 
-      if (generatedName === '-') {
-        addDebug('[MetadataForm] ✗ No fields filled in', true);
-        this.showStatus('Please fill in at least one field', 'error');
+      // Validate required fields
+      if (!location || !subject || !shotType) {
+        addDebug('[MetadataForm] ✗ Required fields missing', true);
+        this.showError('Location, Subject, and Shot Type are required');
         return;
       }
 
-      // Prepare metadata object
-      const metadata = {
-        name: generatedName,
-        identifier: this.elements.identifier.value || currentClip.name,
-        description: this.elements.description.value.trim(),
-        shot: this.elements.shotType.value,
-        good: this.elements.good.checked ? 'true' : 'false',
-        location: this.elements.location.value.trim(),
-        subject: this.elements.subject.value.trim(),
-        action: this.elements.action.value.trim()
+      // Parse keywords (comma-separated string → array)
+      const keywordsInput = this.elements.description.value.trim();
+      const keywords = keywordsInput ? keywordsInput.split(',').map(function(k) { return k.trim(); }).filter(function(k) { return k; }) : [];
+
+      // Construct updates object (Schema R1.1 format)
+      const updates = {
+        location: location,
+        subject: subject,
+        action: action,
+        shotType: shotType,
+        keywords: keywords
+        // Note: shotName computed server-side by ExtendScript
+        // shotNumber not included (managed by IA during initial cataloging)
       };
 
-      addDebug('[MetadataForm] Metadata: ' + JSON.stringify(metadata));
-      this.showStatus('Updating Premiere Pro...', 'info');
+      addDebug('[MetadataForm] Updates: ' + JSON.stringify(updates));
 
-      // Call ExtendScript to update PP
+      // Show loading indicator
+      this.showLoadingIndicator('Saving metadata...');
+
+      // Call Track A writeJSONMetadataByNodeId (wrapper accepts nodeId string)
       // SECURITY: Escape nodeId to prevent code injection
-      const metadataJson = JSON.stringify(metadata);
       const escapedNodeId = escapeForEvalScript(currentClip.nodeId);
-      const escapedMetadataJson = metadataJson.replace(/'/g, '\\\'');
-      const script = 'EAVIngest.updateClipMetadata("' + escapedNodeId + '", JSON.parse(\'' + escapedMetadataJson + '\'))';
+      const updatesJSON = JSON.stringify(updates);
+      // Double-escape for ExtendScript string parsing
+      const escapedUpdatesJSON = updatesJSON.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      const script = 'EAVIngest.writeJSONMetadataByNodeId("' + escapedNodeId + '", "' + escapedUpdatesJSON + '")';
 
       csInterface.evalScript(script, function(result) {
-        try {
-          const data = JSON.parse(result);
+        self.hideLoadingIndicator();
 
-          if (data.success) {
-            addDebug('[MetadataForm] ✓ Updated: ' + data.updatedName);
+        addDebug('[MetadataForm] writeJSONMetadata result: ' + result);
 
-            // Display ExtendScript debug info
-            if (data.debug && data.debug.length > 0) {
-              addDebug('[ExtendScript Debug] ===== START =====');
-              for (let i = 0; i < data.debug.length; i++) {
-                addDebug('[ExtendScript] ' + data.debug[i]);
-              }
-              addDebug('[ExtendScript Debug] ===== END =====');
-            }
+        if (result === 'true') {
+          // Success
+          addDebug('[MetadataForm] ✓ Metadata saved');
+          self.showSuccessIndicator('✓ Metadata saved');
 
-            self.showStatus('✓ Updated: ' + data.updatedName, 'success');
+          // Reload form to show updated shotName from server
+          self.loadClipIntoForm(currentClip);
 
-            // Update current clip name in state
-            currentClip.name = data.updatedName;
-
-            // Emit CEP event to notify Navigation Panel
-            try {
-              const metadataEvent = new CSEvent('com.elevana.metadata-applied', 'APPLICATION');
-              metadataEvent.data = JSON.stringify({ nodeId: currentClip.nodeId, name: data.updatedName });
-              csInterface.dispatchEvent(metadataEvent);
-              addDebug('[MetadataForm] ✓ CEP metadata-applied event dispatched');
-            } catch (e) {
-              addDebug('[MetadataForm] ✗ Failed to dispatch metadata event: ' + e.message, true);
-            }
-          } else {
-            addDebug('[MetadataForm] ✗ Error: ' + data.error, true);
-            self.showStatus('Error: ' + data.error, 'error');
+          // Emit CEP event to notify Navigation Panel (clip name may have changed)
+          try {
+            const metadataEvent = new CSEvent('com.elevana.metadata-applied', 'APPLICATION');
+            metadataEvent.data = JSON.stringify({ nodeId: currentClip.nodeId });
+            csInterface.dispatchEvent(metadataEvent);
+            addDebug('[MetadataForm] ✓ CEP metadata-applied event dispatched');
+          } catch (e) {
+            addDebug('[MetadataForm] ✗ Failed to dispatch metadata event: ' + e.message, true);
           }
-        } catch (e) {
-          addDebug('[MetadataForm] ✗ Parse error: ' + e.message, true);
-          self.showStatus('Failed to update metadata', 'error');
+
+        } else {
+          // Failure
+          addDebug('[MetadataForm] ✗ Failed to save metadata', true);
+          self.showError('Failed to save metadata. Check ExtendScript console (Premiere Pro → Help → Console)');
+          console.error('writeJSONMetadata returned:', result);
         }
       });
+    },
+
+    showLoadingIndicator: function(message) {
+      let indicator = document.getElementById('loadingIndicator');
+      if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'loadingIndicator';
+        indicator.style.cssText = 'background:#e3f2fd; color:#1565c0; padding:10px; margin:10px 0; border-radius:4px;';
+        const formContent = document.querySelector('.form-content');
+        if (formContent) {
+          formContent.insertBefore(indicator, formContent.firstChild);
+        }
+      }
+      indicator.textContent = '⏳ ' + message;
+      indicator.style.display = 'block';
+    },
+
+    hideLoadingIndicator: function() {
+      const indicator = document.getElementById('loadingIndicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+    },
+
+    showSuccessIndicator: function(message) {
+      let successDiv = document.getElementById('successMessage');
+      if (!successDiv) {
+        successDiv = document.createElement('div');
+        successDiv.id = 'successMessage';
+        successDiv.style.cssText = 'background:#e8f5e9; color:#2e7d32; padding:10px; margin:10px 0; border-radius:4px;';
+        const formContent = document.querySelector('.form-content');
+        if (formContent) {
+          formContent.insertBefore(successDiv, formContent.firstChild);
+        }
+      }
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+
+      // Auto-hide after 3 seconds
+      setTimeout(function() {
+        successDiv.style.display = 'none';
+      }, 3000);
     },
 
     showStatus: function(message, type) {

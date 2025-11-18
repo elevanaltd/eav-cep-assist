@@ -45,10 +45,13 @@
 - **Documentation:** See docs/002-DOC-ML-FEEDBACK-LOOP.md
 
 ## Current Focus
-PHASE::JSON_SCHEMA_R1.1_IMPLEMENTATION→Schema_Locked✅→Tracks_A/B/C_Ready
-GOVERNANCE::B0_schema_validation_complete✅→JSON_integration_authorized→XMP-First_B2_DEFERRED
+PHASE::CEP_INTEGRATION_TESTING→Track_A_deployed✅→Initial_metadata_loading_confirmed✅→Comprehensive_testing_pending
+GOVERNANCE::Track_A_code_reviewed✅→CEP_Panel_integrated✅→User_validation_in_progress
 
 ## Key Decisions
+- [2025-11-18] CEP_INTEGRATION_BUG_FIXED→nodeId_wrapper_functions_added→metadata_loading_confirmed✅
+- [2025-11-18] TRACK_A_COMPLETE→JSON_read/write_foundation→code_reviewed✅→committed_fafdf16
+- [2025-11-18] FOLDER_LEVEL_COMPLETION_SUFFICIENT→Issue_#37_downgraded_to_enhancement→field_locks_deferred
 - [2025-11-18] SCHEMA_R1.1_LOCKED→empirical_PP_testing→shotName_format_confirmed→field-level_locks_validated
 - [2025-11-18] JSON_INTEGRATION_AUTHORIZED→Tracks_A/B/C_ready→proxy_folder_priority_strategy_validated
 - [2025-11-18] XMP-First_B2_DEFERRED→JSON_sidecar_approach_prioritized→B2_plan_preserved_for_future
@@ -60,16 +63,18 @@ GOVERNANCE::B0_schema_validation_complete✅→JSON_integration_authorized→XMP
 - [x] B0::Schema_R1.1_finalization→empirical_testing_complete→LOCKED✅
 - [x] B0::Schema_documentation→authoritative_spec+implementation_guide+migration_guide+quick_ref→complete
 - [x] B0::Test_fixtures→R1.1_JSON_created→production_validated
-- [ ] Track_A::JSON_read/write_foundation→ExtendScript_implementation→proxy_folder_lookup
-- [ ] Track_B::Field-level_lock_enforcement→lockedFields_array→UI_indicators
-- [ ] Track_C::Proxy_path_JSON_lookup→getProxyPath()_detection→offline_handling
+- [x] Track_A::JSON_read/write_foundation→ExtendScript_complete→CEP_integration_deployed→initial_testing_passed✅
+- [x] CEP_Panel::Integration→readJSONMetadataByNodeId/writeJSONMetadataByNodeId→wrapper_functions_deployed✅
+- [ ] USER_TESTING::Comprehensive_validation→round-trip_metadata→save_functionality→offline_scenarios→NEXT_SESSION
+- [ ] Track_B::Field-level_lock_enforcement→lockedFields_array→UI_indicators→DEFERRED (folder-level sufficient)
+- [ ] Track_C::Proxy_path_JSON_lookup→getProxyPath()_detection→offline_handling→DEFERRED (Track A handles)
 
 ## Failed Approaches (This Session)
 - ❌ attribute_regex→assumed_from_ExifTool→Premiere_uses_elements→switched_to_element_format
 - ❌ QE_DOM_getProjectColumnsMetadata()→unreliable_offline→REPLACED_BY→XMP-First_architecture✅
 
 ## Next Milestone
-JSON Integration (Tracks A/B/C): Implement .ingest-metadata.json read/write → Field-level locks → Proxy path lookup → Round-trip validation tests → Schema R1.1 production-ready
+USER VALIDATION (Next Session): Comprehensive testing with multiple JSON files → Round-trip save validation → Edit workflow testing → Production deployment decision → Issue #38 (unit tests) before production
 
 ## Recent User Feedback
 > "The purpose of the metadata panel is for users to review the metadata against the photos to do QC and amend where wrong. It is vital." (offline workflow requirement)
@@ -92,4 +97,4 @@ Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ---
 
-**LAST UPDATED:** 2025-11-18 (Phase update: JSON Schema R1.1 implementation, XMP-First B2 deferred)
+**LAST UPDATED:** 2025-11-18 (Track A complete, CEP integration deployed, initial metadata loading confirmed - comprehensive testing next session)
