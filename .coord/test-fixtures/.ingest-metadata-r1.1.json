@@ -1,0 +1,88 @@
+{
+  "_schema": "2.0",
+  "_completed": false,
+  "EAV0TEST1": {
+    "id": "EAV0TEST1",
+    "originalFilename": "EAV0TEST1.MOV",
+    "currentFilename": "EAV0TEST1.MOV",
+    "filePath": "/Volumes/EAV_Video_RAW/test-videos-raw/EAV0TEST1.MOV",
+    "extension": ".MOV",
+    "fileType": "video",
+    "creationTimestamp": "2024-09-26T10:25:00Z",
+    "cameraId": "EAV0TEST1",
+
+    "shotNumber": 1,
+    "shotName": "kitchen-oven-cleaning-ESTAB-#1",
+    "keywords": ["stainless-steel", "gas-range", "appliance"],
+
+    "location": "kitchen",
+    "subject": "oven",
+    "action": "cleaning",
+    "shotType": "ESTAB",
+
+    "processedByAI": true,
+    "lockedFields": [],
+
+    "createdAt": "2025-11-18T02:59:32Z",
+    "createdBy": "ingest-assistant",
+    "modifiedAt": "2025-11-18T02:59:32Z",
+    "modifiedBy": "ingest-assistant",
+    "version": "1.1.0"
+  },
+  "EAV0TEST2": {
+    "id": "EAV0TEST2",
+    "originalFilename": "EAV0TEST2.MOV",
+    "currentFilename": "EAV0TEST2.MOV",
+    "filePath": "/Volumes/EAV_Video_RAW/test-videos-raw/EAV0TEST2.MOV",
+    "extension": ".MOV",
+    "fileType": "video",
+    "creationTimestamp": "2024-09-26T10:27:08Z",
+    "cameraId": "EAV0TEST2",
+
+    "shotNumber": 3,
+    "shotName": "kitchen-oven-cleaning-MID-#3",
+    "keywords": [],
+
+    "location": "kitchen",
+    "subject": "oven",
+    "action": "cleaning",
+    "shotType": "MID",
+
+    "processedByAI": true,
+    "lockedFields": [],
+
+    "createdAt": "2025-11-18T02:59:32Z",
+    "createdBy": "ingest-assistant",
+    "modifiedAt": "2025-11-18T02:59:32Z",
+    "modifiedBy": "ingest-assistant",
+    "version": "1.1.0"
+  },
+  "EAV0TEST3": {
+    "id": "EAV0TEST3",
+    "originalFilename": "EAV0TEST3.MOV",
+    "currentFilename": "EAV0TEST3.MOV",
+    "filePath": "/Volumes/EAV_Video_RAW/test-videos-raw/EAV0TEST3.MOV",
+    "extension": ".MOV",
+    "fileType": "video",
+    "creationTimestamp": "2024-09-26T10:28:15Z",
+    "cameraId": "EAV0TEST3",
+
+    "shotNumber": 1,
+    "shotName": "hallway-front-door-safety-chain-CU-#1",
+    "keywords": ["door", "chain", "lock"],
+
+    "location": "hallway",
+    "subject": "front-door",
+    "action": "safety-chain",
+    "shotType": "CU",
+
+    "processedByAI": true,
+    "lockedFields": ["location", "subject"],
+
+    "createdAt": "2025-11-18T02:59:32Z",
+    "createdBy": "ingest-assistant",
+    "modifiedAt": "2025-11-18T03:15:00Z",
+    "modifiedBy": "cep-panel",
+    "version": "1.1.0"
+  }
+}

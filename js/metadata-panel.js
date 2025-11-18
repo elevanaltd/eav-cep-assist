@@ -284,7 +284,7 @@
       });
 
       // Validate on blur
-      input.addEventListener('blur', function(e) {
+      input.addEventListener('blur', function(_e) {
         // Delay to allow option click to register
         setTimeout(function() {
           const value = input.value.toUpperCase().trim();
