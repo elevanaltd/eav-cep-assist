@@ -183,6 +183,262 @@ var EAVIngest = (function() {
 
 
   /**
+   * Compute shotName from component metadata fields
+   * Format: {location}-{subject}-{action}-{shotType}-#{shotNumber}
+   * @param {Object} metadata - Clip metadata object
+   * @returns {String} Computed shotName
+   */
+  function computeShotName(metadata) {
+    if (!metadata) {
+      return '';
+    }
+
+    var parts = [];
+
+    if (metadata.location) {
+      parts.push(metadata.location);
+    }
+    if (metadata.subject) {
+      parts.push(metadata.subject);
+    }
+    if (metadata.action) {
+      parts.push(metadata.action);
+    }
+    if (metadata.shotType) {
+      parts.push(metadata.shotType);
+    }
+
+    var baseName = parts.join('-');
+
+    if (metadata.shotNumber) {
+      return baseName + '-#' + metadata.shotNumber;
+    }
+
+    return baseName;
+  }
+
+
+
+  /**
+   * Read metadata from .ingest-metadata.json sidecar file
+   * Looks in proxy folder first, falls back to raw media folder
+   * Computes shotName client-side if missing from JSON
+   * @param {ProjectItem} clip - Premiere Pro clip object
+   * @returns {String} JSON string of metadata object or "null" if not found
+   */
+  function readJSONMetadata(clip) {
+    try {
+      // Get proxy path (preferred - proxy folders usually online)
+      var proxyPath = clip.getProxyPath();
+      var folder = null;
+
+      // Priority 1: Proxy folder
+      if (proxyPath && proxyPath !== '') {
+        folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
+        var proxyJSONFile = new File(folder + '/.ingest-metadata.json');
+
+        if (proxyJSONFile.exists) {
+          $.writeln('DEBUG JSON: Reading from proxy folder: ' + folder);
+          return readJSONFromFile(proxyJSONFile, clip.name);
+        }
+      }
+
+      // Priority 2: Raw media folder (fallback)
+      var mediaPath = clip.getMediaPath();
+      if (mediaPath && mediaPath !== '') {
+        folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
+        var rawJSONFile = new File(folder + '/.ingest-metadata.json');
+
+        if (rawJSONFile.exists) {
+          $.writeln('DEBUG JSON: Reading from raw folder: ' + folder);
+          return readJSONFromFile(rawJSONFile, clip.name);
+        }
+      }
+
+      // No JSON file found
+      $.writeln('WARNING: No .ingest-metadata.json found for clip: ' + clip.name);
+      return 'null';
+
+    } catch (e) {
+      $.writeln('ERROR in readJSONMetadata: ' + e.message);
+      return 'null';
+    }
+  }
+
+
+
+  /**
+   * Helper: Read and parse JSON file, lookup clip metadata by ID
+   * @param {File} jsonFile - ExtendScript File object
+   * @param {String} clipName - Clip filename (e.g., "EAV0TEST3.MOV")
+   * @returns {String} JSON string of metadata or "null"
+   */
+  function readJSONFromFile(jsonFile, clipName) {
+    try {
+      // Read file contents
+      jsonFile.open('r');
+      var jsonString = jsonFile.read();
+      jsonFile.close();
+
+      // Parse JSON (ES3-compatible - no JSON.parse available)
+      var jsonData = eval('(' + jsonString + ')');
+
+      // Extract clip ID (remove file extension)
+      // "EAV0TEST3.MOV" → "EAV0TEST3"
+      var clipID = clipName.replace(/\.[^.]+$/, '');
+
+      // Lookup metadata for this clip
+      var metadata = jsonData[clipID];
+
+      if (!metadata) {
+        $.writeln('WARNING: Clip ID "' + clipID + '" not found in JSON');
+        return 'null';
+      }
+
+      // Compute shotName if missing (defensive programming)
+      if (!metadata.shotName) {
+        metadata.shotName = computeShotName(metadata);
+        $.writeln('INFO: shotName computed client-side: ' + metadata.shotName);
+      }
+
+      // Return as JSON string (for CEP panel consumption)
+      return JSON.stringify(metadata);
+
+    } catch (e) {
+      $.writeln('ERROR parsing JSON file: ' + e.message);
+      return 'null';
+    }
+  }
+
+
+
+  /**
+   * Write metadata updates to .ingest-metadata.json sidecar file
+   * Uses atomic write (temp file + rename) to prevent corruption
+   * Updates modifiedAt timestamp and modifiedBy field
+   * Computes shotName from component fields if not provided
+   * @param {ProjectItem} clip - Premiere Pro clip object
+   * @param {Object} updates - Metadata fields to update (location, subject, action, etc.)
+   * @returns {String} "true" if successful, "false" if failed
+   */
+  function writeJSONMetadata(clip, updates) {
+    try {
+      // Get proxy path (preferred - write to proxy folder)
+      var proxyPath = clip.getProxyPath();
+      var folder = null;
+      var jsonFilePath = null;
+
+      // Priority 1: Proxy folder
+      if (proxyPath && proxyPath !== '') {
+        folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
+        jsonFilePath = folder + '/.ingest-metadata.json';
+        var proxyJSONFile = new File(jsonFilePath);
+
+        if (proxyJSONFile.exists) {
+          $.writeln('DEBUG JSON WRITE: Writing to proxy folder: ' + folder);
+          return writeJSONToFile(proxyJSONFile, clip.name, updates);
+        }
+      }
+
+      // Priority 2: Raw media folder (fallback)
+      var mediaPath = clip.getMediaPath();
+      if (mediaPath && mediaPath !== '') {
+        folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
+        jsonFilePath = folder + '/.ingest-metadata.json';
+        var rawJSONFile = new File(jsonFilePath);
+
+        if (rawJSONFile.exists) {
+          $.writeln('DEBUG JSON WRITE: Writing to raw folder: ' + folder);
+          return writeJSONToFile(rawJSONFile, clip.name, updates);
+        }
+      }
+
+      // No JSON file found
+      $.writeln('ERROR: No .ingest-metadata.json found for writing');
+      return 'false';
+
+    } catch (e) {
+      $.writeln('ERROR in writeJSONMetadata: ' + e.message);
+      return 'false';
+    }
+  }
+
+
+
+  /**
+   * Helper: Write metadata updates to JSON file atomically
+   * @param {File} jsonFile - ExtendScript File object
+   * @param {String} clipName - Clip filename (e.g., "EAV0TEST3.MOV")
+   * @param {Object} updates - Metadata fields to update
+   * @returns {String} "true" if successful, "false" if failed
+   */
+  function writeJSONToFile(jsonFile, clipName, updates) {
+    try {
+      // Read existing JSON
+      jsonFile.open('r');
+      var jsonString = jsonFile.read();
+      jsonFile.close();
+
+      // Parse JSON (ES3-compatible)
+      var jsonData = eval('(' + jsonString + ')');
+
+      // Extract clip ID (remove extension)
+      var clipID = clipName.replace(/\.[^.]+$/, '');
+
+      // Get existing metadata or create new entry
+      var metadata = jsonData[clipID] || {
+        id: clipID,
+        originalFilename: clipName
+      };
+
+      // Merge updates into metadata
+      for (var key in updates) {
+        if (updates[key] !== undefined) {
+          metadata[key] = updates[key];
+        }
+      }
+
+      // Compute shotName from updated fields
+      metadata.shotName = computeShotName(metadata);
+
+      // Update audit fields
+      metadata.modifiedAt = new Date().toISOString();
+      metadata.modifiedBy = 'cep-panel';
+
+      // Update JSON data
+      jsonData[clipID] = metadata;
+
+      // Write atomically (temp file + rename to prevent corruption)
+      var folder = jsonFile.parent.fsName;
+      var tempFile = new File(folder + '/.ingest-metadata.tmp.json');
+
+      tempFile.open('w');
+      tempFile.write(JSON.stringify(jsonData, null, 2)); // Pretty print
+      tempFile.close();
+
+      // Remove old file first (ExtendScript rename doesn't replace existing files)
+      if (jsonFile.exists) {
+        jsonFile.remove();
+      }
+
+      // Now rename temp file to original name
+      tempFile.rename(jsonFile.name);
+
+      $.writeln('DEBUG JSON WRITE: Successfully wrote metadata for ' + clipID);
+      $.writeln('  shotName: ' + metadata.shotName);
+      $.writeln('  modifiedAt: ' + metadata.modifiedAt);
+
+      return 'true';
+
+    } catch (e) {
+      $.writeln('ERROR writing JSON file: ' + e.message);
+      return 'false';
+    }
+  }
+
+
+
+  /**
 
      * Update PP project item metadata fields
 
@@ -1545,6 +1801,10 @@ var EAVIngest = (function() {
     getSelectedClips: getSelectedClips,
 
     updateClipMetadata: updateClipMetadata,
+
+    readJSONMetadata: readJSONMetadata,
+
+    writeJSONMetadata: writeJSONMetadata,
 
     getAllProjectClips: getAllProjectClips,
 

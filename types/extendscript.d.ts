@@ -46,6 +46,7 @@ declare class ProjectItem {
 
   getMediaPath(): string;
   isOffline(): boolean;
+  getProxyPath(): string;
 
   // Premiere Pro specific methods
   getProjectColumnsMetadata(): string;
@@ -70,8 +71,12 @@ declare class File {
   write(text: string): boolean;
   writeln(text: string): boolean;
   close(): void;
+  remove(): boolean;
+  rename(newName: string): boolean;
   readonly exists: boolean;
   readonly fsName: string;
+  readonly name: string;
+  readonly parent: Folder;
 }
 
 declare class Folder {
