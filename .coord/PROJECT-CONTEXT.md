@@ -45,29 +45,38 @@
 - **Documentation:** See docs/002-DOC-ML-FEEDBACK-LOOP.md
 
 ## Current Focus
-PHASE::B2_XMP-First_refactor→APPROVED✅→5_days_execution_ready
-GOVERNANCE::B1_workspace_complete✅→B2_build_plan_validated✅→CDA_CONDITIONAL_GO→FINAL_GO_issued
+PHASE::PRODUCTION_READY→Track_A_complete✅→CEP_integration_validated✅→JSON_read_working✅→XMP_write_limitations_documented✅
+GOVERNANCE::Reality_validation_complete✅→Production_approved✅→XMP_write_limitations_acceptable✅→Documentation_updated✅
 
 ## Key Decisions
-- [2025-11-15] B2_BUILD_PLAN→validated_by_CDA→CONDITIONAL_GO→3_MUST_FIX_incorporated→FINAL_GO_approved
+- [2025-11-19] PRODUCTION_APPROVED→reality_validation_complete→XMP_write_limitations_acceptable→JSON_read_sufficient_for_QC_workflow✅
+- [2025-11-19] XMP_WRITE_LIMITATIONS_DOCUMENTED→Clip_Name_reliable✅→Description_uncertain⚠️→Full_JSON_roundtrip_deferred→User_confirmed_acceptable
+- [2025-11-18] CEP_INTEGRATION_BUG_FIXED→nodeId_wrapper_functions_added→metadata_loading_confirmed✅
+- [2025-11-18] TRACK_A_COMPLETE→JSON_read/write_foundation→code_reviewed✅→committed_fafdf16
+- [2025-11-18] FOLDER_LEVEL_COMPLETION_SUFFICIENT→Issue_#37_downgraded_to_enhancement→field_locks_deferred
+- [2025-11-18] SCHEMA_R1.1_LOCKED→empirical_PP_testing→shotName_format_confirmed→field-level_locks_validated
+- [2025-11-18] JSON_INTEGRATION_AUTHORIZED→Tracks_A/B/C_ready→proxy_folder_priority_strategy_validated
+- [2025-11-18] XMP-First_B2_DEFERRED→JSON_sidecar_approach_prioritized→B2_plan_preserved_for_future
 - [2025-11-15] B1_WORKSPACE_SETUP→quality_gates_operational→ESLint+TypeScript+Vitest→all_passing
-- [2025-11-15] TIMELINE_ADJUSTMENT→4_days_optimistic→5_days_realistic→6.5h_buffer_for_ExtendScript
-- [2025-11-14] XMP_FORMAT→element_format[vs attribute_format]→Premiere_returns_<tag>value</tag>≠tag="value"
-- [2025-11-14] OFFLINE_WORKFLOWS→XMP-First_architecture→ADR-003_APPROVED→POC_validated_all_tests_passed
-- [2025-11-14] Issue_#32_RESOLVED→getProjectMetadata()_API_confirmed→9877_chars_XMP_in_project→offline_safe
+- [2025-11-14] OFFLINE_WORKFLOWS→JSON_sidecar_architecture→North_Star_approved→schema_finalization_required
+- [2025-11-14] Issue_#32_RESOLVED→metadata_access_research_complete→JSON_approach_selected
 
 ## Active Work
-- [x] XMP::LogComment_parsing→fixed→online_works
-- [x] RESEARCH::offline_metadata_access→XMP-First_validated→ADR-003_approved
-- [x] B1::workspace_setup→quality_gates_operational✅→ESLint+TypeScript+Vitest_passing
-- [ ] B2::XMP-First_refactor→5_days_validated→17_tasks→FINAL_GO_approved→execution_start_ready
+- [x] B0::Schema_R1.1_finalization→empirical_testing_complete→LOCKED✅
+- [x] B0::Schema_documentation→authoritative_spec+implementation_guide+migration_guide+quick_ref→complete
+- [x] B0::Test_fixtures→R1.1_JSON_created→production_validated
+- [x] Track_A::JSON_read/write_foundation→ExtendScript_complete→CEP_integration_deployed→initial_testing_passed✅
+- [x] CEP_Panel::Integration→readJSONMetadataByNodeId/writeJSONMetadataByNodeId→wrapper_functions_deployed✅
+- [ ] USER_TESTING::Comprehensive_validation→round-trip_metadata→save_functionality→offline_scenarios→NEXT_SESSION
+- [ ] Track_B::Field-level_lock_enforcement→lockedFields_array→UI_indicators→DEFERRED (folder-level sufficient)
+- [ ] Track_C::Proxy_path_JSON_lookup→getProxyPath()_detection→offline_handling→DEFERRED (Track A handles)
 
 ## Failed Approaches (This Session)
 - ❌ attribute_regex→assumed_from_ExifTool→Premiere_uses_elements→switched_to_element_format
 - ❌ QE_DOM_getProjectColumnsMetadata()→unreliable_offline→REPLACED_BY→XMP-First_architecture✅
 
 ## Next Milestone
-B2 Phase: XMP-First refactor (5 days, 17 tasks) → Replace QE DOM with XMPScript APIs → Offline workflows enabled → Issue #32 closed
+USER VALIDATION (Next Session): Comprehensive testing with multiple JSON files → Round-trip save validation → Edit workflow testing → Production deployment decision → Issue #38 (unit tests) before production
 
 ## Recent User Feedback
 > "The purpose of the metadata panel is for users to review the metadata against the photos to do QC and amend where wrong. It is vital." (offline workflow requirement)
@@ -90,4 +99,4 @@ Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ---
 
-**LAST UPDATED:** 2025-11-15
+**LAST UPDATED:** 2025-11-18 (Track A complete, CEP integration deployed, initial metadata loading confirmed - comprehensive testing next session)
