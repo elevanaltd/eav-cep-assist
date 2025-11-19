@@ -69,20 +69,38 @@ User clicks clip in Navigation Panel
 3. **ExtendScript (Premiere Pro):** `jsx/host.jsx` (XMP read/write, Project Panel interaction)
 
 
-### **Metadata Strategy (Shared with ingest-assistant)**
+### **Metadata Strategy - JSON Read + Limited XMP Write (Schema 2.0)**
 
-This project uses a **shared XMP metadata strategy** with `ingest-assistant` (Electron desktop app). Both tools write **identical XMP fields** to video files, ensuring metadata consistency across the video production workflow.
+**CURRENT IMPLEMENTATION (November 2025 - Production Ready):**
 
-**See:** [`ingest-assistant/.coord/docs/000001-DOC-METADATA-STRATEGY-SHARED.md`](../ingest-assistant/.coord/docs/000001-DOC-METADATA-STRATEGY-SHARED.md) for complete field specifications, namespace rationale, and implementation details.
+This project uses **JSON sidecar files** (Schema 2.0) as the primary metadata source, with **limited XMP write capability** for Premiere Pro clip name updates.
 
-**Key XMP Fields Written:**
-- `xmpDm:shotName` - Combined entity mapping to PP Shot field (survives proxy workflows)
-- `xmpDM:LogComment` - Structured key=value pairs for CEP panel parsing (**CRITICAL:** Capital 'C' in LogComment)
-- `dc:description` - Human description or keywords (universal compatibility)
+####  **✅ JSON Sidecar Read (VALIDATED - Production Ready)**
+- **File:** `.ingest-metadata.json` (co-located with proxy/raw video files)
+- **Format:** Schema 2.0 - See [`.coord/docs/005-DOC-SCHEMA-R1-1-AUTHORITATIVE-CEP-IA-METADATA.md`](.coord/docs/005-DOC-SCHEMA-R1-1-AUTHORITATIVE-CEP-IA-METADATA.md)
+- **Capability:** CEP Panel reads ALL metadata fields (location, subject, action, shotType, shotNumber, keywords, shotName, timestamps, _schema, _completed)
+- **Status:** User testing confirmed JSON read works correctly (November 2025)
 
-**Technology:** XMPScript API (Adobe ExtendScript) via `jsx/host.jsx` (lines 371-535)
+#### **⚠️ XMP Write Capability (LIMITED - Adobe Constraints)**
+- **Clip Name:** ✅ **RELIABLE** - Updates Premiere Pro Clip Name field consistently
+- **Description:** ⚠️ **UNCERTAIN** - May persist, but Adobe XMP namespace constraints cause inconsistency
+- **Other Fields:** ❌ **NOT SUPPORTED** - Full JSON round-trip write not implemented
 
-**⚠️ KNOWN BUG (Pre-XMPScript Migration):** Current regex implementation uses `xmpDm:logComment` (lowercase 'c') instead of `xmpDM:LogComment` (capital 'C'). This writes to a DIFFERENT field than ingest-assistant, breaking metadata alignment. Fix required during XMPScript SDK migration.
+#### **Reality-Validated Behavior (User Testing - November 2025):**
+```
+Test Results:
+  ✅ JSON metadata loads into CEP Panel correctly
+  ✅ Clip Name updates persist to Premiere Pro
+  ⚠️ Description field persistence is inconsistent (Adobe XMP limitation)
+  ✅ Lock indicator (_completed: true) displays correctly
+  ✅ Error handling works (missing JSON, malformed format)
+```
+
+#### **Production Use Case:**
+CEP Panel is a **metadata viewer/editor** - reads from JSON sidecar, allows limited Premiere Pro Clip Name updates. Full metadata persistence managed by ingest-assistant via JSON file updates.
+
+**Legacy XMP Approach (Deprecated):**
+Previously attempted full XMP read/write using `xmpDM:shotName`, `xmpDM:LogComment`, `dc:description`. Namespace collision issues and Adobe XMP constraints made this impractical. Superseded by JSON sidecar strategy (Schema 2.0).
 
 ---
 
@@ -142,33 +160,38 @@ This project uses a **shared XMP metadata strategy** with `ingest-assistant` (El
 
 ---
 
-### Step 4: Batch Clip Name Update (CEP Panel - NEW WORKFLOW)
+### Step 4: Metadata Review via CEP Panel (PRODUCTION READY)
 
-**Purpose:** Update PP Clip Names from JSON metadata in bulk
+**Purpose:** View and edit clip metadata from JSON sidecar files
 
-**Current State:** ⚠️ **NOT IMPLEMENTED** - Requires JSON sidecar read integration
-**Future State:** CEP Panel reads `.ingest-metadata.json` and batch-updates PP
+**Current State:** ✅ **JSON READ WORKING** - CEP Panel reads `.ingest-metadata.json` successfully
+**Future State:** Batch update functionality for multiple clips simultaneously
 
-**Future Process:**
-1. **Select All Clips:** In Project Panel, select all clips from shoot folder
+**Current Process (Per-Clip Review):**
+1. **Open Metadata Panel:** Window → Extensions → EAV Ingest Assistant - Metadata
 
-2. **CEP Panel Batch Operation:**
-   - Click "Batch Update from JSON" button (future feature)
-   - CEP finds `.ingest-metadata.json` in proxy folder
-   - For each clip:
-     - Lookup by PP Tape Name (e.g., EA001621)
-     - Read metadata from JSON
-     - Update PP Clip Name to shotName format: `{location}-{subject}-{action}-{shotType}-#{shotNumber}`
+2. **Select Clip:** Click clip in Navigation Panel OR Project Panel
+   - CEP Panel automatically loads metadata from `.ingest-metadata.json`
+   - Lookup by PP Tape Name (e.g., EA001621)
+   - All fields populate: location, subject, action, shotType, shotNumber, keywords
 
-3. **Result:**
-   - PP Clip Name: `kitchen-oven-cleaning-ESTAB-#25`
-   - PP Metadata columns populated (location, subject, action, shotType, shotNumber)
-   - Editor sees meaningful clip names in timeline
+3. **Review and Edit:**
+   - View AI-generated metadata
+   - Make corrections if needed
+   - Generated shotName updates live: `{location}-{subject}-{action}-{shotType}-#{shotNumber}`
 
-**Why This Matters:**
-Editors work with descriptive names (`kitchen-oven-cleaning-ESTAB-#25`) instead of camera filenames (`EA001621_proxy.mov`), making timeline navigation 10x faster.
+4. **Apply to Premiere:**
+   - Click "Apply to Premiere" button
+   - Updates PP Clip Name (reliable)
+   - Description field (uncertain persistence - Adobe XMP limitation)
 
-**Implementation Status:** Requires JSON sidecar read functionality (not yet implemented)
+**Result:**
+- PP Clip Name: `kitchen-oven-cleaning-ESTAB-#25`
+- Editor sees meaningful names instead of camera filenames (`EA001621_proxy.mov`)
+- Timeline navigation significantly faster
+
+**Future Enhancement (Batch Update):**
+Batch operation to update multiple clips simultaneously from JSON. Currently requires per-clip review/apply workflow.
 
 ---
 
@@ -180,8 +203,8 @@ Editors work with descriptive names (`kitchen-oven-cleaning-ESTAB-#25`) instead 
 1. **Open CEP Panel:** Window → Extensions → EAV Ingest Assistant - Metadata
 
 2. **Load Clip Metadata:**
-   - **Current (XMP-based):** CEP reads XMP from file
-   - **Future (JSON-based):** CEP reads `.ingest-metadata.json` by PP Tape Name lookup
+   - **Current (JSON-based - WORKING):** CEP reads `.ingest-metadata.json` by PP Tape Name lookup
+   - **Legacy (XMP-based - Deprecated):** Previously read XMP from file (namespace issues)
 
 3. **Review AI Analysis:**
    - Check location, subject, action, shotType fields
@@ -191,8 +214,8 @@ Editors work with descriptive names (`kitchen-oven-cleaning-ESTAB-#25`) instead 
 4. **Make Corrections:**
    - Edit fields in CEP Panel form
    - Click "Apply to Premiere" button
-   - **Current:** Updates PP + writes XMP
-   - **Future:** Updates PP + writes JSON + optional Supabase sync
+   - **Current:** Updates PP Clip Name (reliable) + Description (uncertain)
+   - **Future:** Updates JSON sidecar + optional Supabase sync
 
 5. **JSON Lock Mechanism (Future):**
    - If IA folder marked COMPLETE → JSON `lockedFields: []` prevents IA from overwriting QC corrections
@@ -204,12 +227,15 @@ Editors work with descriptive names (`kitchen-oven-cleaning-ESTAB-#25`) instead 
 - When online → sync queue uploads changes to JSON file
 - No database dependency for core QC operations
 
-**Success Criteria:**
-- All metadata corrections persist to JSON (source of truth)
-- CEP Panel can read/write JSON even when Supabase unavailable
-- Lock mechanism prevents IA from clobbering QC work
+**Success Criteria (Current Reality - November 2025):**
+- ✅ CEP Panel reads JSON sidecar successfully (Schema 2.0)
+- ✅ Metadata displays correctly in Premiere Pro
+- ✅ Clip Name updates persist reliably
+- ⚠️ Description field persistence uncertain (Adobe XMP limitation)
+- ❌ JSON write-back not implemented (future enhancement)
+- ❌ Lock mechanism not implemented (future enhancement)
 
-**Implementation Status:** Currently XMP-based, migrating to JSON sidecar per CEP Panel North Star (D1 complete)
+**Implementation Status:** **JSON READ - PRODUCTION READY** (Track A complete, November 2025)
 
 ---
 

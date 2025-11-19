@@ -20,6 +20,17 @@
 
             <!-- Form Content -->
             <div class="form-content">
+                <!-- Lock Indicator (hidden by default) -->
+                <div id="lockIndicator" style="display:none; background:#fffacd; border-left:4px solid #f9a825; padding:12px; margin:10px 0; border-radius:4px;">
+                    🔒 <strong>FOLDER COMPLETED</strong> (locked by Ingest Assistant)
+                    <div style="font-size:0.9em; margin-top:5px; color:#666;">
+                        Locked by: <span id="lockedBy">unknown</span> at <span id="lockedAt">unknown time</span>
+                    </div>
+                    <div style="font-size:0.85em; margin-top:8px; color:#666;">
+                        ℹ️ CEP Panel can still edit (QC corrections allowed). Ingest Assistant will not overwrite.
+                    </div>
+                </div>
+
                 <!-- Top Row: Identifier (20%) | Description (70%) | Good (10%) -->
                 <div class="form-row-split">
                     <!-- Identifier (20%) -->
@@ -139,6 +150,22 @@
                 <div class="name-preview">
                     <label>Generated Name:</label>
                     <div id="generatedName" class="generated-name-text">-</div>
+                </div>
+
+                <!-- Combined Name (shotName) Display -->
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="shotNameDisplay">Combined Name (Computed):</label>
+                    <input
+                        type="text"
+                        id="shotNameDisplay"
+                        readonly
+                        disabled
+                        style="background: #f5f5f5; cursor: not-allowed; font-family: monospace; padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%;"
+                        placeholder="Format: {location}-{subject}-{action}-{shotType}-#{shotNumber}"
+                    />
+                    <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                        Auto-generated from location, subject, action, shot type, and shot number
+                    </small>
                 </div>
             </div>
 
