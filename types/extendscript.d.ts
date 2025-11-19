@@ -13,6 +13,10 @@ declare const $: {
   version: string;
   /** Operating system */
   os: string;
+  /** Path of currently executing script file */
+  fileName: string;
+  /** Evaluate another ExtendScript file */
+  evalFile: (file: File | string) => any;
 };
 
 // Premiere Pro application

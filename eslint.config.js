@@ -22,6 +22,7 @@ export default [
         // CEP-specific globals
         CSInterface: 'readonly',
         CSEvent: 'readonly',
+        SystemPath: 'readonly',
         cep: 'readonly',
         cep_node: 'readonly'
       }
