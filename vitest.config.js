@@ -16,7 +16,8 @@ export default defineConfig({
 
       // Include only source files
       include: [
-        'js/**/*.js'
+        'js/**/*.js',
+        'src/**/*.js'
       ],
 
       // Exclude vendor libraries and ExtendScript
@@ -39,7 +40,8 @@ export default defineConfig({
     // Test file patterns
     include: [
       'test/unit/**/*.test.js',
-      'test/integration/**/*.test.js'
+      'test/integration/**/*.test.js',
+      'test/track-a/**/*.test.js'
     ],
 
     // Exclude patterns

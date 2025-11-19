@@ -14,7 +14,13 @@
 
     "install": "echo 'Copy this folder to Adobe CEP extensions directory'",
 
-    "lint": "eslint js/**/*.js jsx/**/*.jsx",
+    "build": "bash scripts/build-track-a.sh",
+
+    "prebuild": "echo '🔧 Transpiling Track A functions (ES6 → ES3)...'",
+
+    "postbuild": "echo '✅ Build complete'",
+
+    "lint": "eslint js/**/*.js jsx/**/*.jsx src/**/*.js",
 
     "validate:es3": "bash scripts/validate-es3-enforcement.sh",
 
@@ -28,7 +34,7 @@
 
     "test:coverage": "vitest run --coverage",
 
-    "quality-gates": "npm run lint && npm run validate:es3 && npm run typecheck && npm test"
+    "quality-gates": "npm run build && npm run lint && npm run validate:es3 && npm run typecheck && npm test"
 
   },
 
@@ -63,6 +69,12 @@
   "license": "PROPRIETARY",
 
   "devDependencies": {
+
+    "@babel/cli": "^7.28.3",
+
+    "@babel/core": "^7.28.5",
+
+    "@babel/preset-env": "^7.28.5",
 
     "@vitest/coverage-v8": "^2.1.8",
 

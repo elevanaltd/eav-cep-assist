@@ -23,6 +23,7 @@
     "node_modules",
     "test",
     "js",
-    "jsx/test-es3-*.jsx"
+    "jsx/test-es3-*.jsx",
+    "jsx/generated"
   ]
 }
