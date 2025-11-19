@@ -793,6 +793,19 @@
   function init() {
     addDebug('=== Metadata Panel Initializing ===');
 
+    // Load ExtendScript manually (ScriptPath in manifest doesn't always work)
+    const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
+    const jsxPath = extensionRoot + '/jsx/host.jsx';
+    addDebug('[Init] Loading ExtendScript: ' + jsxPath);
+
+    csInterface.evalFile(jsxPath, function(result) {
+      if (result === 'EvalScript error.') {
+        addDebug('[Init] ✗ ExtendScript load failed: ' + result, true);
+      } else {
+        addDebug('[Init] ✓ ExtendScript loaded successfully');
+      }
+    });
+
     // Initialize Debug Panel clear button
     const clearDebugBtn = document.getElementById('clearDebug');
     if (clearDebugBtn) {
