@@ -1,0 +1,18 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "ie": "5"
+        },
+        "modules": false,
+        "loose": true,
+        "spec": false,
+        "useBuiltIns": false
+      }
+    ]
+  ],
+  "comments": true,
+  "compact": false
+}

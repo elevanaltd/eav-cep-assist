@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { computeShotName } from '../helpers/track-a-functions.js';
+import { computeShotName } from '../../src/track-a/json-integration.js';
 
 describe('computeShotName()', () => {
   describe('Happy Path', () => {

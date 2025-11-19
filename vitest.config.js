@@ -16,7 +16,8 @@ export default defineConfig({
 
       // Include only source files
       include: [
-        'js/**/*.js'
+        'js/**/*.js',
+        'src/**/*.js'
       ],
 
       // Exclude vendor libraries and ExtendScript

@@ -1,7 +1,13 @@
 /**
- * Track A Functions - Testable JavaScript versions
- * These are JavaScript implementations of the ExtendScript functions in jsx/host.jsx
- * Used for unit testing - the actual production code is in jsx/host.jsx
+ * Track A: JSON Sidecar Integration
+ *
+ * Pure JavaScript implementation of JSON metadata read/write functions.
+ * This file is:
+ * 1. Tested directly in Vitest (ES6)
+ * 2. Transpiled to ES3 for ExtendScript (via Babel)
+ * 3. Included in jsx/host.jsx as production code
+ *
+ * Schema: R1.1 (see .coord/docs/005-DOC-SCHEMA-R1-1-AUTHORITATIVE-CEP-IA-METADATA.md)
  */
 
 /**
@@ -15,7 +21,7 @@ export function computeShotName(metadata) {
     return '';
   }
 
-  var parts = [];
+  const parts = [];
 
   if (metadata.location) {
     parts.push(metadata.location);
@@ -30,7 +36,7 @@ export function computeShotName(metadata) {
     parts.push(metadata.shotType);
   }
 
-  var baseName = parts.join('-');
+  const baseName = parts.join('-');
 
   if (metadata.shotNumber) {
     return baseName + '-#' + metadata.shotNumber;
@@ -41,27 +47,27 @@ export function computeShotName(metadata) {
 
 /**
  * Helper: Read and parse JSON file, lookup clip metadata by ID
- * @param {File} jsonFile - ExtendScript File object (or mock)
+ * @param {File} jsonFile - ExtendScript File object
  * @param {String} clipName - Clip filename (e.g., "EAV0TEST3.MOV")
- * @param {Object} $ - ExtendScript global (or mock)
+ * @param {Object} $ - ExtendScript global (optional for logging)
  * @returns {String} JSON string of metadata or "null"
  */
 export function readJSONFromFile(jsonFile, clipName, $) {
   try {
     // Read file contents
     jsonFile.open('r');
-    var jsonString = jsonFile.read();
+    const jsonString = jsonFile.read();
     jsonFile.close();
 
     // Parse JSON
-    var jsonData = JSON.parse(jsonString);
+    const jsonData = JSON.parse(jsonString);
 
     // Extract clip ID (remove file extension)
     // "EAV0TEST3.MOV" → "EAV0TEST3"
-    var clipID = clipName.replace(/\.[^.]+$/, '');
+    const clipID = clipName.replace(/\.[^.]+$/, '');
 
     // Lookup metadata for this clip
-    var metadata = jsonData[clipID];
+    const metadata = jsonData[clipID];
 
     if (!metadata) {
       if ($) {
@@ -93,21 +99,21 @@ export function readJSONFromFile(jsonFile, clipName, $) {
  * Read metadata from .ingest-metadata.json sidecar file
  * Looks in proxy folder first, falls back to raw media folder
  * Computes shotName client-side if missing from JSON
- * @param {ProjectItem} clip - Premiere Pro clip object (or mock)
- * @param {Object} File - ExtendScript File constructor (or mock)
- * @param {Object} $ - ExtendScript global (or mock)
+ * @param {ProjectItem} clip - Premiere Pro clip object
+ * @param {Function} FileConstructor - File constructor (ExtendScript File or mock)
+ * @param {Object} $ - ExtendScript global (optional for logging)
  * @returns {String} JSON string of metadata object or "null" if not found
  */
-export function readJSONMetadata(clip, File, $) {
+export function readJSONMetadata(clip, FileConstructor, $) {
   try {
     // Get proxy path (preferred - proxy folders usually online)
-    var proxyPath = clip.getProxyPath();
-    var folder = null;
+    const proxyPath = clip.getProxyPath();
+    let folder = null;
 
     // Priority 1: Proxy folder
     if (proxyPath && proxyPath !== '') {
       folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
-      var proxyJSONFile = new File(folder + '/.ingest-metadata.json');
+      const proxyJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
 
       if (proxyJSONFile.exists) {
         if ($) {
@@ -118,10 +124,10 @@ export function readJSONMetadata(clip, File, $) {
     }
 
     // Priority 2: Raw media folder (fallback)
-    var mediaPath = clip.getMediaPath();
+    const mediaPath = clip.getMediaPath();
     if (mediaPath && mediaPath !== '') {
       folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
-      var rawJSONFile = new File(folder + '/.ingest-metadata.json');
+      const rawJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
 
       if (rawJSONFile.exists) {
         if ($) {
@@ -147,33 +153,33 @@ export function readJSONMetadata(clip, File, $) {
 
 /**
  * Helper: Write metadata updates to JSON file atomically
- * @param {File} jsonFile - ExtendScript File object (or mock)
+ * @param {File} jsonFile - ExtendScript File object
  * @param {String} clipName - Clip filename (e.g., "EAV0TEST3.MOV")
  * @param {Object} updates - Metadata fields to update
- * @param {Object} $ - ExtendScript global (or mock)
+ * @param {Object} $ - ExtendScript global (optional for logging)
  * @returns {String} "true" if successful, "false" if failed
  */
 export function writeJSONToFile(jsonFile, clipName, updates, $) {
   try {
     // Read existing JSON
     jsonFile.open('r');
-    var jsonString = jsonFile.read();
+    const jsonString = jsonFile.read();
     jsonFile.close();
 
     // Parse JSON
-    var jsonData = JSON.parse(jsonString);
+    const jsonData = JSON.parse(jsonString);
 
     // Extract clip ID (remove extension)
-    var clipID = clipName.replace(/\.[^.]+$/, '');
+    const clipID = clipName.replace(/\.[^.]+$/, '');
 
     // Get existing metadata or create new entry
-    var metadata = jsonData[clipID] || {
+    let metadata = jsonData[clipID] || {
       id: clipID,
       originalFilename: clipName
     };
 
     // Merge updates into metadata
-    for (var key in updates) {
+    for (const key in updates) {
       if (updates[key] !== undefined) {
         metadata[key] = updates[key];
       }
@@ -190,8 +196,9 @@ export function writeJSONToFile(jsonFile, clipName, updates, $) {
     jsonData[clipID] = metadata;
 
     // Write atomically (temp file + rename to prevent corruption)
-    var folder = jsonFile.parent.fsName;
-    var tempFile = new jsonFile.constructor(folder + '/.ingest-metadata.tmp.json');
+    const folder = jsonFile.parent.fsName;
+    const FileConstructor = jsonFile.constructor;
+    const tempFile = new FileConstructor(folder + '/.ingest-metadata.tmp.json');
 
     tempFile.open('w');
     tempFile.write(JSON.stringify(jsonData, null, 2)); // Pretty print
@@ -226,24 +233,24 @@ export function writeJSONToFile(jsonFile, clipName, updates, $) {
  * Uses atomic write (temp file + rename) to prevent corruption
  * Updates modifiedAt timestamp and modifiedBy field
  * Computes shotName from component fields if not provided
- * @param {ProjectItem} clip - Premiere Pro clip object (or mock)
+ * @param {ProjectItem} clip - Premiere Pro clip object
  * @param {Object} updates - Metadata fields to update (location, subject, action, etc.)
- * @param {Object} File - ExtendScript File constructor (or mock)
- * @param {Object} $ - ExtendScript global (or mock)
+ * @param {Function} FileConstructor - File constructor (ExtendScript File or mock)
+ * @param {Object} $ - ExtendScript global (optional for logging)
  * @returns {String} "true" if successful, "false" if failed
  */
-export function writeJSONMetadata(clip, updates, File, $) {
+export function writeJSONMetadata(clip, updates, FileConstructor, $) {
   try {
     // Get proxy path (preferred - write to proxy folder)
-    var proxyPath = clip.getProxyPath();
-    var folder = null;
-    var jsonFilePath = null;
+    const proxyPath = clip.getProxyPath();
+    let folder = null;
+    let jsonFilePath = null;
 
     // Priority 1: Proxy folder
     if (proxyPath && proxyPath !== '') {
       folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
       jsonFilePath = folder + '/.ingest-metadata.json';
-      var proxyJSONFile = new File(jsonFilePath);
+      const proxyJSONFile = new FileConstructor(jsonFilePath);
 
       if (proxyJSONFile.exists) {
         if ($) {
@@ -254,11 +261,11 @@ export function writeJSONMetadata(clip, updates, File, $) {
     }
 
     // Priority 2: Raw media folder (fallback)
-    var mediaPath = clip.getMediaPath();
+    const mediaPath = clip.getMediaPath();
     if (mediaPath && mediaPath !== '') {
       folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
       jsonFilePath = folder + '/.ingest-metadata.json';
-      var rawJSONFile = new File(jsonFilePath);
+      const rawJSONFile = new FileConstructor(jsonFilePath);
 
       if (rawJSONFile.exists) {
         if ($) {
@@ -285,15 +292,15 @@ export function writeJSONMetadata(clip, updates, File, $) {
 /**
  * CEP Panel Wrapper: Read JSON metadata by nodeId
  * @param {String} nodeId - Premiere Pro clip node ID
- * @param {Object} app - Premiere Pro app object (or mock)
+ * @param {Object} app - Premiere Pro app object
  * @param {Function} findProjectItemByNodeId - Helper to find clip by nodeId
- * @param {Object} File - ExtendScript File constructor (or mock)
- * @param {Object} $ - ExtendScript global (or mock)
+ * @param {Function} FileConstructor - File constructor
+ * @param {Object} $ - ExtendScript global (optional for logging)
  * @returns {String} JSON string or "null"
  */
-export function readJSONMetadataByNodeId(nodeId, app, findProjectItemByNodeId, File, $) {
+export function readJSONMetadataByNodeId(nodeId, app, findProjectItemByNodeId, FileConstructor, $) {
   try {
-    var project = app.project;
+    const project = app.project;
     if (!project) {
       if ($) {
         $.writeln('ERROR: No active project');
@@ -302,7 +309,7 @@ export function readJSONMetadataByNodeId(nodeId, app, findProjectItemByNodeId, F
     }
 
     // Find clip by nodeId
-    var clip = findProjectItemByNodeId(project.rootItem, nodeId, project);
+    const clip = findProjectItemByNodeId(project.rootItem, nodeId, project);
     if (!clip) {
       if ($) {
         $.writeln('ERROR: Clip not found for nodeId: ' + nodeId);
@@ -311,7 +318,7 @@ export function readJSONMetadataByNodeId(nodeId, app, findProjectItemByNodeId, F
     }
 
     // Call Track A function with clip object
-    return readJSONMetadata(clip, File, $);
+    return readJSONMetadata(clip, FileConstructor, $);
   } catch (e) {
     if ($) {
       $.writeln('ERROR in readJSONMetadataByNodeId: ' + e.message);
@@ -323,16 +330,16 @@ export function readJSONMetadataByNodeId(nodeId, app, findProjectItemByNodeId, F
 /**
  * CEP Panel Wrapper: Write JSON metadata by nodeId
  * @param {String} nodeId - Premiere Pro clip node ID
- * @param {Object} updatesJSON - Updates object (NOT JSON string in this version)
- * @param {Object} app - Premiere Pro app object (or mock)
+ * @param {String} updatesJSON - JSON string of updates (will be parsed)
+ * @param {Object} app - Premiere Pro app object
  * @param {Function} findProjectItemByNodeId - Helper to find clip by nodeId
- * @param {Object} File - ExtendScript File constructor (or mock)
- * @param {Object} $ - ExtendScript global (or mock)
+ * @param {Function} FileConstructor - File constructor
+ * @param {Object} $ - ExtendScript global (optional for logging)
  * @returns {String} 'true' or 'false'
  */
-export function writeJSONMetadataByNodeId(nodeId, updatesJSON, app, findProjectItemByNodeId, File, $) {
+export function writeJSONMetadataByNodeId(nodeId, updatesJSON, app, findProjectItemByNodeId, FileConstructor, $) {
   try {
-    var project = app.project;
+    const project = app.project;
     if (!project) {
       if ($) {
         $.writeln('ERROR: No active project');
@@ -341,7 +348,7 @@ export function writeJSONMetadataByNodeId(nodeId, updatesJSON, app, findProjectI
     }
 
     // Find clip by nodeId
-    var clip = findProjectItemByNodeId(project.rootItem, nodeId, project);
+    const clip = findProjectItemByNodeId(project.rootItem, nodeId, project);
     if (!clip) {
       if ($) {
         $.writeln('ERROR: Clip not found for nodeId: ' + nodeId);
@@ -349,8 +356,14 @@ export function writeJSONMetadataByNodeId(nodeId, updatesJSON, app, findProjectI
       return 'false';
     }
 
+    // Parse updates if it's a string (from CEP Panel)
+    let updates = updatesJSON;
+    if (typeof updatesJSON === 'string') {
+      updates = JSON.parse(updatesJSON);
+    }
+
     // Call Track A function with clip object
-    return writeJSONMetadata(clip, updatesJSON, File, $);
+    return writeJSONMetadata(clip, updates, FileConstructor, $);
   } catch (e) {
     if ($) {
       $.writeln('ERROR in writeJSONMetadataByNodeId: ' + e.message);

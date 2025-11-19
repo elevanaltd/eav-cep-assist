@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   readJSONMetadataByNodeId,
   writeJSONMetadataByNodeId
-} from '../helpers/track-a-functions.js';
+} from '../../src/track-a/json-integration.js';
 import {
   MockFile,
   MockProjectItem,

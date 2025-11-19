@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { writeJSONMetadata, writeJSONToFile } from '../helpers/track-a-functions.js';
+import { writeJSONMetadata, writeJSONToFile } from '../../src/track-a/json-integration.js';
 import {
   MockFile,
   MockProjectItem,

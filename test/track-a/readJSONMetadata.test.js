@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { readJSONMetadata, readJSONFromFile } from '../helpers/track-a-functions.js';
+import { readJSONMetadata, readJSONFromFile } from '../../src/track-a/json-integration.js';
 import {
   MockFile,
   MockProjectItem,

@@ -119,6 +119,7 @@ export default [
   {
     // Ignore patterns
     ignores: [
+      "jsx/generated/**",
       'node_modules/**',
       'coverage/**',
       '.github/**',
