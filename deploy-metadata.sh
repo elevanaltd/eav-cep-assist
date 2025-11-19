@@ -13,6 +13,7 @@ mkdir -p "$TARGET_DIR/CSXS"
 mkdir -p "$TARGET_DIR/js"
 mkdir -p "$TARGET_DIR/css"
 mkdir -p "$TARGET_DIR/jsx"
+mkdir -p "$TARGET_DIR/jsx/generated"
 
 # Copy files
 echo "Copying files..."
@@ -22,6 +23,7 @@ cp js/metadata-panel.js "$TARGET_DIR/js/"
 cp js/CSInterface.js "$TARGET_DIR/js/"
 cp css/metadata-panel.css "$TARGET_DIR/css/"
 cp jsx/host.jsx "$TARGET_DIR/jsx/"
+cp jsx/generated/track-a-integration.jsx "$TARGET_DIR/jsx/generated/" 2>/dev/null || echo "Warning: jsx/generated/track-a-integration.jsx not found - run npm run build first"
 
 echo "✓ Metadata Panel deployed to:"
 echo "  $TARGET_DIR"
