@@ -793,6 +793,13 @@
   function init() {
     addDebug('=== Metadata Panel Initializing ===');
 
+    // Initialize Debug Panel clear button
+    const clearDebugBtn = document.getElementById('clearDebug');
+    if (clearDebugBtn) {
+      clearDebugBtn.addEventListener('click', clearDebug);
+      addDebug('✓ Debug panel ready');
+    }
+
     // Load ExtendScript manually (ScriptPath in manifest doesn't always work)
     const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
     const jsxPath = extensionRoot + '/jsx/host.jsx';
@@ -801,24 +808,17 @@
     csInterface.evalFile(jsxPath, function(result) {
       if (result === 'EvalScript error.') {
         addDebug('[Init] ✗ ExtendScript load failed: ' + result, true);
-      } else {
-        addDebug('[Init] ✓ ExtendScript loaded successfully');
+        return;
       }
+
+      addDebug('[Init] ✓ ExtendScript loaded successfully');
+
+      // Initialize MetadataForm AFTER ExtendScript loads
+      MetadataForm.init();
+      addDebug('✓ MetadataForm initialized');
+      addDebug('=== Metadata Panel Ready ===');
+      addDebug('Waiting for clip selection from Navigation Panel...');
     });
-
-    // Initialize Debug Panel clear button
-    const clearDebugBtn = document.getElementById('clearDebug');
-    if (clearDebugBtn) {
-      clearDebugBtn.addEventListener('click', clearDebug);
-      addDebug('✓ Debug panel ready');
-    }
-
-    // Initialize MetadataForm
-    MetadataForm.init();
-    addDebug('✓ MetadataForm initialized');
-
-    addDebug('=== Metadata Panel Ready ===');
-    addDebug('Waiting for clip selection from Navigation Panel...');
   }
 
   // Start when DOM is ready

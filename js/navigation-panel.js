@@ -923,6 +923,13 @@
   function init() {
     addDebug('=== Navigation Panel Initializing ===');
 
+    // Initialize Debug Panel clear button
+    const clearDebugBtn = document.getElementById('clearDebug');
+    if (clearDebugBtn) {
+      clearDebugBtn.addEventListener('click', clearDebug);
+      addDebug('✓ Debug panel ready');
+    }
+
     // Load ExtendScript manually (ScriptPath in manifest doesn't always work)
     const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
     const jsxPath = extensionRoot + '/jsx/host.jsx';
@@ -931,23 +938,16 @@
     csInterface.evalFile(jsxPath, function(result) {
       if (result === 'EvalScript error.') {
         addDebug('[Init] ✗ ExtendScript load failed: ' + result, true);
-      } else {
-        addDebug('[Init] ✓ ExtendScript loaded successfully');
+        return;
       }
+
+      addDebug('[Init] ✓ ExtendScript loaded successfully');
+
+      // Initialize ClipBrowser AFTER ExtendScript loads
+      ClipBrowser.init();
+      addDebug('✓ ClipBrowser initialized');
+      addDebug('=== Navigation Panel Ready ===');
     });
-
-    // Initialize Debug Panel clear button
-    const clearDebugBtn = document.getElementById('clearDebug');
-    if (clearDebugBtn) {
-      clearDebugBtn.addEventListener('click', clearDebug);
-      addDebug('✓ Debug panel ready');
-    }
-
-    // Initialize ClipBrowser
-    ClipBrowser.init();
-    addDebug('✓ ClipBrowser initialized');
-
-    addDebug('=== Navigation Panel Ready ===');
   }
 
   // Start when DOM is ready
