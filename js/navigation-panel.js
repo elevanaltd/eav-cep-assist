@@ -934,10 +934,29 @@
     const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
     const jsxPath = extensionRoot + '/jsx/host.jsx';
     addDebug('[Init] Loading ExtendScript: ' + jsxPath);
+    addDebug('[Init] Extension root: ' + extensionRoot);
 
     csInterface.evalFile(jsxPath, function(result) {
-      if (result === 'EvalScript error.') {
-        addDebug('[Init] ✗ ExtendScript load failed: ' + result, true);
+      addDebug('[Init] evalFile callback received');
+      addDebug('[Init] Result type: ' + typeof result);
+      addDebug('[Init] Result value: ' + result);
+
+      if (result === 'EvalScript error.' || typeof result === 'undefined' || result === '') {
+        addDebug('[Init] ✗ ExtendScript load failed', true);
+        addDebug('[Init] Attempting to load via evalScript instead...', true);
+
+        // Fallback: Try loading via evalScript with file read
+        csInterface.evalScript('$.evalFile("' + jsxPath + '")', function(fallbackResult) {
+          addDebug('[Init] Fallback result: ' + fallbackResult);
+          if (fallbackResult === 'true') {
+            addDebug('[Init] ✓ ExtendScript loaded via fallback');
+            ClipBrowser.init();
+            addDebug('✓ ClipBrowser initialized');
+            addDebug('=== Navigation Panel Ready ===');
+          } else {
+            addDebug('[Init] ✗ Fallback also failed', true);
+          }
+        });
         return;
       }
 
