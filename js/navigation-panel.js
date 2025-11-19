@@ -930,42 +930,29 @@
       addDebug('✓ Debug panel ready');
     }
 
-    // Load ExtendScript manually (ScriptPath in manifest doesn't always work)
+    // Load ExtendScript manually (CSInterface.evalFile doesn't work reliably)
     const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
     const jsxPath = extensionRoot + '/jsx/host.jsx';
     addDebug('[Init] Loading ExtendScript: ' + jsxPath);
-    addDebug('[Init] Extension root: ' + extensionRoot);
 
-    csInterface.evalFile(jsxPath, function(result) {
-      addDebug('[Init] evalFile callback received');
-      addDebug('[Init] Result type: ' + typeof result);
-      addDebug('[Init] Result value: ' + result);
+    // Use $.evalFile() directly (more reliable than CSInterface.evalFile)
+    csInterface.evalScript('$.evalFile("' + jsxPath + '"); "loaded"', function(result) {
+      addDebug('[Init] Load result: ' + result);
 
-      if (result === 'EvalScript error.' || typeof result === 'undefined' || result === '') {
-        addDebug('[Init] ✗ ExtendScript load failed', true);
-        addDebug('[Init] Attempting to load via evalScript instead...', true);
+      // Check if EAVIngest is now available
+      csInterface.evalScript('typeof EAVIngest', function(typeResult) {
+        addDebug('[Init] typeof EAVIngest: ' + typeResult);
 
-        // Fallback: Try loading via evalScript with file read
-        csInterface.evalScript('$.evalFile("' + jsxPath + '")', function(fallbackResult) {
-          addDebug('[Init] Fallback result: ' + fallbackResult);
-          if (fallbackResult === 'true') {
-            addDebug('[Init] ✓ ExtendScript loaded via fallback');
-            ClipBrowser.init();
-            addDebug('✓ ClipBrowser initialized');
-            addDebug('=== Navigation Panel Ready ===');
-          } else {
-            addDebug('[Init] ✗ Fallback also failed', true);
-          }
-        });
-        return;
-      }
-
-      addDebug('[Init] ✓ ExtendScript loaded successfully');
-
-      // Initialize ClipBrowser AFTER ExtendScript loads
-      ClipBrowser.init();
-      addDebug('✓ ClipBrowser initialized');
-      addDebug('=== Navigation Panel Ready ===');
+        if (typeResult === 'object') {
+          addDebug('[Init] ✓ ExtendScript loaded successfully');
+          ClipBrowser.init();
+          addDebug('✓ ClipBrowser initialized');
+          addDebug('=== Navigation Panel Ready ===');
+        } else {
+          addDebug('[Init] ✗ ExtendScript load failed - EAVIngest not available', true);
+          addDebug('[Init] Check jsx/host.jsx for syntax errors', true);
+        }
+      });
     });
   }
 
