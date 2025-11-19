@@ -6,40 +6,59 @@
 
 ## 🔍 Debug Console Access (CRITICAL)
 
-This project has **multiple debug consoles** - you need visibility into all of them for effective diagnosis.
+**⚠️ PRIMARY DEBUG SOURCE: CEP Panel Consoles (NOT ExtendScript Console)**
 
-### **1. ExtendScript Console (Premiere Pro)**
-- **Location:** Premiere Pro → Help → Console (or Cmd+F12 on macOS)
-- **Shows:** JSX layer execution (`jsx/host.jsx`)
-- **Key Prefixes:**
-  - `DEBUG SAVE:` → XMP metadata write operations
-  - `DEBUG XMP ERROR:` → XMP read/write failures
-  - `DEBUG:` → General ExtendScript execution
-
-**When diagnosing issues, ALWAYS ask user to copy/paste ExtendScript console output.**
-
-### **2. Metadata Panel Console (CEP - Browser DevTools)**
+### **1. Metadata Panel Console (PRIMARY)**
 - **Location:** Right-click Metadata Panel → Debug (opens Chromium DevTools)
-- **Shows:** `js/metadata-panel.js` execution
+- **Shows:** `js/metadata-panel.js` execution + ExtendScript call results
 - **Key Prefixes:**
   - `[MetadataForm]` → Form operations (load, save, navigation)
   - `✓` → Success operations
   - `✗` → Error operations
   - `▶` → Navigation actions
+  - `typeof EAVIngest:` → ExtendScript availability check
+  - `JSON Parse error:` → ExtendScript return value issues
 
-### **3. Navigation Panel Console (CEP - Browser DevTools)**
+### **2. Navigation Panel Console (PRIMARY)**
 - **Location:** Right-click Navigation Panel → Debug (opens Chromium DevTools)
-- **Shows:** `js/navigation-panel.js` execution
+- **Shows:** `js/navigation-panel.js` execution + ExtendScript call results
 - **Key Prefixes:**
   - `[ClipBrowser]` → Clip loading and filtering
   - `[XMP]` → XMP warm-up delay and cache operations
+  - `typeof EAVIngest:` → ExtendScript availability check
+  - `Calling getAllProjectClips...` → ExtendScript function calls
 
-### **How to Request Diagnostics:**
+**⚠️ CRITICAL:** These diagnostics panels show **actual errors** - they are the primary debug source!
+
+### **3. ExtendScript Console (USUALLY EMPTY)**
+- **Location:** Premiere Pro → Help → Console (or Cmd+F12 on macOS)
+- **Reality:** Console is **empty by default** - ExtendScript does NOT output automatically
+- **Purpose:** Manual script testing only (not automatic diagnostics)
+
+**To Test ExtendScript Manually:**
+```javascript
+// Paste this into ExtendScript Console to test EAVIngest:
+typeof EAVIngest
+// Expected: "object"
+
+// Test getAllProjectClips:
+EAVIngest.getAllProjectClips()
+// Expected: JSON string with clips array
+
+// Test if functions exist:
+typeof EAVIngest.readJSONMetadataByNodeId
+// Expected: "function"
 ```
-"Please copy/paste the following:
-1. ExtendScript Console output (Premiere Pro → Help → Console)
-2. Metadata Panel console (right-click panel → Debug → Console tab)
-3. Navigation Panel console (right-click panel → Debug → Console tab)"
+
+**⚠️ DO NOT expect automatic output in ExtendScript Console** - it stays empty during normal operation. Use CEP panel consoles instead.
+
+### **How to Request Diagnostics (CORRECTED):**
+```
+"Please copy/paste from CEP Panel consoles:
+1. Metadata Panel console (right-click panel → Debug → Console tab)
+2. Navigation Panel console (right-click panel → Debug → Console tab)
+
+ExtendScript Console is usually empty - only use it for manual testing."
 ```
 
 ---
@@ -603,19 +622,42 @@ npm run quality-gates
 
 ## 🎯 When Diagnosing Issues
 
-### **Always Ask For:**
-1. ExtendScript Console output (Premiere Pro → Help → Console)
-2. Metadata Panel console (right-click → Debug)
-3. Navigation Panel console (right-click → Debug)
-4. Screenshots (before/after if visual issue)
+### **Always Ask For (PRIMARY SOURCES):**
+1. **Metadata Panel console** (right-click → Debug → Console tab) ← **PRIMARY**
+2. **Navigation Panel console** (right-click → Debug → Console tab) ← **PRIMARY**
+3. Screenshots (before/after if visual issue)
+
+**⚠️ DO NOT ask for ExtendScript Console** - it's empty by default (no automatic output)
+
+### **Optional Manual ExtendScript Testing:**
+If CEP panel console shows "EvalScript error" or "JSON Parse error", test ExtendScript manually:
+
+**Open:** Premiere Pro → Help → Console (Cmd+F12)
+
+**Paste and run:**
+```javascript
+// Test 1: Is EAVIngest loaded?
+typeof EAVIngest
+// Expected: "object"
+
+// Test 2: Test getAllProjectClips
+EAVIngest.getAllProjectClips()
+// Expected: JSON string with clips array
+
+// Test 3: Test readJSONMetadataByNodeId
+EAVIngest.readJSONMetadataByNodeId("123")
+// Expected: JSON string or "null"
+```
 
 ### **Debugging Checklist:**
-- [ ] Check all three console outputs
-- [ ] Verify `DEBUG SAVE:` lines show correct namespace (`dc:` vs `xmp:`)
+- [ ] Check **CEP panel consoles** (Metadata + Navigation)
 - [ ] Look for `✗` error markers in panel consoles
+- [ ] Check for `typeof EAVIngest: EvalScript error` (indicates ExtendScript crash)
+- [ ] Check for `JSON Parse error` (ExtendScript returning error string, not JSON)
 - [ ] Check XMP warm-up delay completed (`Waiting for XMP metadata...`)
 - [ ] Verify both panels deployed (check deployment timestamps)
 - [ ] Confirm Premiere Pro restarted after deployment
+- [ ] If errors persist, manually test ExtendScript functions (see above)
 
 ---
 
