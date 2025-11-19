@@ -57,3 +57,5 @@ npm-debug.log*
 # Node modules (if added later)
 
 node_modules/
+.claude/hooks/.env
+/.claude/hooks/state
