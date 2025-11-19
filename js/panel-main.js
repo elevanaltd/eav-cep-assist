@@ -768,7 +768,10 @@ function escapeForEvalScript(str) {
       const metadataJson = JSON.stringify(metadata);
       console.log('[MetadataForm] Metadata JSON:', metadataJson);
 
-      const script = 'EAVIngest.updateClipMetadata("' + PanelState.currentClip.nodeId + '", JSON.parse(\'' + metadataJson.replace(/'/g, '\\\'') + '\'))';
+      // SECURITY: Escape nodeId to prevent code injection
+      const escapedNodeId = escapeForEvalScript(PanelState.currentClip.nodeId);
+      const escapedMetadataJson = metadataJson.replace(/'/g, '\\\'');
+      const script = 'EAVIngest.updateClipMetadata("' + escapedNodeId + '", JSON.parse(\'' + escapedMetadataJson + '\'))';
       console.log('[MetadataForm] ExtendScript to execute:', script);
 
       csInterface.evalScript(script, function(result) {
