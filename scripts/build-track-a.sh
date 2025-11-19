@@ -18,9 +18,9 @@ npx babel src/track-a/json-integration.js \
 # 1. Remove export statements (ExtendScript doesn't support modules)
 # 2. Wrap in IIFE to avoid global namespace pollution (optional)
 
-sed -i 's/export function /function /g' jsx/generated/track-a-integration.jsx
-sed -i 's/export var /var /g' jsx/generated/track-a-integration.jsx
-sed -i 's/export const /var /g' jsx/generated/track-a-integration.jsx
+sed -i '' 's/export function /function /g' jsx/generated/track-a-integration.jsx
+sed -i '' 's/export var /var /g' jsx/generated/track-a-integration.jsx
+sed -i '' 's/export const /var /g' jsx/generated/track-a-integration.jsx
 
 # Add ExtendScript wrapper functions that use global variables
 cat >> jsx/generated/track-a-integration.jsx << 'EOF'
