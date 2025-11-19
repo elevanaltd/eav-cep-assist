@@ -274,6 +274,81 @@ Batch operation to update multiple clips simultaneously from JSON. Currently req
 
 ---
 
+## 🔧 ExtendScript Loading (CRITICAL - November 2025)
+
+**Problem Solved:** CEP panels were not loading jsx/host.jsx due to multiple issues.
+
+### Issue 1: ScriptPath in manifest.xml Doesn't Work
+
+**Symptom:** `typeof EAVIngest` returns `undefined` in ExtendScript Console
+**Cause:** `<ScriptPath>./jsx/host.jsx</ScriptPath>` in manifest.xml doesn't reliably auto-load
+**Solution:** Manually load via JavaScript in panel init()
+
+### Issue 2: CSInterface.evalFile() Callback Never Fires
+
+**Symptom:** Panel stuck after "Loading ExtendScript..." with no further output
+**Cause:** CSInterface.evalFile() is unreliable - callback silently never executes (known CEP bug)
+**Solution:** Use $.evalFile() via csInterface.evalScript() instead
+
+### Issue 3: @include Directive Doesn't Work with $.evalFile()
+
+**Symptom:** `SyntaxError: Syntax error at line 210`
+**Cause:** @include is a preprocessor directive (ExtendScript Toolkit only), not runtime
+**Solution:** Replace @include with runtime $.evalFile() loading
+
+### Issue 4: jsx/generated/ Folder Not Deployed
+
+**Symptom:** `IOError: File or folder does not exist at line 207`
+**Cause:** Deploy scripts didn't copy jsx/generated/track-a-integration.jsx
+**Solution:** Updated deploy-navigation.sh and deploy-metadata.sh to copy jsx/generated/
+
+### Current Working Solution (Lines in js/navigation-panel.js and js/metadata-panel.js)
+
+```javascript
+// Load ExtendScript manually (CSInterface.evalFile doesn't work reliably)
+const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
+const jsxPath = extensionRoot + '/jsx/host.jsx';
+addDebug('[Init] Loading ExtendScript: ' + jsxPath);
+
+// Use $.evalFile() directly (more reliable than CSInterface.evalFile)
+csInterface.evalScript('$.evalFile("' + jsxPath + '"); "loaded"', function(result) {
+  addDebug('[Init] Load result: ' + result);
+
+  // Check if EAVIngest is now available
+  csInterface.evalScript('typeof EAVIngest', function(typeResult) {
+    addDebug('[Init] typeof EAVIngest: ' + typeResult);
+
+    if (typeResult === 'object') {
+      addDebug('[Init] ✓ ExtendScript loaded successfully');
+      ClipBrowser.init();  // Initialize AFTER ExtendScript loads
+      addDebug('✓ ClipBrowser initialized');
+      addDebug('=== Navigation Panel Ready ===');
+    } else {
+      addDebug('[Init] ✗ ExtendScript load failed - EAVIngest not available', true);
+      addDebug('[Init] Check jsx/host.jsx for syntax errors', true);
+    }
+  });
+});
+```
+
+**Key Points:**
+- Load jsx/host.jsx via csInterface.evalScript() with $.evalFile()
+- Wait for callback before initializing ClipBrowser/MetadataForm
+- Verify EAVIngest available with typeof check
+- jsx/generated/track-a-integration.jsx loaded via runtime $.evalFile() in jsx/host.jsx
+
+**Expected Debug Output:**
+```
+[Init] Loading ExtendScript: /path/to/jsx/host.jsx
+[Init] Load result: loaded
+[Init] typeof EAVIngest: object
+[Init] ✓ ExtendScript loaded successfully
+✓ ClipBrowser initialized
+=== Navigation Panel Ready ===
+```
+
+---
+
 ## 🚀 Deployment Workflow
 
 ### **Deploy Both Panels**
