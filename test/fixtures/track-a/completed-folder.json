@@ -1,0 +1,28 @@
+{
+  "_schema": "2.0",
+  "_completed": true,
+  "EAV0TEST1": {
+    "id": "EAV0TEST1",
+    "originalFilename": "EAV0TEST1.MOV",
+    "currentFilename": "EAV0TEST1.MOV",
+    "filePath": "/test-videos-raw/EAV0TEST1.MOV",
+    "extension": ".MOV",
+    "fileType": "video",
+    "creationTimestamp": "2024-09-26T10:27:08Z",
+    "cameraId": "EAV0TEST1",
+    "shotNumber": 1,
+    "shotName": "kitchen-oven-cleaning-ESTAB-#1",
+    "keywords": [],
+    "location": "kitchen",
+    "subject": "oven",
+    "action": "cleaning",
+    "shotType": "ESTAB",
+    "processedByAI": true,
+    "lockedFields": ["location", "subject", "action", "shotType"],
+    "createdAt": "2025-11-18T02:59:32Z",
+    "createdBy": "ingest-assistant",
+    "modifiedAt": "2025-11-18T02:59:32Z",
+    "modifiedBy": "ingest-assistant",
+    "version": "1.1.0"
+  }
+}
