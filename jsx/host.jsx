@@ -221,9 +221,12 @@ var EAVIngest = (function() {
     }
   })();
 
-  // Track A wrapper function declarations (defined in generated/track-a-integration.jsx)
-  var readJSONMetadataWrapper, writeJSONMetadataWrapper;
-  var readJSONMetadataByNodeIdWrapper, writeJSONMetadataByNodeIdWrapper;
+  // Track A wrapper functions loaded from generated/track-a-integration.jsx
+  // Note: Functions defined globally by $.evalFile(), no var declarations needed
+  // - readJSONMetadataWrapper
+  // - writeJSONMetadataWrapper
+  // - readJSONMetadataByNodeIdWrapper
+  // - writeJSONMetadataByNodeIdWrapper
 
 
 

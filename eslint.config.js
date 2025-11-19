@@ -64,7 +64,12 @@ export default [
         File: 'readonly',
         Folder: 'readonly',
         // Premiere Pro API
-        ProjectItemType: 'readonly'
+        ProjectItemType: 'readonly',
+        // Track A integration (loaded at runtime from generated/track-a-integration.jsx)
+        readJSONMetadataWrapper: 'readonly',
+        writeJSONMetadataWrapper: 'readonly',
+        readJSONMetadataByNodeIdWrapper: 'readonly',
+        writeJSONMetadataByNodeIdWrapper: 'readonly'
       }
     },
     rules: {

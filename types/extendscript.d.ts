@@ -116,3 +116,9 @@ declare class ExternalObject {
   constructor(lib: string);
   static readonly version: string;
 }
+
+// Track A integration functions (loaded at runtime from generated/track-a-integration.jsx)
+declare function readJSONMetadataWrapper(clip: ProjectItem): string;
+declare function writeJSONMetadataWrapper(clip: ProjectItem, updates: any): string;
+declare function readJSONMetadataByNodeIdWrapper(nodeId: string): string;
+declare function writeJSONMetadataByNodeIdWrapper(nodeId: string, updatesJSON: string): string;
