@@ -204,12 +204,25 @@ var EAVIngest = (function() {
   //
   // ============================================================================
 
-  // @include "generated/track-a-integration.jsx"
-  
+  // Load Track A integration functions at runtime
+  // Note: @include directive doesn't work with $.evalFile(), must load explicitly
+  (function() {
+    var scriptFile = new File($.fileName);
+    var scriptDir = scriptFile.parent;
+    var trackAFile = new File(scriptDir.fsName + '/generated/track-a-integration.jsx');
+
+    if (trackAFile.exists) {
+      $.evalFile(trackAFile);
+    } else {
+      // Fallback: Try to continue without Track A (will fail if JSON functions called)
+      if (typeof $ !== 'undefined' && $.writeln) {
+        $.writeln('WARNING: track-a-integration.jsx not found at: ' + trackAFile.fsName);
+      }
+    }
+  })();
+
   // Track A wrapper function declarations (defined in generated/track-a-integration.jsx)
-  // @ts-ignore - Functions are included via @include directive
   var readJSONMetadataWrapper, writeJSONMetadataWrapper;
-  // @ts-ignore - Functions are included via @include directive
   var readJSONMetadataByNodeIdWrapper, writeJSONMetadataByNodeIdWrapper;
 
 

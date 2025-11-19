@@ -930,11 +930,30 @@
       addDebug('✓ Debug panel ready');
     }
 
-    // Initialize ClipBrowser
-    ClipBrowser.init();
-    addDebug('✓ ClipBrowser initialized');
+    // Load ExtendScript manually (CSInterface.evalFile doesn't work reliably)
+    const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
+    const jsxPath = extensionRoot + '/jsx/host.jsx';
+    addDebug('[Init] Loading ExtendScript: ' + jsxPath);
 
-    addDebug('=== Navigation Panel Ready ===');
+    // Use $.evalFile() directly (more reliable than CSInterface.evalFile)
+    csInterface.evalScript('$.evalFile("' + jsxPath + '"); "loaded"', function(result) {
+      addDebug('[Init] Load result: ' + result);
+
+      // Check if EAVIngest is now available
+      csInterface.evalScript('typeof EAVIngest', function(typeResult) {
+        addDebug('[Init] typeof EAVIngest: ' + typeResult);
+
+        if (typeResult === 'object') {
+          addDebug('[Init] ✓ ExtendScript loaded successfully');
+          ClipBrowser.init();
+          addDebug('✓ ClipBrowser initialized');
+          addDebug('=== Navigation Panel Ready ===');
+        } else {
+          addDebug('[Init] ✗ ExtendScript load failed - EAVIngest not available', true);
+          addDebug('[Init] Check jsx/host.jsx for syntax errors', true);
+        }
+      });
+    });
   }
 
   // Start when DOM is ready

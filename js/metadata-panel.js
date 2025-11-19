@@ -800,12 +800,31 @@
       addDebug('✓ Debug panel ready');
     }
 
-    // Initialize MetadataForm
-    MetadataForm.init();
-    addDebug('✓ MetadataForm initialized');
+    // Load ExtendScript manually (CSInterface.evalFile doesn't work reliably)
+    const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
+    const jsxPath = extensionRoot + '/jsx/host.jsx';
+    addDebug('[Init] Loading ExtendScript: ' + jsxPath);
 
-    addDebug('=== Metadata Panel Ready ===');
-    addDebug('Waiting for clip selection from Navigation Panel...');
+    // Use $.evalFile() directly (more reliable than CSInterface.evalFile)
+    csInterface.evalScript('$.evalFile("' + jsxPath + '"); "loaded"', function(result) {
+      addDebug('[Init] Load result: ' + result);
+
+      // Check if EAVIngest is now available
+      csInterface.evalScript('typeof EAVIngest', function(typeResult) {
+        addDebug('[Init] typeof EAVIngest: ' + typeResult);
+
+        if (typeResult === 'object') {
+          addDebug('[Init] ✓ ExtendScript loaded successfully');
+          MetadataForm.init();
+          addDebug('✓ MetadataForm initialized');
+          addDebug('=== Metadata Panel Ready ===');
+          addDebug('Waiting for clip selection from Navigation Panel...');
+        } else {
+          addDebug('[Init] ✗ ExtendScript load failed - EAVIngest not available', true);
+          addDebug('[Init] Check jsx/host.jsx for syntax errors', true);
+        }
+      });
+    });
   }
 
   // Start when DOM is ready
