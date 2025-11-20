@@ -42,7 +42,8 @@
 
                     <MainPath>./index-navigation.html</MainPath>
 
-                    <ScriptPath>./jsx/host.jsx</ScriptPath>
+                    <!-- ScriptPath disabled - manual load via evalScript to support CEP_EXTENSION_ROOT -->
+                    <!-- <ScriptPath>./jsx/host.jsx</ScriptPath> -->
 
                     <CEFCommandLine>
 
