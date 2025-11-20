@@ -35,20 +35,50 @@
 - **Reality:** Console is **empty by default** - ExtendScript does NOT output automatically
 - **Purpose:** Manual script testing only (not automatic diagnostics)
 
-**To Test ExtendScript Manually:**
+**⚠️ CRITICAL: ExtendScript Path Handling with Spaces**
+
+ExtendScript's $.evalFile() cannot handle paths with spaces directly. The deployed extension path contains spaces:
+```
+/Users/.../Library/Application Support/Adobe/CEP/extensions/...
+                              ↑ Space breaks $.evalFile()
+```
+
+**To Test ExtendScript Manually (Correct Procedure):**
+
+**Step 1: Copy jsx/host.jsx to Desktop**
+```bash
+cp "/Users/shaunbuswell/Library/Application Support/Adobe/CEP/extensions/eav-navigation-panel/jsx/host.jsx" ~/Desktop/host.jsx && echo "✓ File copied to Desktop"
+```
+
+**Step 2: Load from Desktop in ExtendScript Console**
 ```javascript
-// Paste this into ExtendScript Console to test EAVIngest:
+// ExtendScript Console (Premiere Pro → Help → Console)
+
+// Test loading with error handling
+try {
+  $.evalFile(Folder.desktop.fsName + "/host.jsx");
+  "Success - file loaded";
+} catch(e) {
+  "Error: " + e.toString() + " at line " + e.line;
+}
+
+// After successful load, test namespace:
 typeof EAVIngest
 // Expected: "object"
 
-// Test getAllProjectClips:
-EAVIngest.getAllProjectClips()
-// Expected: JSON string with clips array
-
-// Test if functions exist:
+// Test Track A functions:
 typeof EAVIngest.readJSONMetadataByNodeId
 // Expected: "function"
+
+// Test with real clip (select clip in Project Panel first):
+EAVIngest.readJSONMetadataByNodeId(app.project.getSelection()[0].nodeId)
+// Expected: JSON string or "null"
 ```
+
+**Common Error Patterns:**
+- `SyntaxError: Syntax error at line X` → Check that line in jsx/host.jsx for ES3 violations or missing semicolons
+- `TypeError: undefined is not an object` → Variable referenced before definition or scope issue
+- `ReferenceError: X is not defined` → Function/variable not in scope
 
 **⚠️ DO NOT expect automatic output in ExtendScript Console** - it stays empty during normal operation. Use CEP panel consoles instead.
 
