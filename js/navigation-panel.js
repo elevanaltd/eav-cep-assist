@@ -937,13 +937,13 @@
 
     // Set extension root global BEFORE loading host.jsx (fixes $.fileName issue in CEP context)
     // Use double quotes for outer string, single quotes for ExtendScript string value
-    csInterface.evalScript("var CEP_EXTENSION_ROOT = '" + extensionRoot + "'", function(rootResult) {
+    csInterface.evalScript('var CEP_EXTENSION_ROOT = \'' + extensionRoot + '\'', function(rootResult) {
       addDebug('[Init] CEP_EXTENSION_ROOT set to: ' + extensionRoot);
       addDebug('[Init] CEP_EXTENSION_ROOT result: ' + rootResult);
 
       // Now load host.jsx - it will use CEP_EXTENSION_ROOT instead of $.fileName
       // Wrap in try/catch to capture actual error
-      var loadScript = "try { $.evalFile('" + jsxPath + "'); 'SUCCESS'; } catch(e) { 'ERROR: ' + e.toString() + ' at line ' + e.line; }";
+      const loadScript = 'try { $.evalFile(\'' + jsxPath + '\'); \'SUCCESS\'; } catch(e) { \'ERROR: \' + e.toString() + \' at line \' + e.line; }';
       addDebug('[Init] Loading with: ' + loadScript.substring(0, 100) + '...');
 
       csInterface.evalScript(loadScript, function(result) {

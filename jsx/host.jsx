@@ -1593,6 +1593,38 @@ var EAVIngest = (function() {
   }
 
 
+  // ============================================================================
+  // TRACK A AVAILABILITY CHECK
+  // ============================================================================
+  // Guard against missing track-a-integration.jsx file
+  // If Track A wrappers are undefined, provide stub functions that return null/false
+  // This allows EAVIngest to be created even when Track A file is missing
+  // (graceful degradation - core panel functionality works, JSON features unavailable)
+
+  if (typeof readJSONMetadataWrapper === 'undefined') {
+    $.writeln('WARNING: Track A wrappers not loaded - JSON features will be unavailable');
+    $.writeln('         Expected file: jsx/generated/track-a-integration.jsx');
+    $.writeln('         Run scripts/build-track-a.sh to generate Track A integration');
+
+    // Stub functions return same format as actual wrappers
+    // readJSON* returns 'null' string (same as "metadata not found")
+    // writeJSON* returns 'false' string (same as "write failed")
+    var readJSONMetadataWrapper = function() {
+      return 'null';
+    };
+
+    var writeJSONMetadataWrapper = function() {
+      return 'false';
+    };
+
+    var readJSONMetadataByNodeIdWrapper = function() {
+      return 'null';
+    };
+
+    var writeJSONMetadataByNodeIdWrapper = function() {
+      return 'false';
+    };
+  }
 
   // Public API
 

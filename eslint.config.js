@@ -69,7 +69,9 @@ export default [
         readJSONMetadataWrapper: 'readonly',
         writeJSONMetadataWrapper: 'readonly',
         readJSONMetadataByNodeIdWrapper: 'readonly',
-        writeJSONMetadataByNodeIdWrapper: 'readonly'
+        writeJSONMetadataByNodeIdWrapper: 'readonly',
+        // CEP Extension Root (set by CEP panel before loading ExtendScript)
+        CEP_EXTENSION_ROOT: 'writable'
       }
     },
     rules: {

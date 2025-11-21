@@ -19,6 +19,10 @@ declare const $: {
   evalFile: (file: File | string) => any;
 };
 
+// CEP Extension Root (set by CEP panel before loading ExtendScript)
+// Used to resolve paths to jsx files when $.fileName is unreliable in CEP context
+declare const CEP_EXTENSION_ROOT: string | undefined;
+
 // Premiere Pro application
 declare const app: {
   project: {
