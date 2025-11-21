@@ -22,6 +22,7 @@ export default [
         // CEP-specific globals
         CSInterface: 'readonly',
         CSEvent: 'readonly',
+        SystemPath: 'readonly',
         cep: 'readonly',
         cep_node: 'readonly'
       }
@@ -63,7 +64,14 @@ export default [
         File: 'readonly',
         Folder: 'readonly',
         // Premiere Pro API
-        ProjectItemType: 'readonly'
+        ProjectItemType: 'readonly',
+        // Track A integration (loaded at runtime from generated/track-a-integration.jsx)
+        readJSONMetadataWrapper: 'readonly',
+        writeJSONMetadataWrapper: 'readonly',
+        readJSONMetadataByNodeIdWrapper: 'readonly',
+        writeJSONMetadataByNodeIdWrapper: 'readonly',
+        // CEP Extension Root (set by CEP panel before loading ExtendScript)
+        CEP_EXTENSION_ROOT: 'writable'
       }
     },
     rules: {

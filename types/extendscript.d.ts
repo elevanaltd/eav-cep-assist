@@ -13,7 +13,15 @@ declare const $: {
   version: string;
   /** Operating system */
   os: string;
+  /** Path of currently executing script file */
+  fileName: string;
+  /** Evaluate another ExtendScript file */
+  evalFile: (file: File | string) => any;
 };
+
+// CEP Extension Root (set by CEP panel before loading ExtendScript)
+// Used to resolve paths to jsx files when $.fileName is unreliable in CEP context
+declare const CEP_EXTENSION_ROOT: string | undefined;
 
 // Premiere Pro application
 declare const app: {
@@ -112,3 +120,9 @@ declare class ExternalObject {
   constructor(lib: string);
   static readonly version: string;
 }
+
+// Track A integration functions (loaded at runtime from generated/track-a-integration.jsx)
+declare function readJSONMetadataWrapper(clip: ProjectItem): string;
+declare function writeJSONMetadataWrapper(clip: ProjectItem, updates: any): string;
+declare function readJSONMetadataByNodeIdWrapper(nodeId: string): string;
+declare function writeJSONMetadataByNodeIdWrapper(nodeId: string, updatesJSON: string): string;

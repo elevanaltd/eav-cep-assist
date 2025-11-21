@@ -930,11 +930,50 @@
       addDebug('✓ Debug panel ready');
     }
 
-    // Initialize ClipBrowser
-    ClipBrowser.init();
-    addDebug('✓ ClipBrowser initialized');
+    // Load ExtendScript manually (CSInterface.evalFile doesn't work reliably)
+    const extensionRoot = csInterface.getSystemPath(SystemPath.EXTENSION);
+    const jsxPath = extensionRoot + '/jsx/host.jsx';
+    addDebug('[Init] Loading ExtendScript: ' + jsxPath);
 
-    addDebug('=== Navigation Panel Ready ===');
+    // Set extension root global BEFORE loading host.jsx (fixes $.fileName issue in CEP context)
+    // Use double quotes for outer string, single quotes for ExtendScript string value
+    csInterface.evalScript('var CEP_EXTENSION_ROOT = \'' + extensionRoot + '\'', function(rootResult) {
+      addDebug('[Init] CEP_EXTENSION_ROOT set to: ' + extensionRoot);
+      addDebug('[Init] CEP_EXTENSION_ROOT result: ' + rootResult);
+
+      // Now load host.jsx - it will use CEP_EXTENSION_ROOT instead of $.fileName
+      // Wrap in try/catch to capture actual error
+      const loadScript = 'try { $.evalFile(\'' + jsxPath + '\'); \'SUCCESS\'; } catch(e) { \'ERROR: \' + e.toString() + \' at line \' + e.line; }';
+      addDebug('[Init] Loading with: ' + loadScript.substring(0, 100) + '...');
+
+      csInterface.evalScript(loadScript, function(result) {
+        addDebug('[Init] Load result: ' + result);
+
+        if (result && result.indexOf('ERROR:') === 0) {
+          addDebug('[Init] ✗ ExtendScript threw error: ' + result, true);
+          return;
+        }
+
+        // Check if EAVIngest is now available
+        csInterface.evalScript('typeof EAVIngest', function(typeResult) {
+          addDebug('[Init] typeof EAVIngest: ' + typeResult);
+
+          if (typeResult === 'object') {
+            addDebug('[Init] ✓ ExtendScript loaded successfully');
+            ClipBrowser.init();
+            addDebug('✓ ClipBrowser initialized');
+            addDebug('=== Navigation Panel Ready ===');
+          } else {
+            addDebug('[Init] ✗ ExtendScript load failed - EAVIngest not available', true);
+
+            // Additional diagnostics
+            csInterface.evalScript('typeof readJSONMetadataByNodeIdWrapper', function(wrapperType) {
+              addDebug('[Init] typeof readJSONMetadataByNodeIdWrapper: ' + wrapperType);
+            });
+          }
+        });
+      });
+    });
   }
 
   // Start when DOM is ready

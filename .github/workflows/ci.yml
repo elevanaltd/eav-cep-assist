@@ -23,23 +23,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # GATE 0: Build (ensure Babel transpilation works)
+      - name: Build Track A functions
+        run: npm run build
+
       # GATE 1: Lint (BLOCKING)
       - name: Lint JavaScript
         run: npm run lint
 
-      # GATE 2: TypeCheck (placeholder until JSDoc validation implemented)
+      # GATE 2: ES3 Enforcement Validation (BLOCKING)
+      - name: Validate ES3 enforcement
+        run: npm run validate:es3
+
+      # GATE 3: TypeCheck (placeholder until JSDoc validation implemented)
       - name: TypeCheck
         run: npm run typecheck
 
-      # GATE 3: Unit Tests (BLOCKING)
+      # GATE 4: Unit Tests (BLOCKING)
       - name: Run tests
         run: npm test
 
-      # GATE 4: Coverage Validation (BLOCKING - 50% threshold)
+      # GATE 5: Coverage Validation (BLOCKING - 50% threshold)
       - name: Enforce coverage thresholds
         run: npm run test:coverage
 
-      # GATE 5: Build Verification (ensure required files exist)
+      # GATE 6: Build Verification (ensure required files exist)
       - name: Verify deployment files
         run: |
           echo "Checking required files for deployment..."
@@ -52,7 +60,7 @@ jobs:
           test -f index-navigation.html || (echo "❌ Missing index-navigation.html" && exit 1)
           echo "✓ All deployment files present"
 
-      # GATE 6: Security Scanning (detect unsafe evalScript patterns)
+      # GATE 7: Security Scanning (detect unsafe evalScript patterns)
       - name: Security scan for code injection
         run: |
           echo "Scanning for unsafe evalScript patterns..."
