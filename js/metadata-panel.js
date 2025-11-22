@@ -371,12 +371,81 @@
       // Update header
       this.elements.formClipName.textContent = clip.name;
 
-      // Call Track A readJSONMetadataByNodeId (wrapper accepts nodeId string)
+      // Call Track A readJSONMetadataByNodeId with error capture AND path diagnostics
       const escapedNodeId = escapeForEvalScript(clip.nodeId);
-      const script = 'EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '")';
 
-      csInterface.evalScript(script, function(jsonString) {
+      // DIAGNOSTIC: Modified to return both path info and JSON result in one call
+      // Capture $.writeln() output by redirecting to string accumulator
+      const script = '(function() { ' +
+        'var debugLog = []; ' +
+        'var originalWriteln = $.writeln; ' +
+        '$.writeln = function(msg) { debugLog.push(msg); originalWriteln(msg); }; ' +
+        'try { ' +
+        '  var project = app.project; ' +
+        '  if (!project) return "ERROR: No active project"; ' +
+        '  var clip = findProjectItemByNodeId(project.rootItem, "' + escapedNodeId + '"); ' +
+        '  if (!clip) return "ERROR: Clip not found for nodeId: ' + escapedNodeId + '"; ' +
+        '  var mediaPath = clip.getMediaPath(); ' +
+        '  var proxyPath = clip.getProxyPath(); ' +
+        '  var pathInfo = "PATHS|Media:" + mediaPath + "|Proxy:" + proxyPath + "\\n"; ' +
+        '  var jsonResult = EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '"); ' +
+        '  $.writeln = originalWriteln; ' +
+        '  if (debugLog.length > 0) pathInfo += "DEBUG|" + debugLog.join("|") + "\\n"; ' +
+        '  return pathInfo + jsonResult; ' +
+        '} catch(e) { ' +
+        '  $.writeln = originalWriteln; ' +
+        '  return "ERROR: " + e.toString() + " at line " + e.line; ' +
+        '} ' +
+      '})()';
+
+      csInterface.evalScript(script, function(response) {
+        // Split response into paths, debug logs, and JSON
+        let pathInfo = 'unknown';
+        let debugLogs = [];
+        let jsonString = response;
+
+        if (response && response.indexOf('PATHS|') === 0) {
+          const lines = response.split('\\n');
+          pathInfo = lines[0].substring(6); // Remove "PATHS|" prefix
+
+          // Check for debug logs
+          if (lines.length > 1 && lines[1].indexOf('DEBUG|') === 0) {
+            debugLogs = lines[1].substring(6).split('|'); // Remove "DEBUG|" prefix
+            jsonString = lines.slice(2).join('\\n');
+          } else {
+            jsonString = lines.slice(1).join('\\n');
+          }
+        }
+
+        addDebug('[MetadataForm] Clip paths: ' + pathInfo);
+        if (debugLogs.length > 0) {
+          debugLogs.forEach(function(log) {
+            addDebug('[MetadataForm] → ExtendScript: ' + log);
+          });
+        }
         addDebug('[MetadataForm] JSON response: ' + (jsonString || 'null'));
+
+        // DIAGNOSTIC: Check for ExtendScript errors (captured by try/catch wrapper)
+        if (jsonString && jsonString.indexOf('ERROR:') === 0) {
+          addDebug('[MetadataForm] ✗ ExtendScript threw exception:', true);
+          addDebug('[MetadataForm] → ' + jsonString, true);
+          self.showError('ExtendScript error: ' + jsonString.substring(0, 100));
+          self.clearFormFields();
+          return;
+        }
+
+        // DIAGNOSTIC: Check for EvalScript execution failure (ExtendScript crashed or not loaded)
+        if (jsonString === 'EvalScript error.') {
+          addDebug('[MetadataForm] ✗ CRITICAL: ExtendScript execution failed', true);
+          addDebug('[MetadataForm] → Possible causes:', true);
+          addDebug('[MetadataForm]   1. EAVIngest namespace not loaded (jsx/host.jsx failed)', true);
+          addDebug('[MetadataForm]   2. Track A integration missing (jsx/generated/track-a-integration.jsx)', true);
+          addDebug('[MetadataForm]   3. ExtendScript syntax error or runtime exception', true);
+          addDebug('[MetadataForm] → Check panel initialization logs above for ExtendScript loading status', true);
+          self.showError('ExtendScript not available. Check Debug Panel for initialization errors.');
+          self.clearFormFields();
+          return;
+        }
 
         // Handle JSON not found (offline scenario or no metadata file)
         if (jsonString === 'null' || !jsonString || jsonString.trim() === '') {
@@ -439,8 +508,14 @@
 
         } catch (e) {
           addDebug('[MetadataForm] ✗ JSON parse error: ' + e.message, true);
+          addDebug('[MetadataForm] → Received string: "' + jsonString.substring(0, 100) + '"', true);
+          addDebug('[MetadataForm] → String length: ' + jsonString.length + ' chars', true);
+          addDebug('[MetadataForm] → First 50 chars: "' + jsonString.substring(0, 50) + '"', true);
+          if (jsonString.indexOf('Error') >= 0 || jsonString.indexOf('ERROR') >= 0) {
+            addDebug('[MetadataForm] ⚠ Response contains error string (ExtendScript may have thrown exception)', true);
+          }
           self.showError('Failed to parse metadata: ' + e.message);
-          console.error('JSON parse error:', e);
+          console.error('JSON parse error:', e, 'Received:', jsonString);
         }
       });
     },
@@ -828,19 +903,43 @@
         csInterface.evalScript('typeof EAVIngest', function(typeResult) {
           addDebug('[Init] typeof EAVIngest: ' + typeResult);
 
+          // DIAGNOSTIC: Detect EvalScript failure at initialization
+          if (typeResult === 'EvalScript error.') {
+            addDebug('[Init] ✗ CRITICAL: ExtendScript execution completely failed', true);
+            addDebug('[Init] → jsx/host.jsx may have syntax errors or missing dependencies', true);
+            addDebug('[Init] → Panel will NOT function - user must fix ExtendScript errors', true);
+            return;  // Abort initialization
+          }
+
           if (typeResult === 'object') {
-            addDebug('[Init] ✓ ExtendScript loaded successfully');
+            addDebug('[Init] ✓ ExtendScript loaded successfully - EAVIngest namespace exists');
+
+            // DIAGNOSTIC: Verify Track A functions are available
+            csInterface.evalScript('typeof EAVIngest.readJSONMetadataByNodeId', function(funcType) {
+              addDebug('[Init] typeof EAVIngest.readJSONMetadataByNodeId: ' + funcType);
+
+              if (funcType === 'function') {
+                addDebug('[Init] ✓ Track A integration loaded - JSON metadata features available');
+              } else if (funcType === 'EvalScript error.') {
+                addDebug('[Init] ✗ CRITICAL: Cannot check Track A functions (EvalScript failure)', true);
+              } else {
+                addDebug('[Init] ⚠ WARNING: Track A functions missing', true);
+                addDebug('[Init] → jsx/generated/track-a-integration.jsx not loaded', true);
+                addDebug('[Init] → JSON metadata features will NOT work', true);
+                addDebug('[Init] → Run: ./deploy-metadata.sh to ensure all files deployed', true);
+              }
+            });
+
             MetadataForm.init();
             addDebug('✓ MetadataForm initialized');
             addDebug('=== Metadata Panel Ready ===');
             addDebug('Waiting for clip selection from Navigation Panel...');
+          } else if (typeResult === 'undefined') {
+            addDebug('[Init] ✗ ExtendScript load failed - EAVIngest namespace not created', true);
+            addDebug('[Init] → jsx/host.jsx did not execute successfully', true);
+            addDebug('[Init] → Check ExtendScript Console (Premiere Pro → Help → Console) for errors', true);
           } else {
-            addDebug('[Init] ✗ ExtendScript load failed - EAVIngest not available', true);
-
-            // Additional diagnostics
-            csInterface.evalScript('typeof readJSONMetadataByNodeIdWrapper', function(wrapperType) {
-              addDebug('[Init] typeof readJSONMetadataByNodeIdWrapper: ' + wrapperType);
-            });
+            addDebug('[Init] ✗ Unexpected typeof result: ' + typeResult, true);
           }
         });
       });
