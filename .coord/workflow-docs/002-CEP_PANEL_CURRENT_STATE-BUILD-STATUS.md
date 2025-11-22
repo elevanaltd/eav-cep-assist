@@ -144,26 +144,44 @@ if (typeof readJSONMetadataWrapper === 'undefined') {
 
 ## **Known Issues**
 
-### **1. JSON Sidecar Integration (High Priority)**
+### **1. JSON Sidecar Integration - IN PROGRESS (2025-11-22)**
 
-**Symptom:** Metadata Panel shows `JSON response: EvalScript error.` when reading `.ingest-metadata.json`
+**Current Status:** DEBUGGING - ExtendScript returns null despite JSON file existing
 
-**Impact:** Cannot read metadata from JSON sidecar files
+**Progress Summary:**
+- ✅ **Root cause #1 identified:** `findProjectItemByNodeId` function missing from track-a-integration.jsx
+  - Fixed: Added function at line 20-36 (2025-11-22)
+- ✅ **Enhanced diagnostics deployed:**
+  - Error capture wrapper in metadata-panel.js (line 378-399)
+  - Path diagnostics showing Media/Proxy paths
+  - ExtendScript debug log capture via $.writeln() intercept
+- ✅ **Test case created:** `/Volumes/videos-current/.../test-minimal/` with 3 photos + Schema 2.0 JSON (2.5K)
+- ⚠️ **Current issue:** ExtendScript returns `null` even though:
+  - JSON file exists at correct path
+  - Premiere Pro knows correct media path
+  - File is readable (verified manually)
 
-**Likely Causes:**
-- Schema version mismatch (Schema 1.0 vs Schema 2.0)
-- File not found (.ingest-metadata.json missing from media folder)
-- JSON parse error (malformed JSON)
+**Latest Diagnostics (2025-11-22 00:50:11):**
+```
+[MetadataForm] Clip paths: Media:/Volumes/videos-current/.../test-minimal/EA001621.JPG|Proxy: null
+[MetadataForm] JSON response: null
+[MetadataForm] ✗ Metadata file not found
+```
 
-**Files to Investigate:**
-- `jsx/generated/track-a-integration.jsx:50-141` - readJSONFromFile() function
-- `js/metadata-panel.js:374-392` - JSON parsing and error handling
-- Media folder `.ingest-metadata.json` - Schema 2.0 format validation
+**Next Step:**
+- Awaiting test results with unconditional $.writeln() logging (deployed 2025-11-22)
+- Should show: `DEBUG: mediaPath=...`, `DEBUG: File.exists=...`, `DEBUG: File.fsName=...`
+- This will reveal why ExtendScript File object isn't finding the file
 
-**Diagnostic Steps:**
-1. Test in ExtendScript Console: `EAVIngest.readJSONMetadataByNodeId("clip-node-id")`
-2. Share console output or JSON file contents for analysis
-3. Add structured error responses (success/error objects) vs generic strings
+**Test Environment:**
+- Folder: `/Volumes/videos-current/2. WORKING PROJECTS/Berkeley/EAV014 - KV2 Podium Houses/04-media/images/photos/test-minimal/`
+- Files: EA001621.JPG, EA001622.JPG, EA001623.JPG
+- JSON: `.ingest-metadata.json` (2.5K, Schema 2.0, verified valid)
+- Clip: EA001621.JPG (imported fresh to Premiere Pro)
+
+**Files Modified:**
+- `jsx/generated/track-a-integration.jsx` - Added findProjectItemByNodeId + debug logging
+- `js/metadata-panel.js` - Enhanced error capture + path diagnostics + debug log display
 
 ---
 
