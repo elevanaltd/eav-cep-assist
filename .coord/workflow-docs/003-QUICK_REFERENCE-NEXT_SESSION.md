@@ -1,7 +1,7 @@
 # Quick Reference - Next Session Start
 
-**Last Updated:** 2025-11-11
-**Session Status:** Issues 2, 3, 4 complete - awaiting user testing feedback
+**Last Updated:** 2025-11-22
+**Session Status:** DEBUGGING JSON Sidecar Integration - Awaiting test results
 
 ---
 
@@ -10,7 +10,7 @@
 ```bash
 cd /Volumes/HestAI-Projects/eav-cep-assist
 
-# Deploy both panels
+# Deploy both panels (includes latest diagnostics)
 ./deploy-navigation.sh && ./deploy-metadata.sh
 
 # Then restart Premiere Pro (Cmd+Q)
@@ -18,245 +18,266 @@ cd /Volumes/HestAI-Projects/eav-cep-assist
 
 ---
 
-## **📋 What Was Completed This Session**
+## **🎯 Current Priority: JSON Metadata Loading**
 
-### **✅ Issue #2: Dublin Core Identifier**
-- Fixed Identifier field to use standard `<dc:identifier>` XMP
-- Removed redundant Metadata Tags field
-- Description now serves dual purpose
+**Issue:** Metadata Panel returns `null` when trying to read `.ingest-metadata.json` from test folder
 
-### **✅ Issue #3: Searchable Shot Type Dropdown**
-- Restricted searchable dropdown (type to filter, can't enter custom values)
-- Type "W" → filters to "WS (Wide Shot)"
-- Invalid entries auto-revert
-- Keyboard navigation works
+**Status:** DEBUGGING with enhanced ExtendScript diagnostics
 
-### **✅ Issue #3.1: XMP Cache Fix**
-- Added 1.5s delay on first load
-- Prevents "EMPTY" metadata issue
+### **What We Know:**
+1. ✅ JSON file exists at correct path (verified manually)
+2. ✅ Premiere Pro knows correct media path
+3. ✅ File is readable (2.5K, Schema 2.0, valid JSON)
+4. ✅ `findProjectItemByNodeId` function added to track-a-integration.jsx
+5. ❌ ExtendScript returns `null` when trying to read file
 
-### **✅ Issue #4: Previous/Next Navigation**
-- Added `[◀ Previous]  [Apply to Premiere]  [Next ▶]` buttons
-- Works with search/filters
-- Auto-enables/disables based on position
+### **Latest Diagnostic Output (2025-11-22 00:50:11):**
+```
+[MetadataForm] Clip paths: Media:/Volumes/videos-current/.../test-minimal/EA001621.JPG|Proxy: null
+[MetadataForm] JSON response: null
+[MetadataForm] ✗ Metadata file not found
+```
+
+**Missing:** ExtendScript debug logs (should show `DEBUG: mediaPath=...`, `DEBUG: File.exists=...`)
 
 ---
 
-## **🧪 Testing Instructions for User**
+## **📋 Next Steps for Continuation**
 
-### **Issue #3: Shot Type Dropdown**
-1. Click in Shot Type field → dropdown appears
-2. Type "W" → should show only "WS (Wide Shot)"
-3. Select "WS" → should fill field
-4. Type "ECU" (invalid) → should revert on blur
-5. Arrow keys → should navigate options
-6. Enter key → should select
-
-**Expected Debug:**
-```
-[MetadataForm] ✓ Shot Type selected: ESTAB
-[MetadataForm] ⚠ Invalid shot type: "ECU" - reverting
-```
-
----
-
-### **Issue #4: Previous/Next Buttons**
-1. Click first clip → Previous should be disabled
-2. Click Next → should load next clip
-3. Navigate to last clip → Next should be disabled
-4. Search "kitchen" → Next/Previous should only show kitchen clips
-5. Uncheck Video filter → navigate images only
-
-**Expected Debug:**
-```
-[ClipBrowser] ✓ CEP event dispatched (index: 40/152)
-[MetadataForm] Navigation context: 40/152
-[MetadataForm] ▶ Navigating to next clip: kitchen-fridge-ESTAB
-```
-
----
-
-## **📍 Current State**
-
-### **What's Working:**
-✅ XMP metadata loads correctly on first panel open
-✅ Identifier uses Dublin Core standard field
-✅ Shot Type dropdown filters options as you type
-✅ Previous/Next buttons track position in filtered list
-✅ Navigation syncs between panels
-✅ Source Monitor updates on navigation
-
-### **What Needs Testing:**
-⏳ Shot Type dropdown validation (user feedback)
-⏳ Previous/Next button behavior with filters (user feedback)
-
-### **Next Steps:**
-📝 Issue #5 documented (Navigation Panel sorting) - not implemented
-🔄 Git commit after successful testing
-
----
-
-## **🔍 Debug Monitoring**
-
-### **Navigation Panel (Bottom):**
-```
-[ClipBrowser] Waiting for XMP metadata to load...
-[ClipBrowser] ✓ Loaded 152 clips
-[ClipBrowser] ✓ Selected: wine-cooler-ESTAB (index: 40/152)
-[ClipBrowser] ✓ CEP event dispatched (index: 40/152)
-```
-
-### **Metadata Panel (Right):**
-```
-[MetadataForm] Navigation context: 40/152
-[MetadataForm] clip.identifier: "wine-cooler-ESTAB"
-[MetadataForm] Updating navigation buttons: 40/152
-[MetadataForm] ✓ Shot Type selected: ESTAB
-[MetadataForm] ▶ Navigating to next clip: kitchen-fridge-ESTAB
-```
-
----
-
-## **🚨 Troubleshooting**
-
-### **If metadata shows "EMPTY":**
-- Wait 1.5 seconds for XMP cache to load
-- Click Refresh button in Navigation Panel
-- Check debug: should see "Waiting for XMP metadata to load..."
-
-### **If Shot Type won't accept value:**
-- Check it's one of: WS, MID, CU, UNDER, FP, TRACK, ESTAB
-- Debug will show: `⚠ Invalid shot type: "[value]" - reverting`
-
-### **If Previous/Next buttons stay disabled:**
-- Check debug: `Navigation context: X/Y` should show valid numbers
-- Verify Navigation Panel shows filtered clips
-- Try clicking a clip in Navigation Panel first
-
----
-
-## **📂 Modified Files This Session**
-
-```
-jsx/host.jsx                    ← Dublin Core XMP + escapeXML()
-js/navigation-panel.js          ← XMP warm-up delay + navigation context
-js/metadata-panel.js            ← Searchable dropdown + navigation buttons
-index-metadata.html             ← Removed tags field + button layout
-css/metadata-panel.css          ← Dropdown styling + button styling
-```
-
----
-
-## **🎯 Issue #5: Sorting (Documented, Not Implemented)**
-
-**Location:** `.coord/workflow-docs/ISSUE-05-NAVIGATION-PANEL-SORTING.md`
-
-**Summary:**
-- Add sort dropdown to Navigation Panel
-- Options: Name (A-Z/Z-A), By Bin, Duration, File Type
-- **Recommended default:** By Bin (groups by shoot/location)
-
-**Implementation Phases:**
-1. Phase 1: Alphabetical sort (~30 min)
-2. Phase 2: Bin grouping with headers (~1-2 hours)
-3. Phase 3: Duration/Type sorts (~30 min)
-
----
-
-## **💾 Git Commit Template (After Testing)**
+### **1. Test Latest Deployment (IMMEDIATE)**
 
 ```bash
-git add jsx/host.jsx js/navigation-panel.js js/metadata-panel.js \
-        index-metadata.html css/metadata-panel.css
+# Restart Premiere Pro
+# Open Metadata Panel → Debug Console
+# Click EA001621.JPG from test-minimal folder
+# Check for ExtendScript debug logs
+```
 
-git commit -m "feat: Complete Issues 2, 3, 4 - Dublin Core, searchable dropdown, navigation
+**Expected Output:**
+```
+[MetadataForm] Clip paths: Media:/Volumes/.../test-minimal/EA001621.JPG|Proxy:null
+[MetadataForm] → ExtendScript: DEBUG: mediaPath=/Volumes/.../test-minimal/EA001621.JPG (type=string)
+[MetadataForm] → ExtendScript: DEBUG: Attempting read from: /Volumes/.../test-minimal/.ingest-metadata.json
+[MetadataForm] → ExtendScript: DEBUG: File.exists=false (or true)
+[MetadataForm] → ExtendScript: DEBUG: File.fsName=/Volumes/.../.ingest-metadata.json
+```
 
-Issue #2: Dublin Core Identifier Integration
-- Replace custom xmp:TapeName with standard dc:identifier
-- Remove Metadata Tags field (Description serves dual purpose)
-- Update all variable names (tapeName → identifier)
+**If logs still missing:** The $.writeln() interception may not be working - check ExtendScript Console directly
 
-Issue #3: Restricted Searchable Shot Type Dropdown
-- Custom dropdown with type-to-filter search
-- Restricted to predefined values (WS, MID, CU, UNDER, FP, TRACK, ESTAB)
-- Auto-reverts invalid entries
-- Keyboard navigation (arrows, enter, escape)
+**If File.exists=false:** Issue is with ExtendScript File API - possible causes:
+- Path with spaces not handled correctly
+- File permissions issue
+- ExtendScript File constructor behavior with `.` prefix files
 
-Issue #3.1: XMP Cache Warm-Up Fix
-- Add 1.5s delay on first panel load
-- Prevents 'EMPTY' metadata on initial open
+### **2. Investigate File.exists=false (IF APPLICABLE)**
 
-Issue #4: Previous/Next Navigation Buttons
-- Add navigation button row alongside Apply button
-- Track clip position in filtered list
-- Auto-enable/disable based on position
-- Bidirectional sync with Navigation Panel
-- Works with search/filters
+Possible solutions to test:
+- Try creating test JSON without `.` prefix: `ingest-metadata.json` (no dot)
+- Check ExtendScript File API documentation for hidden file handling
+- Test with File.decode() if path encoding is issue
+- Verify file permissions allow ExtendScript access
 
-Security:
-- Add escapeXML() for XML injection prevention
-- Apply to all XMP write operations
+### **3. Verify Test Environment**
 
-Files:
-- jsx/host.jsx: Dublin Core XMP + security
-- js/navigation-panel.js: XMP warm-up + navigation context
-- js/metadata-panel.js: Dropdown + navigation logic
-- index-metadata.html: UI updates
-- css/metadata-panel.css: Styling
+**Test Folder:**
+```
+/Volumes/videos-current/2. WORKING PROJECTS/Berkeley/EAV014 - KV2 Podium Houses/04-media/images/photos/test-minimal/
+```
 
-Fixes #2 #3 #4"
+**Contents:**
+```bash
+ls -la /Volumes/videos-current/.../test-minimal/
+# Should show:
+# EA001621.JPG
+# EA001622.JPG
+# EA001623.JPG
+# .ingest-metadata.json (2569 bytes)
+```
+
+**JSON Validation:**
+```bash
+jq '.EA001621' /Volumes/videos-current/.../test-minimal/.ingest-metadata.json
+# Should return metadata object with id, shotName, location, etc.
 ```
 
 ---
 
-## **📞 If You Need Help**
+## **📂 Files Modified This Session**
 
-### **Common Questions:**
-**Q: Shot Type not accepting my value?**
-A: Only WS, MID, CU, UNDER, FP, TRACK, ESTAB are valid. Custom values auto-revert.
+### **jsx/generated/track-a-integration.jsx**
+- **Line 20-36:** Added `findProjectItemByNodeId()` function (was missing, causing crashes)
+- **Line 145-165:** Added unconditional $.writeln() debug logging
+  - Shows mediaPath, jsonPath, File.exists, File.fsName
+  - Helps diagnose why file isn't found
 
-**Q: Previous/Next buttons not working?**
-A: Check Navigation Panel debug for "CEP event dispatched (index: X/Y)". If index is -1, click a clip first.
-
-**Q: Metadata still shows EMPTY?**
-A: Wait 1.5s on first load, or click Refresh. Check debug for "Waiting for XMP metadata to load..."
-
-**Q: Want to implement sorting (Issue #5)?**
-A: Read `.coord/workflow-docs/ISSUE-05-NAVIGATION-PANEL-SORTING.md` for full spec.
-
----
-
-## **🎬 Testing Session Workflow**
-
-1. **Start Fresh:**
-   - Quit Premiere Pro (Cmd+Q)
-   - Redeploy: `./deploy-navigation.sh && ./deploy-metadata.sh`
-   - Reopen Premiere Pro
-
-2. **Test Issue #3 (Shot Type):**
-   - Click Shot Type field
-   - Type "W" → verify filters
-   - Select "WS" → verify accepts
-   - Type "ECU" → verify reverts
-   - Try arrow keys + Enter
-
-3. **Test Issue #4 (Navigation):**
-   - Click first clip → verify Previous disabled
-   - Click Next → verify loads next clip
-   - Navigate to end → verify Next disabled
-   - Search "kitchen" → verify Next stays in kitchen clips
-
-4. **Verify Issue #2 (Identifier):**
-   - Check Identifier field has actual value (not filename fallback)
-   - Right-click clip → File Info → Dublin Core tab
-   - Verify Identifier matches panel
-
-5. **Report Back:**
-   - What worked?
-   - What didn't work?
-   - Any unexpected behavior?
-   - Ready for git commit?
+### **js/metadata-panel.js**
+- **Line 378-399:** Enhanced error capture wrapper
+  - Wraps ExtendScript call in try/catch
+  - Returns "ERROR: message at line X" instead of "EvalScript error."
+  - Intercepts $.writeln() output and returns to CEP panel
+- **Line 401-426:** Debug log parsing and display
+  - Splits response into PATHS, DEBUG logs, and JSON
+  - Shows ExtendScript diagnostic messages in panel console
+- **Line 428-435:** ExtendScript error detection
+  - Checks for "ERROR:" prefix in response
+  - Shows actual exception message instead of generic error
 
 ---
 
-**✨ Ready for your testing feedback!**
+## **🔍 Diagnostic Commands**
+
+### **Check JSON File:**
+```bash
+ls -lh "/Volumes/videos-current/2. WORKING PROJECTS/Berkeley/EAV014 - KV2 Podium Houses/04-media/images/photos/test-minimal/.ingest-metadata.json"
+```
+
+### **Validate JSON Content:**
+```bash
+jq '._schema, (. | keys | map(select(startswith("_") | not)) | length)' "/Volumes/videos-current/.../test-minimal/.ingest-metadata.json"
+# Expected: "2.0" and 3
+```
+
+### **Check EA001621 Entry:**
+```bash
+jq '.EA001621.shotName' "/Volumes/videos-current/.../test-minimal/.ingest-metadata.json"
+# Expected: "kitchen-counter-stove-MID-#1"
+```
+
+### **Manual ExtendScript Test (IF NEEDED):**
+```javascript
+// Premiere Pro → Help → Console
+var testPath = "/Volumes/videos-current/2. WORKING PROJECTS/Berkeley/EAV014 - KV2 Podium Houses/04-media/images/photos/test-minimal/.ingest-metadata.json";
+var testFile = new File(testPath);
+testFile.exists
+// Expected: true
+
+testFile.fsName
+// Shows how ExtendScript interprets the path
+```
+
+---
+
+## **🚨 Known Issues**
+
+### **Issue #1: ExtendScript Debug Logs Not Appearing**
+
+**Symptom:** No `[MetadataForm] → ExtendScript: DEBUG:` lines in output
+
+**Possible Causes:**
+1. $.writeln() interception not working (try/catch wrapper issue)
+2. Script execution failing before debug calls
+3. Debug logs being filtered out somewhere
+
+**Next Action:** Check ExtendScript Console directly (Premiere Pro → Help → Console)
+
+### **Issue #2: File.exists Returns False (HYPOTHESIS)**
+
+**Symptom:** ExtendScript can't find `.ingest-metadata.json` despite file existing
+
+**Possible Causes:**
+1. ExtendScript File API doesn't handle hidden files (`.` prefix)
+2. Path with spaces not properly encoded
+3. File permissions prevent ExtendScript access
+4. Volume mounting issue (/Volumes/videos-current)
+
+**Next Action:** Test alternative file names/locations
+
+---
+
+## **🧪 Alternative Test Cases (IF NEEDED)**
+
+### **Test 1: File Without Dot Prefix**
+```bash
+cp "/Volumes/videos-current/.../test-minimal/.ingest-metadata.json" \
+   "/Volumes/videos-current/.../test-minimal/ingest-metadata.json"
+```
+Modify track-a-integration.jsx to look for `ingest-metadata.json` instead
+
+### **Test 2: Simpler Path Without Spaces**
+```bash
+mkdir -p /tmp/cep-test
+cp "/Volumes/videos-current/.../test-minimal/EA001621.JPG" /tmp/cep-test/
+cp "/Volumes/videos-current/.../test-minimal/.ingest-metadata.json" /tmp/cep-test/
+```
+Import from `/tmp/cep-test/` instead
+
+### **Test 3: Direct ExtendScript File Test**
+Create minimal test script to isolate File API behavior
+
+---
+
+## **💾 Git Status**
+
+**Current Branch:** `chore/update-dependencies`
+
+**Uncommitted Changes:**
+- `jsx/generated/track-a-integration.jsx` - findProjectItemByNodeId + debug logging
+- `js/metadata-panel.js` - error capture + diagnostics
+- `.coord/workflow-docs/002-CEP_PANEL_CURRENT_STATE-BUILD-STATUS.md` - updated status
+- `.coord/workflow-docs/003-QUICK_REFERENCE-NEXT_SESSION.md` - this file
+
+**Ready to Commit:** NO - awaiting test results to confirm fix
+
+---
+
+## **📞 Session Handoff Notes**
+
+### **Context for Next Session:**
+
+**Where We Are:**
+- Investigating why ExtendScript can't read JSON sidecar files
+- Root cause #1 fixed (missing function)
+- Enhanced diagnostics deployed
+- Awaiting test results to see actual File.exists status
+
+**What We Need:**
+- User to restart Premiere Pro and test
+- Check for ExtendScript debug logs in panel console
+- If logs missing, check ExtendScript Console directly
+- File.exists result will reveal next debugging step
+
+**Likely Outcomes:**
+1. **File.exists=true:** JSON parsing issue → check readJSONFromFile()
+2. **File.exists=false:** File API issue → test alternative approaches
+3. **No debug logs:** Wrapper issue → check ExtendScript Console directly
+
+### **Quick Continuation Prompt:**
+
+```
+I'm continuing the CEP Panel JSON metadata debugging session.
+
+Last session status:
+- Added findProjectItemByNodeId to track-a-integration.jsx
+- Added unconditional $.writeln() debug logging
+- Deployed enhanced diagnostics
+- Awaiting test results showing why ExtendScript can't find .ingest-metadata.json
+
+The user just tested and the diagnostic output shows:
+[PASTE DIAGNOSTIC OUTPUT HERE]
+
+What's the next step to resolve the File.exists issue?
+```
+
+---
+
+## **🎬 Testing Workflow for User**
+
+1. **Restart Premiere Pro** (Cmd+Q, reopen)
+
+2. **Open Metadata Panel Debug Console:**
+   - Window → Extensions → EAV Ingest Assistant - Metadata
+   - Right-click panel → Debug → Console tab
+   - Click "Clear Debug" button
+
+3. **Click EA001621.JPG** (from test-minimal folder in Project Panel)
+
+4. **Check debug output for:**
+   - `[MetadataForm] Clip paths:` line (should show test-minimal path)
+   - `[MetadataForm] → ExtendScript: DEBUG:` lines (should show file operations)
+   - `[MetadataForm] JSON response:` line (currently returns null)
+
+5. **Share complete output** including all ExtendScript debug lines
+
+---
+
+**✨ Session paused - awaiting test results with enhanced diagnostics**
