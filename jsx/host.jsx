@@ -22,14 +22,22 @@ if (typeof CEP_EXTENSION_ROOT !== 'undefined' && CEP_EXTENSION_ROOT) {
 }
 
 var _trackAFile = new File(_trackAScriptDir.fsName + '/track-a-integration.jsx');
+$.writeln('HOST_TRYING_PRIMARY: ' + _trackAScriptDir.fsName + '/track-a-integration.jsx exists=' + _trackAFile.exists);
 
 if (!_trackAFile.exists) {
   // Fallback to generated/ subdirectory (for deployed extension)
   _trackAFile = new File(_trackAScriptDir.fsName + '/generated/track-a-integration.jsx');
+  $.writeln('HOST_TRYING_GENERATED: ' + _trackAScriptDir.fsName + '/generated/track-a-integration.jsx exists=' + _trackAFile.exists);
 }
 
 if (_trackAFile.exists) {
-  $.evalFile(_trackAFile);  // ← TRUE top-level execution creates globals
+  $.writeln('HOST_BEFORE_EVALFILE: About to load ' + _trackAFile.fsName);
+  try {
+    $.evalFile(_trackAFile);  // ← TRUE top-level execution creates globals
+    $.writeln('HOST_EVALFILE_SUCCESS: track-a-integration.jsx loaded');
+  } catch(e) {
+    $.writeln('HOST_EVALFILE_ERROR: ' + e.message);
+  }
 } else {
   // Neither location found - warn and continue without Track A
   $.writeln('WARNING: track-a-integration.jsx not found at: ' + _trackAScriptDir.fsName + '/track-a-integration.jsx');
@@ -1602,23 +1610,125 @@ var EAVIngest = (function() {
   // (graceful degradation - core panel functionality works, JSON features unavailable)
 
   if (typeof readJSONMetadataWrapper === 'undefined') {
-    $.writeln('WARNING: Track A wrappers not loaded - JSON features will be unavailable');
-    $.writeln('         Expected file: jsx/generated/track-a-integration.jsx');
-    $.writeln('         Run scripts/build-track-a.sh to generate Track A integration');
+    $.writeln('WARNING: Track A wrappers not loaded from jsx/generated/track-a-integration.jsx');
+    $.writeln('         Using inlined implementation instead');
 
-    // Stub functions return same format as actual wrappers
-    // readJSON* returns 'null' string (same as "metadata not found")
-    // writeJSON* returns 'false' string (same as "write failed")
-    var readJSONMetadataWrapper = function() {
-      return 'null';
+    // ========================================================================
+    // INLINED TRACK A IMPLEMENTATION (from track-a-integration.jsx)
+    // ========================================================================
+
+    /**
+     * Helper: Find project item by nodeId (recursive search)
+     */
+    function findProjectItemByNodeIdInline(parentItem, nodeId) {
+      if (parentItem.nodeId === nodeId) {
+        return parentItem;
+      }
+      if (parentItem.children && parentItem.children.numItems > 0) {
+        for (var i = 0; i < parentItem.children.numItems; i++) {
+          var found = findProjectItemByNodeIdInline(parentItem.children[i], nodeId);
+          if (found) {
+            return found;
+          }
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Helper: Read and parse JSON file, lookup clip metadata by ID
+     */
+    function readJSONFromFileInline(jsonFile, clipName) {
+      try {
+        jsonFile.open('r');
+        var jsonString = jsonFile.read();
+        jsonFile.close();
+
+        var jsonData = JSON.parse(jsonString);
+        var clipID = clipName.replace(/\.[^.]+$/, '');
+        var metadata = jsonData[clipID];
+
+        if (metadata) {
+          return JSON.stringify(metadata);
+        } else {
+          return 'null';
+        }
+      } catch (e) {
+        return 'null';
+      }
+    }
+
+    /**
+     * Read metadata from .ingest-metadata.json sidecar file
+     * Looks in proxy folder first, falls back to raw media folder
+     */
+    function readJSONMetadataInline(clip, FileConstructor) {
+      try {
+        var proxyPath = clip.getProxyPath();
+        var folder = null;
+
+        // Priority 1: Proxy folder
+        if (proxyPath && proxyPath !== '') {
+          folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
+          var proxyJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
+          if (proxyJSONFile.exists) {
+            return readJSONFromFileInline(proxyJSONFile, clip.name);
+          }
+        }
+
+        // Priority 2: Raw media folder (fallback)
+        var mediaPath = clip.getMediaPath();
+        if (mediaPath && mediaPath !== '') {
+          folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
+          var jsonPath = folder + '/.ingest-metadata.json';
+          var rawJSONFile = new FileConstructor(jsonPath);
+          if (rawJSONFile.exists) {
+            return readJSONFromFileInline(rawJSONFile, clip.name);
+          }
+        }
+
+        return 'null';
+      } catch (e) {
+        return 'null';
+      }
+    }
+
+    /**
+     * Read metadata by nodeId
+     */
+    function readJSONMetadataByNodeIdInline(nodeId) {
+      try {
+        var project = app.project;
+        if (!project) {
+          return 'null';
+        }
+
+        var clip = findProjectItemByNodeIdInline(project.rootItem, nodeId);
+        if (!clip) {
+          return 'null';
+        }
+
+        return readJSONMetadataInline(clip, File);
+      } catch (e) {
+        return 'null';
+      }
+    }
+
+    // ========================================================================
+    // END INLINED IMPLEMENTATION
+    // ========================================================================
+
+    // Use inlined implementations
+    var readJSONMetadataWrapper = function(mediaPath, FileConstructor) {
+      return 'null'; // Not used in CEP panel, stub only
     };
 
     var writeJSONMetadataWrapper = function() {
       return 'false';
     };
 
-    var readJSONMetadataByNodeIdWrapper = function() {
-      return 'null';
+    var readJSONMetadataByNodeIdWrapper = function(nodeId) {
+      return readJSONMetadataByNodeIdInline(nodeId);
     };
 
     var writeJSONMetadataByNodeIdWrapper = function() {
