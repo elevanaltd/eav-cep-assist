@@ -21,20 +21,18 @@
 - **Framework:** Adobe CEP APIs
 - **Frontend:** HTML, CSS, JavaScript
 - **ExtendScript:** ES3 (Premiere Pro scripting layer)
-- **XMP Metadata:** Direct XMP read/write via item.getXMPMetadata() / item.setXMPMetadata()
+- **Metadata:** JSON sidecar files (`.ingest-metadata.json`)
 - **Communication:** CSInterface (CEP ↔ ExtendScript)
 
 ## Key Features
 
-### Metadata Tagging & XMP Integration
-- **Structured Fields:** Location, Subject, Action, Shot Type
-- **Naming Convention:** {location}-{subject}-{action}-{shotType} format
-- **XMP Read/Write:**
-  - xmpDM:shotName → Combined name (maps to PP Shot field)
-  - xmpDM:LogComment → Structured key=value pairs (e.g., location=kitchen, subject=oven, shotType=ESTAB)
-  - dc:description → Keywords/tags (Dublin Core standard)
-- **IA Compatibility:** Reads/writes same XMP fields as Ingest Assistant (bidirectional workflow)
-- **Premiere Pro Integration:** Updates clip Name in project panel
+### Metadata Tagging (JSON Sidecar Approach)
+- **Structured Fields:** Location, Subject, Action, Shot Type, Shot Number
+- **Naming Convention:** {location}-{subject}-{action}-{shotType}-#{shotNumber} format
+- **JSON Sidecar:** Reads/writes `.ingest-metadata.json` files (co-located with media)
+- **IA Compatibility:** Same JSON schema as Ingest Assistant (Schema 2.0)
+- **Premiere Pro Integration:** Updates clip Name in Project Panel
+- **Batch Operations:** Process multiple clips at once via Navigation Panel
 
 ### ML Feedback Loop
 - **PP Edits Tracking:** Writes .ingest-metadata-pp.json to original media folder
@@ -49,19 +47,22 @@ PHASE::PRODUCTION_COMPLETE→Track_A✅→Track_B✅→Batch_Apply✅→All_merg
 GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Navigation_checkmarks_working✅→Batch_Apply_JSON✅
 
 ## Key Decisions
+- [2025-11-25] XMP_REMOVAL→getAllProjectClips_simplified→removed_225_lines_XMP_parsing→JSON_only_architecture✅
+- [2025-11-25] TAGGED_FILTER→dropdown_with_All/Tagged/Untagged→filter_work_remaining✅
 - [2025-11-25] BATCH_APPLY_JSON_REWORK→readJSONMetadataByNodeId+writeJSONMetadataByNodeId→replaces_old_XMP_approach✅
 - [2025-11-25] STABLE_FILENAME_LOOKUP→use_mediaPath/proxyPath_not_clip.name→survives_clip_rename✅
 - [2025-11-25] TRACK_B_JSON_WRITE→writeJSONMetadataByNodeIdInline→shotName_computed→PP_Clip_Name_updated✅
 - [2025-11-25] ALL_FIELDS_VISIBLE→removed_video-only_filter→location+subject+action+shotType_available_for_images✅
-- [2025-11-25] NAVIGATION_CHECKMARK→added_structured_name_detection→clips_with_naming_pattern_show_✓
-- [2025-11-19] PRODUCTION_APPROVED→XMP_write_limitations_acceptable→JSON_read_sufficient_for_QC_workflow✅
+- [2025-11-25] NAVIGATION_CHECKMARK→structured_name_detection→clips_with_naming_pattern_show_✓
 
 ## Active Work
 - [x] Track_A::JSON_read→working✅
 - [x] Track_B::JSON_write→implemented→shotName_computed→PP_Clip_Name_updated✅
 - [x] STABLE_LOOKUP::extractOriginalFilename()→from_path_not_clip.name→reload_survives_rename✅
 - [x] BATCH_APPLY::JSON_rework→reads_JSON→writes_JSON→updates_PP_Clip_Name✅
-- [x] PRODUCTION_TESTING::User_validated→"works_perfectly"✅
+- [x] XMP_REMOVAL::getAllProjectClips_simplified→5_properties_only→removed_legacy_tests✅
+- [x] TAGGED_FILTER::All/Tagged/Untagged_dropdown→filter_work_remaining✅
+- [x] PRODUCTION_TESTING::User_validated→"This is working"✅
 
 ## Blockers
 - None currently
@@ -91,4 +92,4 @@ Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ---
 
-**LAST UPDATED:** 2025-11-25 (All Track A/B complete, Batch Apply JSON rework merged, production ready)
+**LAST UPDATED:** 2025-11-25 (XMP removal complete, Tagged/Untagged filter added, JSON-only architecture)
