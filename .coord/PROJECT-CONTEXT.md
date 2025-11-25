@@ -43,32 +43,46 @@
 - **Documentation:** See docs/002-DOC-ML-FEEDBACK-LOOP.md
 
 ## Current Focus
-PHASE::PRODUCTION_COMPLETE→Track_A✅→Track_B✅→Batch_Apply✅→All_merged_to_main✅
-GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Navigation_checkmarks_working✅→Batch_Apply_JSON✅
+PHASE::PRODUCTION_COMPLETE→All_core_features_merged_to_main✅
+GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Navigation_checkmarks_working✅→Batch_Apply_JSON✅→Security_XSS_fix✅
 
 ## Key Decisions
 - [2025-11-25] XMP_REMOVAL→getAllProjectClips_simplified→removed_225_lines_XMP_parsing→JSON_only_architecture✅
-- [2025-11-25] TAGGED_FILTER→dropdown_with_All/Tagged/Untagged→filter_work_remaining✅
+- [2025-11-25] TAGGED_FILTER→dropdown_with_All/Tagged/Untagged→structured_name_detection✅
 - [2025-11-25] BATCH_APPLY_JSON_REWORK→readJSONMetadataByNodeId+writeJSONMetadataByNodeId→replaces_old_XMP_approach✅
 - [2025-11-25] STABLE_FILENAME_LOOKUP→use_mediaPath/proxyPath_not_clip.name→survives_clip_rename✅
 - [2025-11-25] TRACK_B_JSON_WRITE→writeJSONMetadataByNodeIdInline→shotName_computed→PP_Clip_Name_updated✅
 - [2025-11-25] ALL_FIELDS_VISIBLE→removed_video-only_filter→location+subject+action+shotType_available_for_images✅
 - [2025-11-25] NAVIGATION_CHECKMARK→structured_name_detection→clips_with_naming_pattern_show_✓
+- [2025-11-25] ML_FEEDBACK_LOOP→.ingest-metadata-pp.json_prioritized→preserves_IA_original→enables_AI_training_diff✅
+- [2025-11-25] SECURITY_FIX→escapeHTML()_added→XSS_prevention_in_panel-main.js✅
+- [2025-11-25] CONSUMER_ALIGNMENT→panel-main.js_uses_hasStructuredName()→matches_navigation-panel.js_pattern✅
 
-## Active Work
+## Completed Work (PR #50-#54)
 - [x] Track_A::JSON_read→working✅
 - [x] Track_B::JSON_write→implemented→shotName_computed→PP_Clip_Name_updated✅
 - [x] STABLE_LOOKUP::extractOriginalFilename()→from_path_not_clip.name→reload_survives_rename✅
 - [x] BATCH_APPLY::JSON_rework→reads_JSON→writes_JSON→updates_PP_Clip_Name✅
 - [x] XMP_REMOVAL::getAllProjectClips_simplified→5_properties_only→removed_legacy_tests✅
-- [x] TAGGED_FILTER::All/Tagged/Untagged_dropdown→filter_work_remaining✅
+- [x] TAGGED_FILTER::All/Tagged/Untagged_dropdown→structured_name_detection✅
+- [x] ML_FEEDBACK::PP_edits_JSON_writer→.ingest-metadata-pp.json→diff_comparison_enabled✅
+- [x] SECURITY::XSS_prevention→escapeHTML()_helper→panel-main.js_hardened✅
+- [x] CONSUMER_FIX::hasMetadata_aligned→panel-main.js_uses_same_pattern_as_navigation-panel.js✅
 - [x] PRODUCTION_TESTING::User_validated→"This is working"✅
 
-## Blockers
-- None currently
+## Quality Gates Status
+- `npm run lint` → 0 errors ✅
+- `npm run typecheck` → 0 errors ✅
+- `npm test` → 143 tests passing ✅
+- `npm run quality-gates` → All passing ✅
+
+## Open Issues (17 total)
+- **Critical:** #14 (XSS - partially fixed), #16 (ExtendScript tests), #17 (CI/CD), #18 (Lint config), #37 (Lock enforcement), #38 (Track A tests)
+- **High:** #19 (Desktop writes), #20 (Scalability), #21 (SECURITY.md), #22 (Error handling), #32 (Offline workflow)
+- **Medium:** #13 (Auto-apply), #30 (XMPScript API), #31 (LogComment format), #35 (Batch flush)
 
 ## Next Milestone
-ENHANCEMENT PHASE: Consider B1 documentation completion, offline sync (IndexedDB), or Supabase integration planning
+HARDENING PHASE: Address security issues (#14, #37), add comprehensive tests (#16, #38), implement CI/CD (#17)
 
 ## Recent User Feedback
 > "This is all working very well" (JSON read/write flow)

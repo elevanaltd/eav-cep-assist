@@ -1,36 +1,43 @@
 # CEP Panel - Current State & Build Status
 
-**Last Updated:** 2025-11-24
-**Build Phase:** Track A Integration - JSON Metadata Loading ✅ **WORKING**
+**Last Updated:** 2025-11-25
+**Build Phase:** PRODUCTION COMPLETE ✅ - All core features merged to main
 
 ---
 
-## ✅ PRODUCTION READY - JSON Metadata Loading
+## ✅ PRODUCTION COMPLETE - All Core Features Working
 
-**Status:** JSON sidecar file reading **FULLY FUNCTIONAL**
+**Status:** JSON read/write, batch apply, navigation checkmarks - **ALL FUNCTIONAL**
 
-### **What Works:**
-- ✅ Navigation Panel dispatches clip selection events
-- ✅ Metadata Panel receives events and loads JSON data
-- ✅ ExtendScript reads `.ingest-metadata.json` from media folders
-- ✅ Form populates with location, subject, action, shotType, keywords
-- ✅ Generated shotName displays correctly
-- ✅ Previous/Next navigation with context tracking
-- ✅ Diagnostic breadcrumbs show execution flow
+### **What Works (as of PR #54 merge):**
+- ✅ **Track A:** JSON metadata reading from `.ingest-metadata.json`
+- ✅ **Track B:** JSON metadata writing to `.ingest-metadata-pp.json`
+- ✅ **Batch Apply:** Apply metadata to multiple clips via JSON
+- ✅ **Navigation Checkmarks:** Structured name detection (✓ for tagged, • for untagged)
+- ✅ **Tagged/Untagged Filter:** Dropdown filter for clip status
+- ✅ **ML Feedback Loop:** PP edits JSON preserves IA original for diff comparison
+- ✅ **XSS Prevention:** escapeHTML() helper in panel-main.js
+- ✅ **Consumer Alignment:** hasStructuredName() pattern consistent across panels
+- ✅ **Quality Gates:** 143 tests passing, lint + typecheck clean
+
+### **Recent PRs Merged:**
+| PR | Description | Status |
+|----|-------------|--------|
+| #54 | Consumer alignment + security fix (hasMetadata, XSS) | ✅ Merged |
+| #52 | XMP removal + Tagged filter | ✅ Merged |
+| #50 | Batch apply JSON rework | ✅ Merged |
+| #49 | Track B JSON write | ✅ Merged |
+| #48 | Track A JSON read | ✅ Merged |
 
 ### **Test Results:**
 ```
-Test File: EA001621.JPG (test-minimal folder)
-Result: ✅ SUCCESS
+npm test
+✓ 143 tests passing
 
-Output:
-  Location: kitchen
-  Subject: counter
-  Action: stove
-  Shot Type: MID
-  Shot Number: 1
-  Keywords: counter, stove, appliances
-  Generated Name: kitchen-counter-stove-MID-#1
+npm run quality-gates
+✓ lint: 0 errors
+✓ typecheck: 0 errors
+✓ test: 143 passing
 ```
 
 ---
@@ -125,21 +132,29 @@ Form populates ✅
 
 ---
 
-## 🚧 Known Limitations
+## 🚧 Known Limitations & Open Issues
 
-### **Write Functionality (Not Yet Implemented):**
-- Current: "Apply to Premiere" only writes XMP to Premiere Pro Clip Name
-- Future: Update `.ingest-metadata.json` file with changes
-- Requires: Atomic file writes (temp file + rename pattern)
+### **Security (Partially Addressed):**
+- ✅ XSS prevention added in panel-main.js (PR #54)
+- ⚠️ Issue #14: Full security audit needed for all applyMetadata paths
 
-### **Lock Mechanism (Display Only):**
+### **Lock Mechanism (Not Enforced - Issue #37):**
 - Current: `_completed: true` shows lock icon but doesn't prevent edits
-- Future: Make fields read-only when locked
-- Future: Block "Apply to Premiere" button when locked
+- Issue #37: writeJSONToFile() doesn't respect `lockedFields` array
+- Future: Make fields read-only when locked, block "Apply to Premiere" button
 
-### **Batch Operations:**
-- Current: Per-clip workflow only
-- Future: Select multiple clips, update metadata simultaneously
+### **Test Coverage Gaps:**
+- Issue #16: Zero functional test coverage for ExtendScript layer (mocks only)
+- Issue #38: Track A JSON functions need additional unit tests
+
+### **CI/CD:**
+- Issue #17: No automated deployment pipeline
+- GitHub Actions workflow exists but deployment is manual
+
+### **Offline Workflow (Issue #32):**
+- ExtendScript cannot access Project Columns API
+- IndexedDB caching not implemented
+- Requires architectural decision (ADR-003 exists)
 
 ---
 
@@ -164,22 +179,26 @@ Form populates ✅
 
 ---
 
-## 🎯 Next Session Priorities
+## 🎯 Next Priorities (Hardening Phase)
 
-### **Immediate (< 30 min):**
-1. Test EA001622.JPG and EA001623.JPG to verify robustness
-2. Test Previous/Next navigation between clips
-3. Verify metadata persists when switching clips
+### **Critical/Security (Address First):**
+1. Issue #14: Complete security audit for applyMetadata paths
+2. Issue #37: Implement field-level lock enforcement in writeJSONToFile()
+3. Issue #38: Add comprehensive unit tests for Track A JSON functions
 
-### **Short-Term (1-2 hours):**
-1. Implement JSON write-back functionality
-2. Add atomic file updates (prevent corruption)
-3. Preserve existing JSON fields when updating
+### **Infrastructure:**
+1. Issue #17: Implement CI/CD deployment pipeline
+2. Issue #18: Fix lint configuration for vendor library
+3. Issue #16: Add ExtendScript layer tests (or document why not possible)
 
-### **Medium-Term (Next Session):**
-1. Enforce lock mechanism (_completed: true)
-2. Production folder testing (real EAV footage)
-3. User acceptance testing with editors
+### **Quality:**
+1. Issue #19: Remove unauthorized file writes to user desktop
+2. Issue #21: Add SECURITY.md and vulnerability disclosure policy
+3. Issue #22: Audit and improve error handling in ExtendScript
+
+### **Deferred (Architectural Decision Needed):**
+1. Issue #32: Offline metadata workflow (requires ADR review)
+2. Issue #30: XMPScript API migration (optional optimization)
 
 ---
 
@@ -203,15 +222,18 @@ Form populates ✅
 
 ## 📊 Quality Metrics
 
-- **Test Coverage:** Manual testing only (EA001621.JPG verified)
-- **Error Handling:** Basic try/catch, returns 'null' on failure
+- **Test Coverage:** 143 automated tests + manual Premiere Pro testing
+- **Error Handling:** Basic try/catch, returns 'null' on failure (Issue #22 to improve)
 - **Performance:** < 100ms for JSON file read and parse
-- **User Experience:** Smooth, no noticeable delay when clicking clips
+- **User Experience:** Smooth, user confirmed "This is working"
+- **Security:** XSS prevention added (Issue #14 partial fix)
 
 ---
 
-**Status:** ✅ **PRODUCTION READY FOR READ OPERATIONS**
+**Status:** ✅ **PRODUCTION COMPLETE - ALL CORE FEATURES WORKING**
 
-**Next Milestone:** JSON write-back implementation
+**Phase:** Hardening (security, tests, CI/CD)
 
-**Deployment:** Both panels deployed and tested successfully
+**Open Issues:** 17 (6 critical, 5 high, 6 medium)
+
+**Deployment:** Both panels deployed and user-validated
