@@ -374,61 +374,12 @@
       // Call Track A readJSONMetadataByNodeId with error capture AND path diagnostics
       const escapedNodeId = escapeForEvalScript(clip.nodeId);
 
-      // DIAGNOSTIC: Modified to return both path info and JSON result in one call
-      // Capture $.writeln() output by redirecting to string accumulator
-      const script = '(function() { ' +
-        'var debugLog = []; ' +
-        'var originalWriteln = $.writeln; ' +
-        '$.writeln = function(msg) { debugLog.push(msg); }; ' +  // FIXED: Don't call originalWriteln (loses this context)
-        'try { ' +
-        '  $.writeln("WRAPPER_START"); ' +  // Test if interception works
-        '  var project = app.project; ' +
-        '  if (!project) return "ERROR: No active project"; ' +
-        '  var clip = findProjectItemByNodeId(project.rootItem, "' + escapedNodeId + '"); ' +
-        '  if (!clip) return "ERROR: Clip not found for nodeId: ' + escapedNodeId + '"; ' +
-        '  $.writeln("WRAPPER_CLIP_FOUND"); ' +  // Confirm clip found
-        '  var mediaPath = clip.getMediaPath(); ' +
-        '  var proxyPath = clip.getProxyPath(); ' +
-        '  $.writeln("WRAPPER_PATHS_RETRIEVED"); ' +  // Confirm paths retrieved
-        '  var pathInfo = "PATHS|Media:" + mediaPath + "|Proxy:" + proxyPath + "\\n"; ' +
-        '  $.writeln("WRAPPER_CALLING_EAVINGEST"); ' +  // Before calling EAVIngest
-        '  var jsonResult = EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '"); ' +
-        '  $.writeln("WRAPPER_EAVINGEST_RETURNED"); ' +  // After EAVIngest returns
-        '  $.writeln = originalWriteln; ' +
-        '  if (debugLog.length > 0) pathInfo += "DEBUG|" + debugLog.join("|") + "\\n"; ' +
-        '  return pathInfo + jsonResult; ' +
-        '} catch(e) { ' +
-        '  $.writeln = originalWriteln; ' +
-        '  return "ERROR: " + e.toString() + " at line " + e.line; ' +
-        '} ' +
-      '})()';
+      // Call EAVIngest API directly (helper functions are internal to module scope)
+      const script = 'EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '")';
 
       csInterface.evalScript(script, function(response) {
-        // Split response into paths, debug logs, and JSON
-        let pathInfo = 'unknown';
-        let debugLogs = [];
-        let jsonString = response;
-
-        if (response && response.indexOf('PATHS|') === 0) {
-          const lines = response.split('\n');  // FIXED: Split on actual newline, not literal \n
-          pathInfo = lines[0].substring(6); // Remove "PATHS|" prefix
-
-          // Check for debug logs
-          if (lines.length > 1 && lines[1].indexOf('DEBUG|') === 0) {
-            debugLogs = lines[1].substring(6).split('|'); // Remove "DEBUG|" prefix
-            jsonString = lines.slice(2).join('\n');  // FIXED: Join with actual newline
-          } else {
-            jsonString = lines.slice(1).join('\n');  // FIXED: Join with actual newline
-          }
-        }
-
-        addDebug('[MetadataForm] Clip paths: ' + pathInfo);
-        if (debugLogs.length > 0) {
-          debugLogs.forEach(function(log) {
-            addDebug('[MetadataForm] → ExtendScript: ' + log);
-          });
-        }
-        addDebug('[MetadataForm] JSON response: ' + (jsonString || 'null'));
+        const jsonString = response || 'null';
+        addDebug('[MetadataForm] JSON response: ' + jsonString);
 
         // DIAGNOSTIC: Check for ExtendScript errors (captured by try/catch wrapper)
         if (jsonString && jsonString.indexOf('ERROR:') === 0) {
