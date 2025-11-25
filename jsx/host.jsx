@@ -1598,6 +1598,12 @@ var EAVIngest = (function() {
         var result = 'false';
         var originalFilename = null;
 
+        // DIAGNOSTIC: Log all path info for debugging LucidLink issues
+        $.writeln('=== writeJSONMetadataInline DEBUG ===');
+        $.writeln('  clip.name: ' + clip.name);
+        $.writeln('  proxyPath: ' + (proxyPath || '(empty)'));
+        $.writeln('  mediaPath: ' + (mediaPath || '(empty)'));
+
         // Extract original filename from available paths
         // Priority: mediaPath (raw) > proxyPath (may have _proxy suffix)
         if (mediaPath && mediaPath !== '') {
@@ -1608,10 +1614,11 @@ var EAVIngest = (function() {
 
         if (!originalFilename) {
           $.writeln('ERROR: Cannot determine original filename - both paths empty');
+          _logToFile('writeJSONMetadataInline FAIL: both proxyPath and mediaPath are empty');
           return 'false';
         }
 
-        $.writeln('DEBUG JSON WRITE: Original filename from path: "' + originalFilename + '" (clip.name: "' + clip.name + '")');
+        $.writeln('  originalFilename: ' + originalFilename);
 
         // Try proxy folder first, then raw folder
         var foldersToTry = [];
@@ -1622,12 +1629,27 @@ var EAVIngest = (function() {
           foldersToTry.push(mediaPath.substring(0, mediaPath.lastIndexOf('/')));
         }
 
+        $.writeln('  foldersToTry: ' + (foldersToTry.length > 0 ? foldersToTry.join(', ') : '(none)'));
+        _logToFile('writeJSONMetadataInline: proxyPath=' + (proxyPath || 'empty') + ', mediaPath=' + (mediaPath || 'empty') + ', folders=' + foldersToTry.join(';'));
+
         // ML FEEDBACK LOOP: ALWAYS write to -pp.json (never modify IA original)
         for (var i = 0; i < foldersToTry.length && result === 'false'; i++) {
           folder = foldersToTry[i];
+          $.writeln('  Trying folder [' + i + ']: ' + folder);
+
+          // Check if folder exists
+          var folderObj = new Folder(folder);
+          $.writeln('    Folder exists: ' + folderObj.exists);
+          if (!folderObj.exists) {
+            $.writeln('    SKIPPING - folder does not exist on this machine');
+            _logToFile('Folder not accessible: ' + folder);
+            continue;
+          }
 
           var ppJsonFile = new File(folder + '/.ingest-metadata-pp.json');
           var iaJsonFile = new File(folder + '/.ingest-metadata.json');
+          $.writeln('    ppJsonFile exists: ' + ppJsonFile.exists);
+          $.writeln('    iaJsonFile exists: ' + iaJsonFile.exists);
 
           // Case 1: -pp.json exists - update it
           if (ppJsonFile.exists) {
