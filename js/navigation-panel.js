@@ -17,7 +17,7 @@
     searchFilter: '',          // Search text
     filterVideo: true,         // Show videos
     filterImage: true,         // Show images
-    filterHasMeta: false,      // Show only tagged clips
+    filterTagged: 'all',       // 'all' | 'tagged' | 'untagged'
     sortBy: 'bin',             // Sort order: 'name', 'name-desc', 'bin'
     selectedClips: [],         // Array of nodeIds for batch operations
     expandedBins: {}           // Bin collapse state (undefined/false = collapsed, true = expanded)
@@ -111,7 +111,7 @@
       clearSearchBtn: null,
       filterVideo: null,
       filterImage: null,
-      filterHasMeta: null,
+      filterTagged: null,
       sortBy: null,
       clipList: null,
       clipCount: null,
@@ -128,7 +128,7 @@
         clearSearchBtn: document.getElementById('clearSearch'),
         filterVideo: document.getElementById('filterVideo'),
         filterImage: document.getElementById('filterImage'),
-        filterHasMeta: document.getElementById('filterHasMeta'),
+        filterTagged: document.getElementById('filterTagged'),
         sortBy: document.getElementById('sortBy'),
         clipList: document.getElementById('clipList'),
         clipCount: document.getElementById('clipCount'),
@@ -178,8 +178,8 @@
         self.render();
       });
 
-      this.elements.filterHasMeta.addEventListener('change', function(e) {
-        PanelState.filterHasMeta = e.target.checked;
+      this.elements.filterTagged.addEventListener('change', function(e) {
+        PanelState.filterTagged = e.target.value;
         self.render();
       });
 
@@ -483,11 +483,12 @@
         if (isVideo && !PanelState.filterVideo) {return false;}
         if (isImage && !PanelState.filterImage) {return false;}
 
-        // Metadata filter - uses structured naming pattern (XMP fields removed)
+        // Tagged filter - uses structured naming pattern (XMP fields removed)
         const hasStructuredName = clip.name && clip.name.indexOf('-') !== -1 &&
                                   clip.name.split('-').length >= 2 &&
                                   !clip.name.match(/^EA\d{6}/i);
-        if (PanelState.filterHasMeta && !hasStructuredName) {return false;}
+        if (PanelState.filterTagged === 'tagged' && !hasStructuredName) {return false;}
+        if (PanelState.filterTagged === 'untagged' && hasStructuredName) {return false;}
 
         return true;
       });
