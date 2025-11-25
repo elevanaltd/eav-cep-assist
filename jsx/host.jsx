@@ -1582,10 +1582,12 @@ var EAVIngest = (function() {
     }
 
     /**
-     * Write metadata updates to .ingest-metadata.json sidecar file
-     * Priority: proxy folder first, raw media folder fallback
+     * Write metadata updates to JSON sidecar file
+     * Priority: .ingest-metadata-pp.json first (ML feedback loop), .ingest-metadata.json fallback
      * Also updates Premiere Pro Clip Name with computed shotName
      * CRITICAL: Uses original filename from path, NOT clip.name (which may be renamed)
+     *
+     * ML Feedback Loop: PP edits go to -pp.json, preserving IA original for training diff
      */
     var writeJSONMetadataInline = function(clip, updates) {
       try {
@@ -1593,7 +1595,6 @@ var EAVIngest = (function() {
         var proxyPath = clip.getProxyPath();
         var mediaPath = clip.getMediaPath();
         var folder = null;
-        var jsonFilePath = null;
         var result = 'false';
         var originalFilename = null;
 
@@ -1612,35 +1613,38 @@ var EAVIngest = (function() {
 
         $.writeln('DEBUG JSON WRITE: Original filename from path: "' + originalFilename + '" (clip.name: "' + clip.name + '")');
 
-        // Priority 1: Proxy folder
+        // Try proxy folder first, then raw folder
+        var foldersToTry = [];
         if (proxyPath && proxyPath !== '') {
-          folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
-          jsonFilePath = folder + '/.ingest-metadata.json';
-          var proxyJSONFile = new File(jsonFilePath);
-
-          if (proxyJSONFile.exists) {
-            $.writeln('DEBUG JSON WRITE: Writing to proxy folder: ' + folder);
-            result = writeJSONToFileInline(proxyJSONFile, originalFilename, updates);
-          }
+          foldersToTry.push(proxyPath.substring(0, proxyPath.lastIndexOf('/')));
+        }
+        if (mediaPath && mediaPath !== '') {
+          foldersToTry.push(mediaPath.substring(0, mediaPath.lastIndexOf('/')));
         }
 
-        // Priority 2: Raw media folder (fallback) - only if proxy didn't work
-        if (result === 'false') {
-          if (mediaPath && mediaPath !== '') {
-            folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
-            jsonFilePath = folder + '/.ingest-metadata.json';
-            var rawJSONFile = new File(jsonFilePath);
+        // For each folder, try -pp.json first, then .json
+        for (var i = 0; i < foldersToTry.length && result === 'false'; i++) {
+          folder = foldersToTry[i];
 
-            if (rawJSONFile.exists) {
-              $.writeln('DEBUG JSON WRITE: Writing to raw folder: ' + folder);
-              result = writeJSONToFileInline(rawJSONFile, originalFilename, updates);
-            }
+          // Priority 1: .ingest-metadata-pp.json (ML feedback - preserves IA original)
+          var ppJsonFile = new File(folder + '/.ingest-metadata-pp.json');
+          if (ppJsonFile.exists) {
+            $.writeln('DEBUG JSON WRITE: Writing to PP edits file: ' + folder + '/.ingest-metadata-pp.json');
+            result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
+            continue;
+          }
+
+          // Priority 2: .ingest-metadata.json (fallback if no -pp.json exists)
+          var iaJsonFile = new File(folder + '/.ingest-metadata.json');
+          if (iaJsonFile.exists) {
+            $.writeln('DEBUG JSON WRITE: Writing to IA file (no -pp.json): ' + folder + '/.ingest-metadata.json');
+            result = writeJSONToFileInline(iaJsonFile, originalFilename, updates);
           }
         }
 
         // No JSON file found
         if (result === 'false') {
-          $.writeln('ERROR: No .ingest-metadata.json found for writing');
+          $.writeln('ERROR: No .ingest-metadata.json or .ingest-metadata-pp.json found for writing');
           return 'false';
         }
 
