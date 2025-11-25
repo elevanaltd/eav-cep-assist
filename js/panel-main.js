@@ -78,6 +78,23 @@ function escapeForEvalScript(str) {
   }
 
   // ========================================
+  // HELPER FUNCTIONS
+  // ========================================
+
+  /**
+   * Detect if a clip has structured naming (indicates metadata has been applied)
+   * Pattern: {location}-{subject}-{action}-{shotType} (minimum 2 parts)
+   * Excludes: Camera names like EA001234
+   * @param {Object} clip - Clip object with name property
+   * @returns {boolean} - True if clip has structured name
+   */
+  function hasStructuredName(clip) {
+    return clip.name && clip.name.indexOf('-') !== -1 &&
+           clip.name.split('-').length >= 2 &&
+           !clip.name.match(/^EA\d{6}/i);
+  }
+
+  // ========================================
   // COMPONENT 1: CLIP BROWSER
   // ========================================
 
@@ -270,7 +287,8 @@ function escapeForEvalScript(str) {
         }
 
         const isSelected = PanelState.currentClip && clip.nodeId === PanelState.currentClip.nodeId;
-        const hasMetadata = clip.shot || clip.description || clip.tapeName;
+        // Detect structured naming pattern (XMP metadata removed - now using JSON sidecars)
+        const hasMetadata = hasStructuredName(clip);
         const statusIcon = hasMetadata ? '✓' : '•';
         const statusClass = hasMetadata ? 'tagged' : 'untagged';
 
@@ -302,9 +320,8 @@ function escapeForEvalScript(str) {
         if (isVideo && !PanelState.filterVideo) {return false;}
         if (isImage && !PanelState.filterImage) {return false;}
 
-        // Metadata filter
-        const hasMetadata = clip.shot || clip.description || clip.tapeName;
-        if (PanelState.filterHasMeta && !hasMetadata) {return false;}
+        // Metadata filter - uses structured naming pattern (XMP fields removed)
+        if (PanelState.filterHasMeta && !hasStructuredName(clip)) {return false;}
 
         return true;
       });
