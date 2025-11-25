@@ -421,14 +421,13 @@
         const isSelected = PanelState.currentClip && clip.nodeId === PanelState.currentClip.nodeId;
         const isChecked = PanelState.selectedClips.indexOf(clip.nodeId) !== -1;
 
-        // Check for metadata via XMP fields OR naming pattern
+        // Check for structured naming pattern (XMP metadata removed - now using JSON sidecars)
         // Naming pattern: {location}-{subject}-{action}-{shotType} (e.g., "kitchen-wine-cooler-opening-CU")
-        // At minimum: 2+ hyphen-separated parts indicates structured naming
-        const hasXmpMetadata = clip.shot || clip.description || clip.identifier;
+        // At minimum: 2+ hyphen-separated parts indicates clip has been processed
         const hasStructuredName = clip.name && clip.name.indexOf('-') !== -1 &&
                                   clip.name.split('-').length >= 2 &&
                                   !clip.name.match(/^EA\d{6}/i); // Exclude original camera names like EA001234
-        const hasMetadata = hasXmpMetadata || hasStructuredName;
+        const hasMetadata = hasStructuredName;
 
         const statusIcon = hasMetadata ? '✓' : '•';
         const statusClass = hasMetadata ? 'tagged' : 'untagged';
@@ -484,9 +483,11 @@
         if (isVideo && !PanelState.filterVideo) {return false;}
         if (isImage && !PanelState.filterImage) {return false;}
 
-        // Metadata filter
-        const hasMetadata = clip.shot || clip.description || clip.identifier;
-        if (PanelState.filterHasMeta && !hasMetadata) {return false;}
+        // Metadata filter - uses structured naming pattern (XMP fields removed)
+        const hasStructuredName = clip.name && clip.name.indexOf('-') !== -1 &&
+                                  clip.name.split('-').length >= 2 &&
+                                  !clip.name.match(/^EA\d{6}/i);
+        if (PanelState.filterHasMeta && !hasStructuredName) {return false;}
 
         return true;
       });
