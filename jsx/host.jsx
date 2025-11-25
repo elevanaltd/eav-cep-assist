@@ -1636,14 +1636,8 @@ var EAVIngest = (function() {
           folder = foldersToTry[i];
           $.writeln('  Trying folder [' + i + ']: ' + folder);
 
-          // Check if folder exists
-          var folderObj = new Folder(folder);
-          $.writeln('    Folder exists: ' + folderObj.exists);
-          if (!folderObj.exists) {
-            $.writeln('    SKIPPING - folder does not exist on this machine');
-            _logToFile('Folder not accessible: ' + folder);
-            continue;
-          }
+          // NOTE: Removed folder.exists check - LucidLink/network volumes may not report correctly
+          // Just try to write - the file operations will fail if folder truly doesn't exist
 
           var ppJsonFile = new File(folder + '/.ingest-metadata-pp.json');
           var iaJsonFile = new File(folder + '/.ingest-metadata.json');
