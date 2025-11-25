@@ -1622,29 +1622,50 @@ var EAVIngest = (function() {
           foldersToTry.push(mediaPath.substring(0, mediaPath.lastIndexOf('/')));
         }
 
-        // For each folder, try -pp.json first, then .json
+        // ML FEEDBACK LOOP: ALWAYS write to -pp.json (never modify IA original)
         for (var i = 0; i < foldersToTry.length && result === 'false'; i++) {
           folder = foldersToTry[i];
 
-          // Priority 1: .ingest-metadata-pp.json (ML feedback - preserves IA original)
           var ppJsonFile = new File(folder + '/.ingest-metadata-pp.json');
+          var iaJsonFile = new File(folder + '/.ingest-metadata.json');
+
+          // Case 1: -pp.json exists - update it
           if (ppJsonFile.exists) {
-            $.writeln('DEBUG JSON WRITE: Writing to PP edits file: ' + folder + '/.ingest-metadata-pp.json');
+            $.writeln('DEBUG JSON WRITE: Updating existing PP edits file: ' + folder + '/.ingest-metadata-pp.json');
             result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
             continue;
           }
 
-          // Priority 2: .ingest-metadata.json (fallback if no -pp.json exists)
-          var iaJsonFile = new File(folder + '/.ingest-metadata.json');
+          // Case 2: Only IA json exists - CREATE -pp.json with IA data as base
           if (iaJsonFile.exists) {
-            $.writeln('DEBUG JSON WRITE: Writing to IA file (no -pp.json): ' + folder + '/.ingest-metadata.json');
-            result = writeJSONToFileInline(iaJsonFile, originalFilename, updates);
+            $.writeln('DEBUG JSON WRITE: Creating PP edits file from IA base: ' + folder + '/.ingest-metadata-pp.json');
+            // Read IA data to seed the PP file (preserves IA structure for comparison)
+            iaJsonFile.open('r');
+            var iaContent = iaJsonFile.read();
+            iaJsonFile.close();
+
+            // Create new -pp.json with IA content as starting point
+            ppJsonFile.open('w');
+            ppJsonFile.write(iaContent);
+            ppJsonFile.close();
+
+            // Now update the newly created -pp.json
+            result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
+            continue;
           }
+
+          // Case 3: No JSON files exist - CREATE new -pp.json from scratch
+          $.writeln('DEBUG JSON WRITE: Creating new PP edits file from scratch: ' + folder + '/.ingest-metadata-pp.json');
+          var newPpData = { _schema: '2.0' };
+          ppJsonFile.open('w');
+          ppJsonFile.write(JSON.stringify(newPpData, null, 2));
+          ppJsonFile.close();
+          result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
         }
 
-        // No JSON file found
+        // Still failed after trying all folders
         if (result === 'false') {
-          $.writeln('ERROR: No .ingest-metadata.json or .ingest-metadata-pp.json found for writing');
+          $.writeln('ERROR: Failed to write PP edits JSON to any folder');
           return 'false';
         }
 

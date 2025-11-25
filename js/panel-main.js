@@ -784,11 +784,16 @@ function escapeForEvalScript(str) {
       }
 
       // Prepare metadata object
+      // CRITICAL: Include location/subject/action for PP edits JSON (ML feedback loop)
       const metadata = {
         name: generatedName,
         tapeName: PanelState.currentClip.name, // Preserve original filename
+        identifier: PanelState.currentClip.tapeName || PanelState.currentClip.name, // Original filename for JSON lookup
         description: this.elements.metadata.value.trim(),
-        shot: this.elements.shotType.value
+        shot: this.elements.shotType.value,
+        location: this.elements.location.value.trim(),
+        subject: this.elements.subject.value.trim(),
+        action: this.elements.action.value.trim()
       };
 
       console.log('[MetadataForm] Metadata object:', metadata);
