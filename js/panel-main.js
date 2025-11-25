@@ -82,6 +82,18 @@ function escapeForEvalScript(str) {
   // ========================================
 
   /**
+   * Escape HTML to prevent XSS injection
+   * @param {string} str - String to escape
+   * @returns {string} - HTML-escaped string
+   */
+  function escapeHTML(str) {
+    if (!str) {return '';}
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /**
    * Detect if a clip has structured naming (indicates metadata has been applied)
    * Pattern: {location}-{subject}-{action}-{shotType} (minimum 2 parts)
    * Excludes: Camera names like EA001234
@@ -292,11 +304,14 @@ function escapeForEvalScript(str) {
         const statusIcon = hasMetadata ? '✓' : '•';
         const statusClass = hasMetadata ? 'tagged' : 'untagged';
 
+        // Escape clip name to prevent XSS
+        const escapedName = escapeHTML(clip.name || 'Unknown');
+
         return '<div class="clip-item' + (isSelected ? ' selected' : '') + '" ' +
-                       'data-clip-id="' + clip.nodeId + '" ' +
+                       'data-clip-id="' + escapeHTML(clip.nodeId) + '" ' +
                        'role="listitem" tabindex="0">' +
                        '<span class="status-icon ' + statusClass + '">' + statusIcon + '</span>' +
-                       '<span class="clip-name" title="' + (clip.name || 'Unknown') + '">' + (clip.name || 'Unknown') + '</span>' +
+                       '<span class="clip-name" title="' + escapedName + '">' + escapedName + '</span>' +
                        '</div>';
       }).join('');
 
