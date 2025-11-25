@@ -114,6 +114,76 @@ describe('getAllProjectClips() Structure', () => {
     });
   });
 
+  describe('panel-main.js hasMetadata Detection', () => {
+    // Helper function matching the pattern used in panel-main.js
+    function hasMetadataDetection(clip) {
+      const hasStructuredName = clip.name && clip.name.indexOf('-') !== -1 &&
+                                clip.name.split('-').length >= 2 &&
+                                !clip.name.match(/^EA\d{6}/i);
+      return hasStructuredName;
+    }
+
+    it('should detect structured names as having metadata', () => {
+      const structuredClip = {
+        nodeId: 'node-456',
+        name: 'kitchen-oven-cleaning-ESTAB',
+        treePath: '\\Project.prproj\\shoot1\\EA001622.MOV',
+        mediaPath: '/Volumes/EAV_Video_RAW/shoot1/EA001622.MOV',
+        proxyPath: ''
+      };
+
+      expect(hasMetadataDetection(structuredClip)).toBe(true);
+    });
+
+    it('should not detect camera names as having metadata', () => {
+      const cameraNameClip = {
+        nodeId: 'node-123',
+        name: 'EA001621.MOV',
+        treePath: '\\Project.prproj\\shoot1\\EA001621.MOV',
+        mediaPath: '/Volumes/EAV_Video_RAW/shoot1/EA001621.MOV',
+        proxyPath: ''
+      };
+
+      expect(hasMetadataDetection(cameraNameClip)).toBe(false);
+    });
+
+    it('should detect minimal structured names (2 parts)', () => {
+      const minimalStructuredClip = {
+        nodeId: 'node-789',
+        name: 'kitchen-oven',
+        treePath: '\\Project.prproj\\shoot1\\EA001623.MOV',
+        mediaPath: '/Volumes/EAV_Video_RAW/shoot1/EA001623.MOV',
+        proxyPath: ''
+      };
+
+      expect(hasMetadataDetection(minimalStructuredClip)).toBe(true);
+    });
+
+    it('should not detect single-word names as having metadata', () => {
+      const singleWordClip = {
+        nodeId: 'node-999',
+        name: 'kitchen',
+        treePath: '\\Project.prproj\\shoot1\\EA001624.MOV',
+        mediaPath: '/Volumes/EAV_Video_RAW/shoot1/EA001624.MOV',
+        proxyPath: ''
+      };
+
+      expect(hasMetadataDetection(singleWordClip)).toBe(false);
+    });
+
+    it('should handle clips with extensions', () => {
+      const clipWithExtension = {
+        nodeId: 'node-111',
+        name: 'kitchen-oven-cleaning-CU.MOV',
+        treePath: '\\Project.prproj\\shoot1\\EA001625.MOV',
+        mediaPath: '/Volumes/EAV_Video_RAW/shoot1/EA001625.MOV',
+        proxyPath: ''
+      };
+
+      expect(hasMetadataDetection(clipWithExtension)).toBe(true);
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle clips with empty proxyPath', () => {
       const clipWithoutProxy = mockClipsResponse.clips[1];
