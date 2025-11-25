@@ -374,56 +374,12 @@
       // Call Track A readJSONMetadataByNodeId with error capture AND path diagnostics
       const escapedNodeId = escapeForEvalScript(clip.nodeId);
 
-      // DIAGNOSTIC: Modified to return both path info and JSON result in one call
-      // Capture $.writeln() output by redirecting to string accumulator
-      const script = '(function() { ' +
-        'var debugLog = []; ' +
-        'var originalWriteln = $.writeln; ' +
-        '$.writeln = function(msg) { debugLog.push(msg); originalWriteln(msg); }; ' +
-        'try { ' +
-        '  var project = app.project; ' +
-        '  if (!project) return "ERROR: No active project"; ' +
-        '  var clip = findProjectItemByNodeId(project.rootItem, "' + escapedNodeId + '"); ' +
-        '  if (!clip) return "ERROR: Clip not found for nodeId: ' + escapedNodeId + '"; ' +
-        '  var mediaPath = clip.getMediaPath(); ' +
-        '  var proxyPath = clip.getProxyPath(); ' +
-        '  var pathInfo = "PATHS|Media:" + mediaPath + "|Proxy:" + proxyPath + "\\n"; ' +
-        '  var jsonResult = EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '"); ' +
-        '  $.writeln = originalWriteln; ' +
-        '  if (debugLog.length > 0) pathInfo += "DEBUG|" + debugLog.join("|") + "\\n"; ' +
-        '  return pathInfo + jsonResult; ' +
-        '} catch(e) { ' +
-        '  $.writeln = originalWriteln; ' +
-        '  return "ERROR: " + e.toString() + " at line " + e.line; ' +
-        '} ' +
-      '})()';
+      // Call EAVIngest API directly (helper functions are internal to module scope)
+      const script = 'EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '")';
 
       csInterface.evalScript(script, function(response) {
-        // Split response into paths, debug logs, and JSON
-        let pathInfo = 'unknown';
-        let debugLogs = [];
-        let jsonString = response;
-
-        if (response && response.indexOf('PATHS|') === 0) {
-          const lines = response.split('\\n');
-          pathInfo = lines[0].substring(6); // Remove "PATHS|" prefix
-
-          // Check for debug logs
-          if (lines.length > 1 && lines[1].indexOf('DEBUG|') === 0) {
-            debugLogs = lines[1].substring(6).split('|'); // Remove "DEBUG|" prefix
-            jsonString = lines.slice(2).join('\\n');
-          } else {
-            jsonString = lines.slice(1).join('\\n');
-          }
-        }
-
-        addDebug('[MetadataForm] Clip paths: ' + pathInfo);
-        if (debugLogs.length > 0) {
-          debugLogs.forEach(function(log) {
-            addDebug('[MetadataForm] → ExtendScript: ' + log);
-          });
-        }
-        addDebug('[MetadataForm] JSON response: ' + (jsonString || 'null'));
+        const jsonString = response || 'null';
+        addDebug('[MetadataForm] JSON response: ' + jsonString);
 
         // DIAGNOSTIC: Check for ExtendScript errors (captured by try/catch wrapper)
         if (jsonString && jsonString.indexOf('ERROR:') === 0) {
@@ -494,9 +450,9 @@
             self.hideLockIndicator();
           }
 
-          // Show/hide action field based on type (heuristic: video files have action)
-          const isVideo = /\.(mov|mp4|mxf|avi)$/i.test(clip.mediaPath);
-          self.elements.actionGroup.style.display = isVideo ? 'block' : 'none';
+          // Show all metadata fields for both video and images
+          // Previously filtered action field for images - removed to allow editing stale data
+          self.elements.actionGroup.style.display = 'block';
 
           // Update generated name preview
           self.updateGeneratedName();
@@ -648,13 +604,7 @@
 
       if (location) {parts.push(location);}
       if (subject) {parts.push(subject);}
-
-      // Include action only if visible (videos)
-      const actionVisible = this.elements.actionGroup.style.display !== 'none';
-      if (actionVisible && action) {
-        parts.push(action);
-      }
-
+      if (action) {parts.push(action);}
       if (shotType) {parts.push(shotType);}
 
       const generatedName = parts.length > 0 ? parts.join('-') : '-';
@@ -767,23 +717,32 @@
     },
 
     showSuccessIndicator: function(message) {
+      addDebug('[MetadataForm] showSuccessIndicator called: ' + message);
+
       let successDiv = document.getElementById('successMessage');
       if (!successDiv) {
         successDiv = document.createElement('div');
         successDiv.id = 'successMessage';
-        successDiv.style.cssText = 'background:#e8f5e9; color:#2e7d32; padding:10px; margin:10px 0; border-radius:4px;';
+        // Dark theme compatible: bright green background, white text, larger size
+        successDiv.style.cssText = 'background:#4caf50; color:#ffffff; padding:12px 16px; margin:10px 0; border-radius:6px; font-size:14px; font-weight:600; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.3);';
         const formContent = document.querySelector('.form-content');
         if (formContent) {
           formContent.insertBefore(successDiv, formContent.firstChild);
+          addDebug('[MetadataForm] Success indicator inserted into DOM');
+        } else {
+          addDebug('[MetadataForm] ✗ .form-content not found - cannot show success', true);
         }
       }
       successDiv.textContent = message;
       successDiv.style.display = 'block';
 
-      // Auto-hide after 3 seconds
+      addDebug('[MetadataForm] Success indicator display set to block');
+
+      // Auto-hide after 4 seconds (increased from 3)
       setTimeout(function() {
         successDiv.style.display = 'none';
-      }, 3000);
+        addDebug('[MetadataForm] Success indicator auto-hidden');
+      }, 4000);
     },
 
     showStatus: function(message, type) {

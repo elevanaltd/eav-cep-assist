@@ -22,14 +22,22 @@ if (typeof CEP_EXTENSION_ROOT !== 'undefined' && CEP_EXTENSION_ROOT) {
 }
 
 var _trackAFile = new File(_trackAScriptDir.fsName + '/track-a-integration.jsx');
+$.writeln('HOST_TRYING_PRIMARY: ' + _trackAScriptDir.fsName + '/track-a-integration.jsx exists=' + _trackAFile.exists);
 
 if (!_trackAFile.exists) {
   // Fallback to generated/ subdirectory (for deployed extension)
   _trackAFile = new File(_trackAScriptDir.fsName + '/generated/track-a-integration.jsx');
+  $.writeln('HOST_TRYING_GENERATED: ' + _trackAScriptDir.fsName + '/generated/track-a-integration.jsx exists=' + _trackAFile.exists);
 }
 
 if (_trackAFile.exists) {
-  $.evalFile(_trackAFile);  // ← TRUE top-level execution creates globals
+  $.writeln('HOST_BEFORE_EVALFILE: About to load ' + _trackAFile.fsName);
+  try {
+    $.evalFile(_trackAFile);  // ← TRUE top-level execution creates globals
+    $.writeln('HOST_EVALFILE_SUCCESS: track-a-integration.jsx loaded');
+  } catch(e) {
+    $.writeln('HOST_EVALFILE_ERROR: ' + e.message);
+  }
 } else {
   // Neither location found - warn and continue without Track A
   $.writeln('WARNING: track-a-integration.jsx not found at: ' + _trackAScriptDir.fsName + '/track-a-integration.jsx');
@@ -1602,27 +1610,390 @@ var EAVIngest = (function() {
   // (graceful degradation - core panel functionality works, JSON features unavailable)
 
   if (typeof readJSONMetadataWrapper === 'undefined') {
-    $.writeln('WARNING: Track A wrappers not loaded - JSON features will be unavailable');
-    $.writeln('         Expected file: jsx/generated/track-a-integration.jsx');
-    $.writeln('         Run scripts/build-track-a.sh to generate Track A integration');
+    $.writeln('WARNING: Track A wrappers not loaded from jsx/generated/track-a-integration.jsx');
+    $.writeln('         Using inlined implementation instead');
 
-    // Stub functions return same format as actual wrappers
-    // readJSON* returns 'null' string (same as "metadata not found")
-    // writeJSON* returns 'false' string (same as "write failed")
-    var readJSONMetadataWrapper = function() {
-      return 'null';
+    // ========================================================================
+    // INLINED TRACK A IMPLEMENTATION (from track-a-integration.jsx)
+    // ========================================================================
+
+    /**
+     * Helper: Find project item by nodeId (recursive search)
+     */
+    var findProjectItemByNodeIdInline = function(parentItem, nodeId) {
+      if (parentItem.nodeId === nodeId) {
+        return parentItem;
+      }
+      if (parentItem.children && parentItem.children.numItems > 0) {
+        for (var i = 0; i < parentItem.children.numItems; i++) {
+          var found = findProjectItemByNodeIdInline(parentItem.children[i], nodeId);
+          if (found) {
+            return found;
+          }
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Helper: Extract original filename from a file path
+     * Handles both raw paths (/path/EA001622.JPG) and proxy paths (/path/EA001622_proxy.mov)
+     */
+    var extractOriginalFilename = function(filePath) {
+      if (!filePath || filePath === '') {
+        return null;
+      }
+
+      // Extract filename from path
+      var pathParts = filePath.split('/');
+      var filename = pathParts[pathParts.length - 1];
+
+      // Remove _proxy suffix if present (proxy files are named EA001622_proxy.mov)
+      filename = filename.replace(/_proxy(\.[^.]+)?$/, '$1');
+
+      return filename;
+    }
+
+    /**
+     * Helper: Read and parse JSON file, lookup clip metadata by ID
+     * Uses originalFilename (from path) for lookup, NOT clip.name (which may be renamed)
+     */
+    var readJSONFromFileInline = function(jsonFile, originalFilename) {
+      try {
+        jsonFile.open('r');
+        var jsonString = jsonFile.read();
+        jsonFile.close();
+
+        var jsonData = JSON.parse(jsonString);
+
+        // Extract clipID from original filename (remove extension)
+        var clipID = originalFilename.replace(/\.[^.]+$/, '');
+        $.writeln('DEBUG JSON READ: Looking up clipID "' + clipID + '" from original filename "' + originalFilename + '"');
+
+        var metadata = jsonData[clipID];
+
+        if (metadata) {
+          return JSON.stringify(metadata);
+        } else {
+          $.writeln('DEBUG JSON READ: clipID "' + clipID + '" not found in JSON');
+          return 'null';
+        }
+      } catch (e) {
+        $.writeln('ERROR in readJSONFromFileInline: ' + e.message);
+        return 'null';
+      }
+    }
+
+    /**
+     * Read metadata from .ingest-metadata.json sidecar file
+     * Looks in proxy folder first, falls back to raw media folder
+     * CRITICAL: Uses original filename from path, NOT clip.name (which may be renamed)
+     */
+    var readJSONMetadataInline = function(clip, FileConstructor) {
+      try {
+        var proxyPath = clip.getProxyPath();
+        var mediaPath = clip.getMediaPath();
+        var folder = null;
+        var originalFilename = null;
+
+        // Extract original filename from available paths
+        // Priority: mediaPath (raw) > proxyPath (may have _proxy suffix)
+        if (mediaPath && mediaPath !== '') {
+          originalFilename = extractOriginalFilename(mediaPath);
+        } else if (proxyPath && proxyPath !== '') {
+          originalFilename = extractOriginalFilename(proxyPath);
+        }
+
+        if (!originalFilename) {
+          $.writeln('ERROR: Cannot determine original filename - both paths empty');
+          return 'null';
+        }
+
+        $.writeln('DEBUG JSON READ: Original filename from path: "' + originalFilename + '" (clip.name: "' + clip.name + '")');
+
+        // Priority 1: Proxy folder
+        if (proxyPath && proxyPath !== '') {
+          folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
+          var proxyJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
+          if (proxyJSONFile.exists) {
+            return readJSONFromFileInline(proxyJSONFile, originalFilename);
+          }
+        }
+
+        // Priority 2: Raw media folder (fallback)
+        if (mediaPath && mediaPath !== '') {
+          folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
+          var jsonPath = folder + '/.ingest-metadata.json';
+          var rawJSONFile = new FileConstructor(jsonPath);
+          if (rawJSONFile.exists) {
+            return readJSONFromFileInline(rawJSONFile, originalFilename);
+          }
+        }
+
+        return 'null';
+      } catch (e) {
+        $.writeln('ERROR in readJSONMetadataInline: ' + e.message);
+        return 'null';
+      }
+    }
+
+    /**
+     * Read metadata by nodeId
+     */
+    var readJSONMetadataByNodeIdInline = function(nodeId) {
+      try {
+        var project = app.project;
+        if (!project) {
+          return 'null';
+        }
+
+        var clip = findProjectItemByNodeIdInline(project.rootItem, nodeId);
+        if (!clip) {
+          return 'null';
+        }
+
+        return readJSONMetadataInline(clip, File);
+      } catch (e) {
+        return 'null';
+      }
+    }
+
+    /**
+     * Compute shotName from component metadata fields
+     * Format: {location}-{subject}-{action}-{shotType}-#{shotNumber}
+     */
+    var computeShotNameInline = function(metadata) {
+      if (!metadata) {
+        return '';
+      }
+
+      var parts = [];
+
+      if (metadata.location) {
+        parts.push(metadata.location);
+      }
+      if (metadata.subject) {
+        parts.push(metadata.subject);
+      }
+      if (metadata.action) {
+        parts.push(metadata.action);
+      }
+      if (metadata.shotType) {
+        parts.push(metadata.shotType);
+      }
+
+      var baseName = parts.join('-');
+
+      if (metadata.shotNumber) {
+        return baseName + '-#' + metadata.shotNumber;
+      }
+
+      return baseName;
+    }
+
+    /**
+     * Helper: Write metadata updates to JSON file atomically
+     * Uses temp file + rename pattern to prevent corruption
+     * CRITICAL: Uses originalFilename (from path), NOT clip.name (which may be renamed)
+     */
+    var writeJSONToFileInline = function(jsonFile, originalFilename, updates) {
+      try {
+        // Read existing JSON
+        jsonFile.open('r');
+        var jsonString = jsonFile.read();
+        jsonFile.close();
+
+        // Parse JSON
+        var jsonData = JSON.parse(jsonString);
+
+        // Extract clip ID (remove extension)
+        var clipID = originalFilename.replace(/\.[^.]+$/, '');
+        $.writeln('DEBUG JSON WRITE: Writing to clipID "' + clipID + '" from original filename "' + originalFilename + '"');
+
+        // Get existing metadata or create new entry
+        var metadata = jsonData[clipID];
+        if (!metadata) {
+          metadata = {
+            id: clipID,
+            originalFilename: originalFilename
+          };
+        }
+
+        // Merge updates into metadata
+        for (var key in updates) {
+          if (updates.hasOwnProperty(key) && updates[key] !== undefined) {
+            metadata[key] = updates[key];
+          }
+        }
+
+        // Compute shotName from updated fields
+        metadata.shotName = computeShotNameInline(metadata);
+
+        // Update audit fields
+        metadata.modifiedAt = new Date().toISOString();
+        metadata.modifiedBy = 'cep-panel';
+
+        // Update JSON data
+        jsonData[clipID] = metadata;
+
+        // Write atomically (temp file + rename to prevent corruption)
+        var folder = jsonFile.parent.fsName;
+        var tempFile = new File(folder + '/.ingest-metadata.tmp.json');
+
+        tempFile.open('w');
+        tempFile.write(JSON.stringify(jsonData, null, 2)); // Pretty print
+        tempFile.close();
+
+        // Remove old file first (ExtendScript rename doesn't replace existing files)
+        if (jsonFile.exists) {
+          jsonFile.remove();
+        }
+
+        // Now rename temp file to original name
+        tempFile.rename(jsonFile.name);
+
+        $.writeln('DEBUG JSON WRITE: Successfully wrote metadata for ' + clipID);
+        $.writeln('  shotName: ' + metadata.shotName);
+        $.writeln('  modifiedAt: ' + metadata.modifiedAt);
+
+        // Return computed shotName for Clip Name update
+        return metadata.shotName || 'true';
+
+      } catch (e) {
+        $.writeln('ERROR writing JSON file: ' + e.message);
+        return 'false';
+      }
+    }
+
+    /**
+     * Write metadata updates to .ingest-metadata.json sidecar file
+     * Priority: proxy folder first, raw media folder fallback
+     * Also updates Premiere Pro Clip Name with computed shotName
+     * CRITICAL: Uses original filename from path, NOT clip.name (which may be renamed)
+     */
+    var writeJSONMetadataInline = function(clip, updates) {
+      try {
+        // Get paths
+        var proxyPath = clip.getProxyPath();
+        var mediaPath = clip.getMediaPath();
+        var folder = null;
+        var jsonFilePath = null;
+        var result = 'false';
+        var originalFilename = null;
+
+        // Extract original filename from available paths
+        // Priority: mediaPath (raw) > proxyPath (may have _proxy suffix)
+        if (mediaPath && mediaPath !== '') {
+          originalFilename = extractOriginalFilename(mediaPath);
+        } else if (proxyPath && proxyPath !== '') {
+          originalFilename = extractOriginalFilename(proxyPath);
+        }
+
+        if (!originalFilename) {
+          $.writeln('ERROR: Cannot determine original filename - both paths empty');
+          return 'false';
+        }
+
+        $.writeln('DEBUG JSON WRITE: Original filename from path: "' + originalFilename + '" (clip.name: "' + clip.name + '")');
+
+        // Priority 1: Proxy folder
+        if (proxyPath && proxyPath !== '') {
+          folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
+          jsonFilePath = folder + '/.ingest-metadata.json';
+          var proxyJSONFile = new File(jsonFilePath);
+
+          if (proxyJSONFile.exists) {
+            $.writeln('DEBUG JSON WRITE: Writing to proxy folder: ' + folder);
+            result = writeJSONToFileInline(proxyJSONFile, originalFilename, updates);
+          }
+        }
+
+        // Priority 2: Raw media folder (fallback) - only if proxy didn't work
+        if (result === 'false') {
+          if (mediaPath && mediaPath !== '') {
+            folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
+            jsonFilePath = folder + '/.ingest-metadata.json';
+            var rawJSONFile = new File(jsonFilePath);
+
+            if (rawJSONFile.exists) {
+              $.writeln('DEBUG JSON WRITE: Writing to raw folder: ' + folder);
+              result = writeJSONToFileInline(rawJSONFile, originalFilename, updates);
+            }
+          }
+        }
+
+        // No JSON file found
+        if (result === 'false') {
+          $.writeln('ERROR: No .ingest-metadata.json found for writing');
+          return 'false';
+        }
+
+        // Update Premiere Pro Clip Name with computed shotName
+        // result contains the shotName from writeJSONToFileInline
+        if (result && result !== 'true' && result !== 'false') {
+          var shotName = result;
+          clip.name = shotName;
+          $.writeln('DEBUG: Updated Premiere Pro Clip Name to: ' + shotName);
+        }
+
+        return 'true';
+
+      } catch (e) {
+        $.writeln('ERROR in writeJSONMetadata: ' + e.message);
+        return 'false';
+      }
+    }
+
+    /**
+     * Write metadata by nodeId
+     * CEP Panel wrapper for Track A writeJSONMetadata
+     */
+    var writeJSONMetadataByNodeIdInline = function(nodeId, updatesJSON) {
+      try {
+        var project = app.project;
+        if (!project) {
+          $.writeln('ERROR: No active project');
+          return 'false';
+        }
+
+        var clip = findProjectItemByNodeIdInline(project.rootItem, nodeId);
+        if (!clip) {
+          $.writeln('ERROR: Clip not found for nodeId: ' + nodeId);
+          return 'false';
+        }
+
+        // Parse updates if it's a string (from CEP Panel)
+        var updates = updatesJSON;
+        if (typeof updatesJSON === 'string') {
+          updates = JSON.parse(updatesJSON);
+        }
+
+        return writeJSONMetadataInline(clip, updates);
+      } catch (e) {
+        $.writeln('ERROR in writeJSONMetadataByNodeId: ' + e.message);
+        return 'false';
+      }
+    }
+
+    // ========================================================================
+    // END INLINED IMPLEMENTATION
+    // ========================================================================
+
+    // Use inlined implementations
+    var readJSONMetadataWrapper = function(mediaPath, FileConstructor) {
+      return 'null'; // Not used in CEP panel, stub only
     };
 
     var writeJSONMetadataWrapper = function() {
-      return 'false';
+      return 'false'; // Not used in CEP panel, stub only
     };
 
-    var readJSONMetadataByNodeIdWrapper = function() {
-      return 'null';
+    var readJSONMetadataByNodeIdWrapper = function(nodeId) {
+      return readJSONMetadataByNodeIdInline(nodeId);
     };
 
-    var writeJSONMetadataByNodeIdWrapper = function() {
-      return 'false';
+    var writeJSONMetadataByNodeIdWrapper = function(nodeId, updatesJSON) {
+      return writeJSONMetadataByNodeIdInline(nodeId, updatesJSON);
     };
   }
 

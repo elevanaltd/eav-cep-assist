@@ -420,7 +420,16 @@
 
         const isSelected = PanelState.currentClip && clip.nodeId === PanelState.currentClip.nodeId;
         const isChecked = PanelState.selectedClips.indexOf(clip.nodeId) !== -1;
-        const hasMetadata = clip.shot || clip.description || clip.identifier;
+
+        // Check for metadata via XMP fields OR naming pattern
+        // Naming pattern: {location}-{subject}-{action}-{shotType} (e.g., "kitchen-wine-cooler-opening-CU")
+        // At minimum: 2+ hyphen-separated parts indicates structured naming
+        const hasXmpMetadata = clip.shot || clip.description || clip.identifier;
+        const hasStructuredName = clip.name && clip.name.indexOf('-') !== -1 &&
+                                  clip.name.split('-').length >= 2 &&
+                                  !clip.name.match(/^EA\d{6}/i); // Exclude original camera names like EA001234
+        const hasMetadata = hasXmpMetadata || hasStructuredName;
+
         const statusIcon = hasMetadata ? '✓' : '•';
         const statusClass = hasMetadata ? 'tagged' : 'untagged';
 
