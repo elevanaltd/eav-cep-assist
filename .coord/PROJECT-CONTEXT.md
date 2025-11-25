@@ -45,10 +45,11 @@
 - **Documentation:** See docs/002-DOC-ML-FEEDBACK-LOOP.md
 
 ## Current Focus
-PHASE::PRODUCTION_READY→Track_A✅→Track_B_JSON_write✅→User_testing_in_progress
-GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Navigation_checkmarks_working✅
+PHASE::PRODUCTION_COMPLETE→Track_A✅→Track_B✅→Batch_Apply✅→All_merged_to_main✅
+GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Navigation_checkmarks_working✅→Batch_Apply_JSON✅
 
 ## Key Decisions
+- [2025-11-25] BATCH_APPLY_JSON_REWORK→readJSONMetadataByNodeId+writeJSONMetadataByNodeId→replaces_old_XMP_approach✅
 - [2025-11-25] STABLE_FILENAME_LOOKUP→use_mediaPath/proxyPath_not_clip.name→survives_clip_rename✅
 - [2025-11-25] TRACK_B_JSON_WRITE→writeJSONMetadataByNodeIdInline→shotName_computed→PP_Clip_Name_updated✅
 - [2025-11-25] ALL_FIELDS_VISIBLE→removed_video-only_filter→location+subject+action+shotType_available_for_images✅
@@ -59,17 +60,18 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Naviga
 - [x] Track_A::JSON_read→working✅
 - [x] Track_B::JSON_write→implemented→shotName_computed→PP_Clip_Name_updated✅
 - [x] STABLE_LOOKUP::extractOriginalFilename()→from_path_not_clip.name→reload_survives_rename✅
-- [ ] PRODUCTION_TESTING::Comprehensive_validation→round-trip_complete→edge_cases_remaining
+- [x] BATCH_APPLY::JSON_rework→reads_JSON→writes_JSON→updates_PP_Clip_Name✅
+- [x] PRODUCTION_TESTING::User_validated→"works_perfectly"✅
 
 ## Blockers
 - None currently
 
 ## Next Milestone
-MERGE TO MAIN: Quality gates passing (131 tests) → User acceptance complete → Create PR from chore/update-dependencies
+ENHANCEMENT PHASE: Consider B1 documentation completion, offline sync (IndexedDB), or Supabase integration planning
 
 ## Recent User Feedback
 > "This is all working very well" (JSON read/write flow)
-> "It doesn't change to a green tick" (Navigation checkmark - FIXED)
+> "works perfectly" (Batch Apply JSON rework)
 
 ---
 Full history: (No PROJECT-HISTORY.md yet - append if created)
@@ -89,4 +91,4 @@ Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ---
 
-**LAST UPDATED:** 2025-11-25 (Track B JSON write complete, stable filename lookup, PP Clip Name update, Navigation checkmarks)
+**LAST UPDATED:** 2025-11-25 (All Track A/B complete, Batch Apply JSON rework merged, production ready)
