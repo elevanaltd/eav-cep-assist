@@ -1614,8 +1614,7 @@ var EAVIngest = (function() {
 
         if (!originalFilename) {
           $.writeln('ERROR: Cannot determine original filename - both paths empty');
-          _logToFile('writeJSONMetadataInline FAIL: both proxyPath and mediaPath are empty');
-          return 'false';
+          return JSON.stringify({ error: 'NO_PATHS', proxyPath: proxyPath || 'empty', mediaPath: mediaPath || 'empty' });
         }
 
         $.writeln('  originalFilename: ' + originalFilename);
@@ -1688,7 +1687,12 @@ var EAVIngest = (function() {
         // Still failed after trying all folders
         if (result === 'false') {
           $.writeln('ERROR: Failed to write PP edits JSON to any folder');
-          return 'false';
+          return JSON.stringify({
+            error: 'NO_WRITABLE_FOLDER',
+            foldersAttempted: foldersToTry,
+            proxyPath: proxyPath || 'empty',
+            mediaPath: mediaPath || 'empty'
+          });
         }
 
         // Update Premiere Pro Clip Name with computed shotName
@@ -1703,7 +1707,7 @@ var EAVIngest = (function() {
 
       } catch (e) {
         $.writeln('ERROR in writeJSONMetadata: ' + e.message);
-        return 'false';
+        return JSON.stringify({ error: 'EXCEPTION', message: e.message, line: e.line });
       }
     }
 

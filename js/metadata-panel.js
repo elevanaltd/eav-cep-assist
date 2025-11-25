@@ -686,9 +686,24 @@
           }
 
         } else {
-          // Failure
+          // Failure - parse detailed error if available
           addDebug('[MetadataForm] ✗ Failed to save metadata', true);
-          self.showError('Failed to save metadata. Check ExtendScript console (Premiere Pro → Help → Console)');
+          try {
+            const errorData = JSON.parse(result);
+            addDebug('[MetadataForm] Error details: ' + JSON.stringify(errorData, null, 2), true);
+            if (errorData.error === 'NO_PATHS') {
+              self.showError('No media paths available. proxyPath: ' + errorData.proxyPath + ', mediaPath: ' + errorData.mediaPath);
+            } else if (errorData.error === 'NO_WRITABLE_FOLDER') {
+              self.showError('Folders not writable: ' + (errorData.foldersAttempted || []).join(', '));
+              addDebug('[MetadataForm] Folders attempted: ' + JSON.stringify(errorData.foldersAttempted), true);
+            } else if (errorData.error === 'EXCEPTION') {
+              self.showError('ExtendScript error: ' + errorData.message + ' (line ' + errorData.line + ')');
+            } else {
+              self.showError('Failed to save: ' + result);
+            }
+          } catch (_parseError) {
+            self.showError('Failed to save metadata: ' + result);
+          }
           console.error('writeJSONMetadata returned:', result);
         }
       });
