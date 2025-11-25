@@ -114,7 +114,8 @@ body {
     flex-shrink: 0;
 }
 
-.sort-dropdown {
+.sort-dropdown,
+.filter-dropdown {
     flex: 1;
     padding: 4px 8px;
     background-color: #1e1e1e;
@@ -125,9 +126,16 @@ body {
     cursor: pointer;
 }
 
-.sort-dropdown:focus {
+.sort-dropdown:focus,
+.filter-dropdown:focus {
     outline: none;
     border-color: #0078d4;
+}
+
+.filter-dropdown {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 90px;
 }
 
 /* Batch Controls */

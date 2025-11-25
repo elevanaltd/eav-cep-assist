@@ -1,4 +1,4 @@
-# Session Continuation Prompt - 2025-11-25 (Final)
+# Session Continuation Prompt - 2025-11-25 (End of Day)
 
 **Copy/paste this to start the next session:**
 
@@ -10,59 +10,58 @@ Load context for CEP Panel project.
 
 I'm continuing the CEP Panel work.
 
-**Session Status (2025-11-25 - PRODUCTION COMPLETE):**
+**Session Status (2025-11-25 - End of Day):**
+
+### Architecture: JSON-Only (XMP Removed)
+- **getAllProjectClips():** Simplified from 270 → 45 lines
+- **XMP Parsing:** Completely removed (~225 lines)
+- **Metadata Source:** JSON sidecars only (`.ingest-metadata.json`)
+- **Legacy Tests:** Removed (QE DOM payload characterization)
 
 ### All Core Features Complete
 - **Track A (JSON Read):** ✅ Production ready
 - **Track B (JSON Write):** ✅ Production ready
 - **Batch Apply JSON:** ✅ Merged (PR #50)
-- **PP Clip Name Update:** ✅ Working
-- **Navigation Checkmarks:** ✅ Working
+- **XMP Removal:** ✅ PR #52 (user-validated)
+- **Tagged/Untagged Filter:** ✅ Dropdown with All/Tagged/Untagged
+- **Navigation Checkmarks:** ✅ Based on structured naming pattern
 - **Stable Filename Lookup:** ✅ Survives clip rename
-- **All Fields Visible:** ✅ Video + Images
 
-### PRs Merged This Session
-- **PR #49:** Track A/B JSON metadata integration + stable filename lookup
-- **PR #50:** Batch Apply JSON rework (XMP → JSON approach)
+### PRs This Session
+- **PR #49:** Track A/B JSON metadata integration (MERGED)
+- **PR #50:** Batch Apply JSON rework (MERGED)
+- **PR #51:** Documentation update (awaiting merge)
+- **PR #52:** XMP removal + Tagged filter (user-validated, awaiting merge)
 
 ### Quality Gates
-- **Tests:** 138 passing (+7 batch apply tests)
+- **Tests:** 138 passing, 0 skipped
 - **Lint:** 0 errors
 - **Typecheck:** 0 errors
-- **ES3 Validation:** ✅
+- **Code Removed:** ~525 lines (XMP parsing + legacy tests)
 
 ### User Feedback
-> "This is all working very well" (JSON read/write)
+> "This is working" (XMP removal + Tagged filter)
 > "works perfectly" (Batch Apply)
 
 ---
 
 ## Next Steps (Prioritized)
 
-### Option 1: B1 Documentation Completion (LOW priority)
-From SHARED-CHECKLIST.md - uncompleted B1 tasks:
-- [ ] ADR-001: Prototype→Production strategy
-- [ ] ADR-002: Test infrastructure decision
-- [ ] PROJECT-ROADMAP.md update
-- [ ] B1 completion report
+### Option 1: Merge PR #52 (IMMEDIATE)
+XMP removal + Tagged filter - user validated, ready to merge
 
 ### Option 2: Offline Sync - IndexedDB (MEDIUM priority)
 From North Star F2:
 - Cache metadata in IndexedDB on first load
 - Enable offline editing
 - Sync queue for reconnection
-- "⏳ Pending sync" indicator
 
-### Option 3: Supabase Integration Planning (FUTURE)
-From PROJECT-ROADMAP v2.0.0:
+### Option 3: Supabase Integration (FUTURE)
 - Database write to `shots` table
 - Two-way sync with Scenes Web
-- Authentication strategy
 
-### Option 4: Production Deployment (IMMEDIATE if needed)
-- Deploy to additional editors
-- User training
-- Issue tracking setup
+### Option 4: B1 Documentation (LOW priority)
+- ADRs, roadmap updates, completion report
 
 ---
 
@@ -75,5 +74,5 @@ npm run quality-gates
 
 ---
 
-**Branch:** `main` (clean, all PRs merged)
-**Phase:** PRODUCTION_COMPLETE
+**Branch:** `refactor/simplify-getAllProjectClips` (PR #52 pending merge)
+**Phase:** PRODUCTION_COMPLETE (JSON-only architecture)
