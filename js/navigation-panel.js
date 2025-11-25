@@ -870,44 +870,60 @@
         self.elements.batchApply.innerHTML =
                     '<span class="batch-icon">⏳</span> Processing ' + (index + 1) + '/' + selectedClipData.length;
 
-        // Build metadata object from clip's existing XMP data
-        const metadata = {
-          name: clip.shot ? (clip.location + '-' + clip.subject + '-' + clip.action + '-' + clip.shot).replace(/^-+|-+$/g, '') : clip.name,
-          identifier: clip.identifier || clip.name,
-          description: clip.description || '',
-          shot: clip.shot || '',
-          good: clip.good || 'false',
-          location: clip.location || '',
-          subject: clip.subject || '',
-          action: clip.action || ''
-        };
-
-        // Call ExtendScript to update Premiere
-        const metadataJson = JSON.stringify(metadata);
+        // NEW: JSON-based approach (Track A/B integration)
+        // Step 1: Read JSON metadata from .ingest-metadata.json sidecar
         const escapedNodeId = escapeForEvalScript(clip.nodeId);
-        const escapedMetadataJson = metadataJson.replace(/'/g, '\\\'');
-        const script = 'EAVIngest.updateClipMetadata("' + escapedNodeId + '", JSON.parse(\'' + escapedMetadataJson + '\'))';
+        const readScript = 'EAVIngest.readJSONMetadataByNodeId("' + escapedNodeId + '")';
 
-        csInterface.evalScript(script, function(result) {
+        csInterface.evalScript(readScript, function(jsonResult) {
+          let jsonMetadata;
           try {
-            const data = JSON.parse(result);
-
-            if (data.success) {
-              processedCount++;
-              addDebug('[ClipBrowser] ✓ Applied: ' + data.updatedName);
-            } else {
-              errorCount++;
-              addDebug('[ClipBrowser] ✗ Failed: ' + data.error, true);
-            }
+            jsonMetadata = JSON.parse(jsonResult);
           } catch (e) {
+            addDebug('[ClipBrowser] ✗ JSON parse error for ' + clip.name + ': ' + e.message, true);
             errorCount++;
-            addDebug('[ClipBrowser] ✗ Error: ' + e.message, true);
+            setTimeout(function() { processNextClip(index + 1); }, 100);
+            return;
           }
 
-          // Process next clip after a small delay to avoid overwhelming Premiere
-          setTimeout(function() {
-            processNextClip(index + 1);
-          }, 100); // 100ms delay between clips
+          // Check if JSON metadata exists and is valid
+          if (!jsonMetadata || jsonMetadata === 'null' || typeof jsonMetadata !== 'object') {
+            addDebug('[ClipBrowser] ✗ No JSON metadata for ' + clip.name, true);
+            errorCount++;
+            setTimeout(function() { processNextClip(index + 1); }, 100);
+            return;
+          }
+
+          addDebug('[ClipBrowser] ✓ JSON loaded: ' + (jsonMetadata.location || '-') + '-' + (jsonMetadata.subject || '-'));
+
+          // Step 2: Write JSON metadata (triggers JSON update + PP Clip Name update)
+          // Pass through existing metadata fields - writeJSONMetadataByNodeId computes shotName
+          const updates = {
+            location: jsonMetadata.location || '',
+            subject: jsonMetadata.subject || '',
+            action: jsonMetadata.action || '',
+            shotType: jsonMetadata.shotType || '',
+            shotNumber: jsonMetadata.shotNumber || 0,
+            keywords: jsonMetadata.keywords || []
+          };
+
+          const updatesJson = JSON.stringify(updates).replace(/'/g, '\\\'');
+          const writeScript = 'EAVIngest.writeJSONMetadataByNodeId("' + escapedNodeId + '", JSON.parse(\'' + updatesJson + '\'))';
+
+          csInterface.evalScript(writeScript, function(writeResult) {
+            if (writeResult === 'true') {
+              processedCount++;
+              addDebug('[ClipBrowser] ✓ Applied to ' + clip.name);
+            } else {
+              errorCount++;
+              addDebug('[ClipBrowser] ✗ Write failed for ' + clip.name + ': ' + writeResult, true);
+            }
+
+            // Process next clip after a small delay to avoid overwhelming Premiere
+            setTimeout(function() {
+              processNextClip(index + 1);
+            }, 100);
+          });
         });
       }
 
