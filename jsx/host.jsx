@@ -1620,7 +1620,7 @@ var EAVIngest = (function() {
     /**
      * Helper: Find project item by nodeId (recursive search)
      */
-    function findProjectItemByNodeIdInline(parentItem, nodeId) {
+    var findProjectItemByNodeIdInline = function(parentItem, nodeId) {
       if (parentItem.nodeId === nodeId) {
         return parentItem;
       }
@@ -1638,7 +1638,7 @@ var EAVIngest = (function() {
     /**
      * Helper: Read and parse JSON file, lookup clip metadata by ID
      */
-    function readJSONFromFileInline(jsonFile, clipName) {
+    var readJSONFromFileInline = function(jsonFile, clipName) {
       try {
         jsonFile.open('r');
         var jsonString = jsonFile.read();
@@ -1662,7 +1662,7 @@ var EAVIngest = (function() {
      * Read metadata from .ingest-metadata.json sidecar file
      * Looks in proxy folder first, falls back to raw media folder
      */
-    function readJSONMetadataInline(clip, FileConstructor) {
+    var readJSONMetadataInline = function(clip, FileConstructor) {
       try {
         var proxyPath = clip.getProxyPath();
         var folder = null;
@@ -1696,7 +1696,7 @@ var EAVIngest = (function() {
     /**
      * Read metadata by nodeId
      */
-    function readJSONMetadataByNodeIdInline(nodeId) {
+    var readJSONMetadataByNodeIdInline = function(nodeId) {
       try {
         var project = app.project;
         if (!project) {
@@ -1714,6 +1714,187 @@ var EAVIngest = (function() {
       }
     }
 
+    /**
+     * Compute shotName from component metadata fields
+     * Format: {location}-{subject}-{action}-{shotType}-#{shotNumber}
+     */
+    var computeShotNameInline = function(metadata) {
+      if (!metadata) {
+        return '';
+      }
+
+      var parts = [];
+
+      if (metadata.location) {
+        parts.push(metadata.location);
+      }
+      if (metadata.subject) {
+        parts.push(metadata.subject);
+      }
+      if (metadata.action) {
+        parts.push(metadata.action);
+      }
+      if (metadata.shotType) {
+        parts.push(metadata.shotType);
+      }
+
+      var baseName = parts.join('-');
+
+      if (metadata.shotNumber) {
+        return baseName + '-#' + metadata.shotNumber;
+      }
+
+      return baseName;
+    }
+
+    /**
+     * Helper: Write metadata updates to JSON file atomically
+     * Uses temp file + rename pattern to prevent corruption
+     */
+    var writeJSONToFileInline = function(jsonFile, clipName, updates) {
+      try {
+        // Read existing JSON
+        jsonFile.open('r');
+        var jsonString = jsonFile.read();
+        jsonFile.close();
+
+        // Parse JSON
+        var jsonData = JSON.parse(jsonString);
+
+        // Extract clip ID (remove extension)
+        var clipID = clipName.replace(/\.[^.]+$/, '');
+
+        // Get existing metadata or create new entry
+        var metadata = jsonData[clipID];
+        if (!metadata) {
+          metadata = {
+            id: clipID,
+            originalFilename: clipName
+          };
+        }
+
+        // Merge updates into metadata
+        for (var key in updates) {
+          if (updates.hasOwnProperty(key) && updates[key] !== undefined) {
+            metadata[key] = updates[key];
+          }
+        }
+
+        // Compute shotName from updated fields
+        metadata.shotName = computeShotNameInline(metadata);
+
+        // Update audit fields
+        metadata.modifiedAt = new Date().toISOString();
+        metadata.modifiedBy = 'cep-panel';
+
+        // Update JSON data
+        jsonData[clipID] = metadata;
+
+        // Write atomically (temp file + rename to prevent corruption)
+        var folder = jsonFile.parent.fsName;
+        var tempFile = new File(folder + '/.ingest-metadata.tmp.json');
+
+        tempFile.open('w');
+        tempFile.write(JSON.stringify(jsonData, null, 2)); // Pretty print
+        tempFile.close();
+
+        // Remove old file first (ExtendScript rename doesn't replace existing files)
+        if (jsonFile.exists) {
+          jsonFile.remove();
+        }
+
+        // Now rename temp file to original name
+        tempFile.rename(jsonFile.name);
+
+        $.writeln('DEBUG JSON WRITE: Successfully wrote metadata for ' + clipID);
+        $.writeln('  shotName: ' + metadata.shotName);
+        $.writeln('  modifiedAt: ' + metadata.modifiedAt);
+
+        return 'true';
+
+      } catch (e) {
+        $.writeln('ERROR writing JSON file: ' + e.message);
+        return 'false';
+      }
+    }
+
+    /**
+     * Write metadata updates to .ingest-metadata.json sidecar file
+     * Priority: proxy folder first, raw media folder fallback
+     */
+    var writeJSONMetadataInline = function(clip, updates) {
+      try {
+        // Get proxy path (preferred - write to proxy folder)
+        var proxyPath = clip.getProxyPath();
+        var folder = null;
+        var jsonFilePath = null;
+
+        // Priority 1: Proxy folder
+        if (proxyPath && proxyPath !== '') {
+          folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
+          jsonFilePath = folder + '/.ingest-metadata.json';
+          var proxyJSONFile = new File(jsonFilePath);
+
+          if (proxyJSONFile.exists) {
+            $.writeln('DEBUG JSON WRITE: Writing to proxy folder: ' + folder);
+            return writeJSONToFileInline(proxyJSONFile, clip.name, updates);
+          }
+        }
+
+        // Priority 2: Raw media folder (fallback)
+        var mediaPath = clip.getMediaPath();
+        if (mediaPath && mediaPath !== '') {
+          folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
+          jsonFilePath = folder + '/.ingest-metadata.json';
+          var rawJSONFile = new File(jsonFilePath);
+
+          if (rawJSONFile.exists) {
+            $.writeln('DEBUG JSON WRITE: Writing to raw folder: ' + folder);
+            return writeJSONToFileInline(rawJSONFile, clip.name, updates);
+          }
+        }
+
+        // No JSON file found
+        $.writeln('ERROR: No .ingest-metadata.json found for writing');
+        return 'false';
+
+      } catch (e) {
+        $.writeln('ERROR in writeJSONMetadata: ' + e.message);
+        return 'false';
+      }
+    }
+
+    /**
+     * Write metadata by nodeId
+     * CEP Panel wrapper for Track A writeJSONMetadata
+     */
+    var writeJSONMetadataByNodeIdInline = function(nodeId, updatesJSON) {
+      try {
+        var project = app.project;
+        if (!project) {
+          $.writeln('ERROR: No active project');
+          return 'false';
+        }
+
+        var clip = findProjectItemByNodeIdInline(project.rootItem, nodeId);
+        if (!clip) {
+          $.writeln('ERROR: Clip not found for nodeId: ' + nodeId);
+          return 'false';
+        }
+
+        // Parse updates if it's a string (from CEP Panel)
+        var updates = updatesJSON;
+        if (typeof updatesJSON === 'string') {
+          updates = JSON.parse(updatesJSON);
+        }
+
+        return writeJSONMetadataInline(clip, updates);
+      } catch (e) {
+        $.writeln('ERROR in writeJSONMetadataByNodeId: ' + e.message);
+        return 'false';
+      }
+    }
+
     // ========================================================================
     // END INLINED IMPLEMENTATION
     // ========================================================================
@@ -1724,15 +1905,15 @@ var EAVIngest = (function() {
     };
 
     var writeJSONMetadataWrapper = function() {
-      return 'false';
+      return 'false'; // Not used in CEP panel, stub only
     };
 
     var readJSONMetadataByNodeIdWrapper = function(nodeId) {
       return readJSONMetadataByNodeIdInline(nodeId);
     };
 
-    var writeJSONMetadataByNodeIdWrapper = function() {
-      return 'false';
+    var writeJSONMetadataByNodeIdWrapper = function(nodeId, updatesJSON) {
+      return writeJSONMetadataByNodeIdInline(nodeId, updatesJSON);
     };
   }
 
