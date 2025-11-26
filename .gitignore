@@ -62,3 +62,6 @@ node_modules/
 
 # Build artifacts
 jsx/generated/
+
+# Large analysis artifacts
+.coord/reports/codebase-analysis.xml
