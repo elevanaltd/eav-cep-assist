@@ -121,7 +121,11 @@ export function readJSONMetadata(clip, FileConstructor, $) {
         if ($) {
           $.writeln('DEBUG JSON: Reading from proxy folder (.ingest-metadata-pp.json): ' + folder);
         }
-        return readJSONFromFile(proxyPPFile, clip.name, $);
+        const ppResult = readJSONFromFile(proxyPPFile, clip.name, $);
+        if (ppResult !== 'null') {
+          return ppResult;  // Clip found in PP file
+        }
+        // Clip not in PP file - fall through to check IA file
       }
 
       // Fall back to IA original
@@ -145,7 +149,11 @@ export function readJSONMetadata(clip, FileConstructor, $) {
         if ($) {
           $.writeln('DEBUG JSON: Reading from raw folder (.ingest-metadata-pp.json): ' + folder);
         }
-        return readJSONFromFile(rawPPFile, clip.name, $);
+        const ppResult = readJSONFromFile(rawPPFile, clip.name, $);
+        if (ppResult !== 'null') {
+          return ppResult;  // Clip found in PP file
+        }
+        // Clip not in PP file - fall through to check IA file
       }
 
       // Fall back to IA original

@@ -1440,7 +1440,11 @@ var EAVIngest = (function() {
           var proxyPPFile = new FileConstructor(folder + '/.ingest-metadata-pp.json');
           if (proxyPPFile.exists) {
             $.writeln('DEBUG JSON: Reading from proxy folder (.ingest-metadata-pp.json)');
-            return readJSONFromFileInline(proxyPPFile, originalFilename);
+            var ppResult = readJSONFromFileInline(proxyPPFile, originalFilename);
+            if (ppResult !== 'null') {
+              return ppResult;  // Clip found in PP file
+            }
+            // Clip not in PP file - fall through to check IA file
           }
 
           // Fall back to IA original
@@ -1459,7 +1463,11 @@ var EAVIngest = (function() {
           var rawPPFile = new FileConstructor(folder + '/.ingest-metadata-pp.json');
           if (rawPPFile.exists) {
             $.writeln('DEBUG JSON: Reading from raw folder (.ingest-metadata-pp.json)');
-            return readJSONFromFileInline(rawPPFile, originalFilename);
+            var ppResult = readJSONFromFileInline(rawPPFile, originalFilename);
+            if (ppResult !== 'null') {
+              return ppResult;  // Clip found in PP file
+            }
+            // Clip not in PP file - fall through to check IA file
           }
 
           // Fall back to IA original
