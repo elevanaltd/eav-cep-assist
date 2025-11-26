@@ -76,13 +76,13 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Naviga
 - `npm test` → 143 tests passing ✅
 - `npm run quality-gates` → All passing ✅
 
-## Open Issues (17 total)
-- **Critical:** #14 (XSS - partially fixed), #16 (ExtendScript tests), #17 (CI/CD), #18 (Lint config), #37 (Lock enforcement), #38 (Track A tests)
-- **High:** #19 (Desktop writes), #20 (Scalability), #21 (SECURITY.md), #22 (Error handling), #32 (Offline workflow)
-- **Medium:** #13 (Auto-apply), #30 (XMPScript API), #31 (LogComment format), #35 (Batch flush)
+## Open Issues (7 total)
+- **High:** #20 (Scalability testing)
+- **Medium:** #22 (Error handling), #32 (Verify offline JSON), #16 (Document ExtendScript testing)
+- **Low:** #23 (Runbooks), #35 (Batch flush), #13 (Auto-apply feature)
 
 ## Next Milestone
-HARDENING PHASE: Address security issues (#14, #37), add comprehensive tests (#16, #38), implement CI/CD (#17)
+HARDENING PHASE: Scalability testing (#20), error handling audit (#22)
 
 ## Recent User Feedback
 > "This is all working very well" (JSON read/write flow)
