@@ -505,4 +505,134 @@ describe('readJSONMetadata()', () => {
       expect(parsed.lockedFields).toEqual([]);
     });
   });
+
+  describe('PP Edits File Priority', () => {
+    it('should prioritize -pp.json over -ia.json when both exist', () => {
+      // Proxy folder has BOTH files with DIFFERENT data
+      const proxyIAPath = path.join(PROXY_DIR, '.ingest-metadata.json');
+      const proxyPPPath = path.join(PROXY_DIR, '.ingest-metadata-pp.json');
+
+      const iaJSON = {
+        "_schema": "2.0",
+        "_completed": false,
+        "EAV0TEST1": {
+          "id": "EAV0TEST1",
+          "shotName": "kitchen-oven-cleaning-ESTAB-#1",
+          "location": "kitchen",
+          "subject": "oven",
+          "action": "cleaning",
+          "shotType": "ESTAB"
+        }
+      };
+
+      const ppJSON = {
+        "_schema": "2.0",
+        "_completed": false,
+        "EAV0TEST1": {
+          "id": "EAV0TEST1",
+          "shotName": "living-room-sofa-sitting-CU-#5",
+          "location": "living-room",
+          "subject": "sofa",
+          "action": "sitting",
+          "shotType": "CU"
+        }
+      };
+
+      fs.writeFileSync(proxyIAPath, JSON.stringify(iaJSON));
+      fs.writeFileSync(proxyPPPath, JSON.stringify(ppJSON));
+
+      const clip = new MockProjectItem({
+        name: 'EAV0TEST1.MOV',
+        proxyPath: path.join(PROXY_DIR, 'EAV0TEST1_Proxy.mov'),
+        mediaPath: path.join(RAW_DIR, 'EAV0TEST1.MOV')
+      });
+
+      const result = readJSONMetadata(clip, MockFile, $);
+
+      const parsed = JSON.parse(result);
+
+      // MUST read from PP file (user edits), NOT IA file (AI original)
+      expect(parsed.shotName).toBe('living-room-sofa-sitting-CU-#5');
+      expect(parsed.location).toBe('living-room');
+      expect(parsed.subject).toBe('sofa');
+      expect(parsed.action).toBe('sitting');
+      expect(parsed.shotType).toBe('CU');
+
+      // Verify log shows PP file was prioritized
+      const logs = $.getLogsByPrefix('DEBUG JSON: Reading from proxy folder');
+      expect(logs.length).toBeGreaterThan(0);
+    });
+
+    it('should fallback to -ia.json when -pp.json does not exist', () => {
+      const proxyIAPath = path.join(PROXY_DIR, '.ingest-metadata.json');
+
+      const iaJSON = {
+        "_schema": "2.0",
+        "_completed": false,
+        "EAV0TEST1": {
+          "id": "EAV0TEST1",
+          "shotName": "kitchen-oven-cleaning-ESTAB-#1",
+          "location": "kitchen"
+        }
+      };
+
+      fs.writeFileSync(proxyIAPath, JSON.stringify(iaJSON));
+      // NO -pp.json file created
+
+      const clip = new MockProjectItem({
+        name: 'EAV0TEST1.MOV',
+        proxyPath: path.join(PROXY_DIR, 'EAV0TEST1_Proxy.mov'),
+        mediaPath: path.join(RAW_DIR, 'EAV0TEST1.MOV')
+      });
+
+      const result = readJSONMetadata(clip, MockFile, $);
+
+      const parsed = JSON.parse(result);
+      expect(parsed.shotName).toBe('kitchen-oven-cleaning-ESTAB-#1');
+      expect(parsed.location).toBe('kitchen');
+    });
+
+    it('should prioritize raw folder -pp.json over -ia.json', () => {
+      // No proxy, but raw folder has BOTH files
+      const rawIAPath = path.join(RAW_DIR, '.ingest-metadata.json');
+      const rawPPPath = path.join(RAW_DIR, '.ingest-metadata-pp.json');
+
+      const iaJSON = {
+        "_schema": "2.0",
+        "_completed": false,
+        "EAV0TEST1": {
+          "id": "EAV0TEST1",
+          "shotName": "FROM-IA-RAW",
+          "location": "ia-raw"
+        }
+      };
+
+      const ppJSON = {
+        "_schema": "2.0",
+        "_completed": false,
+        "EAV0TEST1": {
+          "id": "EAV0TEST1",
+          "shotName": "FROM-PP-RAW",
+          "location": "pp-raw"
+        }
+      };
+
+      fs.writeFileSync(rawIAPath, JSON.stringify(iaJSON));
+      fs.writeFileSync(rawPPPath, JSON.stringify(ppJSON));
+
+      const clip = new MockProjectItem({
+        name: 'EAV0TEST1.MOV',
+        proxyPath: '', // No proxy
+        mediaPath: path.join(RAW_DIR, 'EAV0TEST1.MOV')
+      });
+
+      const result = readJSONMetadata(clip, MockFile, $);
+
+      const parsed = JSON.parse(result);
+
+      // MUST read from PP file in raw folder
+      expect(parsed.shotName).toBe('FROM-PP-RAW');
+      expect(parsed.location).toBe('pp-raw');
+    });
+  });
 });
