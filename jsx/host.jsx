@@ -765,26 +765,31 @@ var EAVIngest = (function() {
 
 
           // Read existing PP edits (if any)
+          // NOTE: Don't trust File.exists on LucidLink/network volumes - it can return false
+          // for files that exist. Instead, try to read and handle failure gracefully.
 
           var existingPpData = { _schema: '2.0' };
 
-          if (ppJsonFile.exists) {
+          try {
 
-            ppJsonFile.open('r');
+            if (ppJsonFile.open('r')) {
 
-            var existingContent = ppJsonFile.read();
+              var existingContent = ppJsonFile.read();
 
-            ppJsonFile.close();
+              ppJsonFile.close();
 
-            try {
+              if (existingContent && existingContent.length > 0) {
 
-              existingPpData = JSON.parse(existingContent);
+                existingPpData = JSON.parse(existingContent);
 
-            } catch (e) {
-
-              existingPpData = { _schema: '2.0' };
+              }
 
             }
+
+          } catch (readError) {
+
+            // File doesn't exist or can't be read - use default
+            existingPpData = { _schema: '2.0' };
 
           }
 
@@ -1636,46 +1641,61 @@ var EAVIngest = (function() {
           folder = foldersToTry[i];
           $.writeln('  Trying folder [' + i + ']: ' + folder);
 
-          // Check if folder exists
-          var folderObj = new Folder(folder);
-          $.writeln('    Folder exists: ' + folderObj.exists);
-          if (!folderObj.exists) {
-            $.writeln('    SKIPPING - folder does not exist on this machine');
-            _logToFile('Folder not accessible: ' + folder);
-            continue;
-          }
+          // NOTE: Removed folder.exists check - LucidLink/network volumes may not report correctly
+          // Just try to write - the file operations will fail if folder truly doesn't exist
 
           var ppJsonFile = new File(folder + '/.ingest-metadata-pp.json');
           var iaJsonFile = new File(folder + '/.ingest-metadata.json');
           $.writeln('    ppJsonFile exists: ' + ppJsonFile.exists);
           $.writeln('    iaJsonFile exists: ' + iaJsonFile.exists);
 
-          // Case 1: -pp.json exists - update it
-          if (ppJsonFile.exists) {
-            $.writeln('DEBUG JSON WRITE: Updating existing PP edits file: ' + folder + '/.ingest-metadata-pp.json');
-            result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
-            continue;
+          // NOTE: Don't trust File.exists on LucidLink/network volumes - it can return false
+          // for files that actually exist. Instead, try to open and read directly.
+
+          // Case 1: Try to read -pp.json (don't trust exists check)
+          var ppReadSuccess = false;
+          try {
+            if (ppJsonFile.open('r')) {
+              var ppContent = ppJsonFile.read();
+              ppJsonFile.close();
+              if (ppContent && ppContent.length > 0) {
+                ppReadSuccess = true;
+                $.writeln('DEBUG JSON WRITE: Updating existing PP edits file: ' + folder + '/.ingest-metadata-pp.json');
+                result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
+                continue;
+              }
+            }
+          } catch (ppReadErr) {
+            // File truly doesn't exist or can't be read
+            ppReadSuccess = false;
           }
 
-          // Case 2: Only IA json exists - CREATE -pp.json with IA data as base
-          if (iaJsonFile.exists) {
-            $.writeln('DEBUG JSON WRITE: Creating PP edits file from IA base: ' + folder + '/.ingest-metadata-pp.json');
-            // Read IA data to seed the PP file (preserves IA structure for comparison)
-            iaJsonFile.open('r');
-            var iaContent = iaJsonFile.read();
-            iaJsonFile.close();
+          // Case 2: Try to read IA json (don't trust exists check)
+          var iaReadSuccess = false;
+          try {
+            if (iaJsonFile.open('r')) {
+              var iaContent = iaJsonFile.read();
+              iaJsonFile.close();
+              if (iaContent && iaContent.length > 0) {
+                iaReadSuccess = true;
+                $.writeln('DEBUG JSON WRITE: Creating PP edits file from IA base: ' + folder + '/.ingest-metadata-pp.json');
 
-            // Create new -pp.json with IA content as starting point
-            ppJsonFile.open('w');
-            ppJsonFile.write(iaContent);
-            ppJsonFile.close();
+                // Create new -pp.json with IA content as starting point
+                ppJsonFile.open('w');
+                ppJsonFile.write(iaContent);
+                ppJsonFile.close();
 
-            // Now update the newly created -pp.json
-            result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
-            continue;
+                // Now update the newly created -pp.json
+                result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
+                continue;
+              }
+            }
+          } catch (iaReadErr) {
+            // File truly doesn't exist or can't be read
+            iaReadSuccess = false;
           }
 
-          // Case 3: No JSON files exist - CREATE new -pp.json from scratch
+          // Case 3: No JSON files readable - CREATE new -pp.json from scratch
           $.writeln('DEBUG JSON WRITE: Creating new PP edits file from scratch: ' + folder + '/.ingest-metadata-pp.json');
           var newPpData = { _schema: '2.0' };
           ppJsonFile.open('w');
