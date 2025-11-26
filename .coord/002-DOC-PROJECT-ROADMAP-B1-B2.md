@@ -84,30 +84,24 @@
 **Target Date:** TBD
 **Phase:** Hardening (Security, Tests, CI/CD)
 
-**Open Issues to Address (17 total):**
+**Open Issues to Address (9 total - audited 2025-11-26):**
 
-#### Critical/Blockers (6):
-- [ ] Issue #14: Complete security audit for applyMetadata paths
-- [ ] Issue #16: Add ExtendScript layer functional tests
-- [ ] Issue #17: Implement CI/CD deployment pipeline
-- [ ] Issue #18: Fix lint configuration for vendor library
-- [ ] Issue #37: Implement field-level lock enforcement
-- [ ] Issue #38: Add comprehensive Track A unit tests
-
-#### High Priority (5):
-- [ ] Issue #19: Remove unauthorized file writes to user desktop
-- [ ] Issue #20: Implement scalability testing for large projects
+#### High Priority (3):
+- [ ] Issue #14: Verify security fix complete (partial fix in PR #54)
 - [ ] Issue #21: Add SECURITY.md and vulnerability disclosure policy
-- [ ] Issue #22: Audit and improve error handling in ExtendScript
-- [ ] Issue #32: Offline metadata workflow (architectural decision needed)
+- [ ] Issue #20: Implement scalability testing for large projects
 
-#### Medium Priority (6):
-- [ ] Issue #13: Auto-Apply XMP Metadata on Import
+#### Medium Priority (3):
+- [ ] Issue #22: Audit and improve error handling in ExtendScript
+- [ ] Issue #32: Verify JSON sidecar works offline (reclassified from CRITICAL)
+- [ ] Issue #16: Document ExtendScript testing limitations (reclassified)
+
+#### Low Priority (3):
 - [ ] Issue #23: Create operational runbooks
-- [ ] Issue #24: Update test infrastructure ADR
-- [ ] Issue #30: XMPScript API migration
-- [ ] Issue #31: LogComment hyphen-delimited format
 - [ ] Issue #35: Batch flush delays for network storage
+- [ ] Issue #13: Auto-Apply on Import (feature request)
+
+**Closed (2025-11-26):** #17, #18, #19, #24, #30, #31, #37, #38 (implemented or architecture superseded)
 
 ---
 
