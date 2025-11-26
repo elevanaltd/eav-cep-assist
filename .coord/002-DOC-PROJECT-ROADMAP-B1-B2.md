@@ -79,27 +79,28 @@
 
 ---
 
-### v1.1.0-hardened (CURRENT TARGET)
-**Status:** 🟡 IN PROGRESS
-**Target Date:** TBD
-**Phase:** Hardening (Security, Tests, CI/CD)
+### v1.1.0-hardened (COMPLETE)
+**Status:** ✅ COMPLETE
+**Date:** 2025-11-26
+**Phase:** Hardening (Complete - LucidLink fix merged)
 
-**Open Issues to Address (7 total - audited 2025-11-26):**
+**Completed Hardening:**
+- [x] LucidLink/network volume compatibility (PR #61)
+- [x] File.exists false-negative handling (prevents data loss)
+- [x] All high/medium priority issues resolved or closed
 
-#### High Priority (1):
-- [ ] Issue #20: Implement scalability testing for large projects
-
-#### Medium Priority (3):
-- [ ] Issue #22: Audit and improve error handling in ExtendScript
-- [ ] Issue #32: Verify JSON sidecar works offline (reclassified from CRITICAL)
-- [ ] Issue #16: Document ExtendScript testing limitations (reclassified)
-
-#### Low Priority (3):
+**Remaining Issues (3 total - all Low priority enhancements):**
 - [ ] Issue #23: Create operational runbooks
 - [ ] Issue #35: Batch flush delays for network storage
 - [ ] Issue #13: Auto-Apply on Import (feature request)
 
-**Closed (2025-11-26):** #14, #21 (internal tool - threat model N/A), #17, #18, #19, #24, #30, #31, #37, #38 (implemented or architecture superseded)
+**Closed (2025-11-26):**
+- #14, #21 (internal tool - threat model N/A)
+- #20 (scalability - solved by PR #52 + usage patterns)
+- #16 (ExtendScript testing - platform limitation)
+- #22 (error handling - nice-to-have for internal tool)
+- #32 (offline JSON - same-platform storage)
+- #17, #18, #19, #24, #30, #31, #37, #38 (implemented or superseded)
 
 ---
 
@@ -358,8 +359,8 @@ git commit -m "feat: Add retry logic to XMP write"
 
 ---
 
-**LAST UPDATED:** 2025-11-25
-**CURRENT PHASE:** Hardening (v1.1.0 target)
-**COMPLETED:** v0.1.0 (prototype), v0.2.0 (B1), v1.0.0 (B2 core features)
-**NEXT MILESTONE:** v1.1.0-hardened (security, tests, CI/CD)
-**OPEN ISSUES:** 17 (6 critical, 5 high, 6 medium)
+**LAST UPDATED:** 2025-11-26
+**CURRENT PHASE:** Production Stable (v1.1.0 complete)
+**COMPLETED:** v0.1.0 (prototype), v0.2.0 (B1), v1.0.0 (B2 core), v1.1.0 (hardening)
+**NEXT MILESTONE:** v2.0.0 (feature expansion - optional)
+**OPEN ISSUES:** 3 (all Low priority enhancements)

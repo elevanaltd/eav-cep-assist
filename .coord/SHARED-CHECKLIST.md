@@ -207,22 +207,20 @@ All core features implemented and merged to main:
 - [x] Issue #4: XMP namespace corruption ✅ FIXED
 - [x] LogComment parsing (element vs attribute format) ✅ FIXED (2025-11-14)
 
-### Open Issues (7 total as of 2025-11-26)
-
-**High Priority:**
-- [ ] Issue #20: Implement scalability testing for large projects
-
-**Medium Priority:**
-- [ ] Issue #22: Audit and improve error handling in ExtendScript
-- [ ] Issue #32: Verify JSON sidecar works for offline/proxy clips (reclassified)
-- [ ] Issue #16: Document ExtendScript testing limitations (reclassified)
+### Open Issues (3 total as of 2025-11-26 - all Low priority enhancements)
 
 **Low Priority:**
 - [ ] Issue #23: Create operational runbooks for common failure scenarios
 - [ ] Issue #35: Enhancement: Add batch flush delays to prevent metadata corruption
 - [ ] Issue #13: Feature: Auto-Apply XMP Metadata on Import
 
-**Closed (2025-11-26):** #14, #21 (internal tool - threat model doesn't apply), #17, #18, #19, #24, #30, #31, #37, #38 (obsolete - implemented or architecture superseded)
+**Closed (2025-11-26):**
+- #14, #21 (internal tool - threat model doesn't apply)
+- #20 (scalability - solved by PR #52 XMP removal + usage patterns)
+- #16 (ExtendScript testing - platform limitation, not actionable)
+- #22 (error handling - nice-to-have for internal tool)
+- #32 (offline JSON - same-platform storage, not relevant)
+- #17, #18, #19, #24, #30, #31, #37, #38 (obsolete - implemented or architecture superseded)
 
 **Track issues in:** [GitHub Issues](https://github.com/elevanaltd/eav-cep-assist/issues)
 
@@ -237,10 +235,10 @@ All core features implemented and merged to main:
 - Batch apply integration tests
 - ES3 enforcement validation tests
 
-**Testing Challenges (Remaining):**
+**Testing Challenges (Accepted Limitations):**
 - Adobe CEP extensions require Premiere Pro running (hard to fully automate)
 - ExtendScript execution context cannot be unit tested without mocks
-- Field-level lock enforcement needs tests (Issue #37)
+- These are platform limitations, not actionable issues
 
 **Architecture Evolution:**
 - Moved from XMP-based to JSON-sidecar architecture
@@ -250,6 +248,6 @@ All core features implemented and merged to main:
 
 ---
 
-**LAST UPDATED:** 2025-11-25
-**PHASE:** PRODUCTION COMPLETE (B1 complete, B2 features implemented)
-**NEXT:** Hardening phase - security, tests, CI/CD
+**LAST UPDATED:** 2025-11-26
+**PHASE:** PRODUCTION STABLE (Hardening complete, LucidLink fix merged)
+**NEXT:** Feature requests only (all 3 remaining issues are optional enhancements)
