@@ -61,6 +61,21 @@ var EAVIngest = (function() {
 
      */
 
+  /**
+   * ES3-compatible ISO date string (toISOString is ES5, not available in all ExtendScript environments)
+   */
+  function _toISOString(date) {
+    var d = date || new Date();
+    var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+    return d.getUTCFullYear() + '-' +
+      pad(d.getUTCMonth() + 1) + '-' +
+      pad(d.getUTCDate()) + 'T' +
+      pad(d.getUTCHours()) + ':' +
+      pad(d.getUTCMinutes()) + ':' +
+      pad(d.getUTCSeconds()) + '.' +
+      ('00' + d.getUTCMilliseconds()).slice(-3) + 'Z';
+  }
+
   function _logToFile(message) {
 
     try {
@@ -76,7 +91,7 @@ var EAVIngest = (function() {
 
       logFile.open('a'); // append mode
 
-      logFile.writeln(new Date().toISOString() + ' - ' + message);
+      logFile.writeln(_toISOString() + ' - ' + message);
 
       logFile.close();
 
@@ -742,11 +757,11 @@ var EAVIngest = (function() {
 
             // Audit Trail
 
-            createdAt: iaEntry.createdAt || new Date().toISOString(),
+            createdAt: iaEntry.createdAt || _toISOString(),
 
             createdBy: iaEntry.createdBy || 'unknown',
 
-            modifiedAt: new Date().toISOString(),
+            modifiedAt: _toISOString(),
 
             modifiedBy: 'cep-panel',
 
@@ -1545,20 +1560,21 @@ var EAVIngest = (function() {
      * CRITICAL: Uses originalFilename (from path), NOT clip.name (which may be renamed)
      */
     var writeJSONToFileInline = function(jsonFile, originalFilename, updates) {
+      var step = 0;
       try {
-        // Read existing JSON
+        step = 1; // Read existing JSON
         jsonFile.open('r');
         var jsonString = jsonFile.read();
         jsonFile.close();
 
-        // Parse JSON
+        step = 2; // Parse JSON
         var jsonData = JSON.parse(jsonString);
 
-        // Extract clip ID (remove extension)
+        step = 3; // Extract clip ID (remove extension)
         var clipID = originalFilename.replace(/\.[^.]+$/, '');
         $.writeln('DEBUG JSON WRITE: Writing to clipID "' + clipID + '" from original filename "' + originalFilename + '"');
 
-        // Get existing metadata or create new entry
+        step = 4; // Get existing metadata or create new entry
         var metadata = jsonData[clipID];
         if (!metadata) {
           metadata = {
@@ -1567,38 +1583,53 @@ var EAVIngest = (function() {
           };
         }
 
-        // Merge updates into metadata
+        step = 5; // Merge updates into metadata
         for (var key in updates) {
           if (updates.hasOwnProperty(key) && updates[key] !== undefined) {
             metadata[key] = updates[key];
           }
         }
 
-        // Compute shotName from updated fields
+        step = 6; // Compute shotName from updated fields
         metadata.shotName = computeShotNameInline(metadata);
 
-        // Update audit fields
-        metadata.modifiedAt = new Date().toISOString();
+        step = 7; // Update audit fields
+        metadata.modifiedAt = _toISOString();
         metadata.modifiedBy = 'cep-panel';
 
-        // Update JSON data
+        step = 8; // Update JSON data
         jsonData[clipID] = metadata;
 
-        // Write atomically (temp file + rename to prevent corruption)
+        step = 9; // Write atomically (temp file + rename to prevent corruption)
         var folder = jsonFile.parent.fsName;
         var tempFile = new File(folder + '/.ingest-metadata.tmp.json');
 
-        tempFile.open('w');
+        step = 10; // Open temp for write
+        var tempOpenResult = tempFile.open('w');
+        if (!tempOpenResult) {
+          _lastWriteError = 'Step10: tempFile.open(w) returned false, folder=' + folder;
+          return 'false';
+        }
+
+        step = 11; // Write to temp
         tempFile.write(JSON.stringify(jsonData, null, 2)); // Pretty print
         tempFile.close();
 
-        // Remove old file first (ExtendScript rename doesn't replace existing files)
+        step = 12; // Remove old file first (ExtendScript rename doesn't replace existing files)
         if (jsonFile.exists) {
-          jsonFile.remove();
+          var removeResult = jsonFile.remove();
+          if (!removeResult) {
+            _lastWriteError = 'Step12: jsonFile.remove() returned false';
+            return 'false';
+          }
         }
 
-        // Now rename temp file to original name
-        tempFile.rename(jsonFile.name);
+        step = 13; // Now rename temp file to original name
+        var renameResult = tempFile.rename(jsonFile.name);
+        if (!renameResult) {
+          _lastWriteError = 'Step13: tempFile.rename() returned false';
+          return 'false';
+        }
 
         $.writeln('DEBUG JSON WRITE: Successfully wrote metadata for ' + clipID);
         $.writeln('  shotName: ' + metadata.shotName);
@@ -1609,9 +1640,14 @@ var EAVIngest = (function() {
 
       } catch (e) {
         $.writeln('ERROR writing JSON file: ' + e.message);
+        // Store error for diagnostic return
+        _lastWriteError = 'Step' + step + ' catch: ' + e.message + ' at line ' + e.line;
         return 'false';
       }
     }
+
+    // Store last write error for diagnostics
+    var _lastWriteError = null;
 
     /**
      * Write metadata updates to JSON sidecar file
@@ -1681,10 +1717,14 @@ var EAVIngest = (function() {
 
           // Case 1: Try to read -pp.json (don't trust exists check)
           var ppReadSuccess = false;
+          var ppOpenResult = false;
+          var ppContentLen = 0;
           try {
-            if (ppJsonFile.open('r')) {
+            ppOpenResult = ppJsonFile.open('r');
+            if (ppOpenResult) {
               var ppContent = ppJsonFile.read();
               ppJsonFile.close();
+              ppContentLen = ppContent ? ppContent.length : 0;
               if (ppContent && ppContent.length > 0) {
                 ppReadSuccess = true;
                 $.writeln('DEBUG JSON WRITE: Updating existing PP edits file: ' + folder + '/.ingest-metadata-pp.json');
@@ -1695,6 +1735,7 @@ var EAVIngest = (function() {
           } catch (ppReadErr) {
             // File truly doesn't exist or can't be read
             ppReadSuccess = false;
+            _lastWriteError = 'Case1 catch: ' + ppReadErr.message;
           }
 
           // Case 2: Try to read IA json (don't trust exists check)
@@ -1738,7 +1779,16 @@ var EAVIngest = (function() {
             error: 'NO_WRITABLE_FOLDER',
             foldersAttempted: foldersToTry,
             proxyPath: proxyPath || 'empty',
-            mediaPath: mediaPath || 'empty'
+            mediaPath: mediaPath || 'empty',
+            debug: {
+              originalFilename: originalFilename || 'null',
+              lastFolder: folder || 'null',
+              ppFileExists: ppJsonFile ? ppJsonFile.exists : 'no ppJsonFile',
+              iaFileExists: iaJsonFile ? iaJsonFile.exists : 'no iaJsonFile',
+              ppOpenResult: ppOpenResult,
+              ppContentLen: ppContentLen,
+              lastWriteError: _lastWriteError || 'none'
+            }
           });
         }
 
