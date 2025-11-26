@@ -96,7 +96,8 @@ export function readJSONFromFile(jsonFile, clipName, $) {
 }
 
 /**
- * Read metadata from .ingest-metadata.json sidecar file
+ * Read metadata from JSON sidecar files
+ * Prioritizes PP edits file (.ingest-metadata-pp.json) over IA original (.ingest-metadata.json)
  * Looks in proxy folder first, falls back to raw media folder
  * Computes shotName client-side if missing from JSON
  * @param {ProjectItem} clip - Premiere Pro clip object
@@ -110,28 +111,48 @@ export function readJSONMetadata(clip, FileConstructor, $) {
     const proxyPath = clip.getProxyPath();
     let folder = null;
 
-    // Priority 1: Proxy folder
+    // Priority 1: Proxy folder (PP edits first, then IA original)
     if (proxyPath && proxyPath !== '') {
       folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
-      const proxyJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
 
+      // Try PP edits file first (user corrections take precedence)
+      const proxyPPFile = new FileConstructor(folder + '/.ingest-metadata-pp.json');
+      if (proxyPPFile.exists) {
+        if ($) {
+          $.writeln('DEBUG JSON: Reading from proxy folder (.ingest-metadata-pp.json): ' + folder);
+        }
+        return readJSONFromFile(proxyPPFile, clip.name, $);
+      }
+
+      // Fall back to IA original
+      const proxyJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
       if (proxyJSONFile.exists) {
         if ($) {
-          $.writeln('DEBUG JSON: Reading from proxy folder: ' + folder);
+          $.writeln('DEBUG JSON: Reading from proxy folder (.ingest-metadata.json): ' + folder);
         }
         return readJSONFromFile(proxyJSONFile, clip.name, $);
       }
     }
 
-    // Priority 2: Raw media folder (fallback)
+    // Priority 2: Raw media folder (PP edits first, then IA original)
     const mediaPath = clip.getMediaPath();
     if (mediaPath && mediaPath !== '') {
       folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
-      const rawJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
 
+      // Try PP edits file first (user corrections take precedence)
+      const rawPPFile = new FileConstructor(folder + '/.ingest-metadata-pp.json');
+      if (rawPPFile.exists) {
+        if ($) {
+          $.writeln('DEBUG JSON: Reading from raw folder (.ingest-metadata-pp.json): ' + folder);
+        }
+        return readJSONFromFile(rawPPFile, clip.name, $);
+      }
+
+      // Fall back to IA original
+      const rawJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
       if (rawJSONFile.exists) {
         if ($) {
-          $.writeln('DEBUG JSON: Reading from raw folder: ' + folder);
+          $.writeln('DEBUG JSON: Reading from raw folder (.ingest-metadata.json): ' + folder);
         }
         return readJSONFromFile(rawJSONFile, clip.name, $);
       }

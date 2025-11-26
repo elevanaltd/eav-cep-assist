@@ -1432,21 +1432,40 @@ var EAVIngest = (function() {
 
         $.writeln('DEBUG JSON READ: Original filename from path: "' + originalFilename + '" (clip.name: "' + clip.name + '")');
 
-        // Priority 1: Proxy folder
+        // Priority 1: Proxy folder (PP edits first, then IA original)
         if (proxyPath && proxyPath !== '') {
           folder = proxyPath.substring(0, proxyPath.lastIndexOf('/'));
+
+          // Try PP edits file first (user corrections take precedence)
+          var proxyPPFile = new FileConstructor(folder + '/.ingest-metadata-pp.json');
+          if (proxyPPFile.exists) {
+            $.writeln('DEBUG JSON: Reading from proxy folder (.ingest-metadata-pp.json)');
+            return readJSONFromFileInline(proxyPPFile, originalFilename);
+          }
+
+          // Fall back to IA original
           var proxyJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
           if (proxyJSONFile.exists) {
+            $.writeln('DEBUG JSON: Reading from proxy folder (.ingest-metadata.json)');
             return readJSONFromFileInline(proxyJSONFile, originalFilename);
           }
         }
 
-        // Priority 2: Raw media folder (fallback)
+        // Priority 2: Raw media folder (PP edits first, then IA original)
         if (mediaPath && mediaPath !== '') {
           folder = mediaPath.substring(0, mediaPath.lastIndexOf('/'));
-          var jsonPath = folder + '/.ingest-metadata.json';
-          var rawJSONFile = new FileConstructor(jsonPath);
+
+          // Try PP edits file first (user corrections take precedence)
+          var rawPPFile = new FileConstructor(folder + '/.ingest-metadata-pp.json');
+          if (rawPPFile.exists) {
+            $.writeln('DEBUG JSON: Reading from raw folder (.ingest-metadata-pp.json)');
+            return readJSONFromFileInline(rawPPFile, originalFilename);
+          }
+
+          // Fall back to IA original
+          var rawJSONFile = new FileConstructor(folder + '/.ingest-metadata.json');
           if (rawJSONFile.exists) {
+            $.writeln('DEBUG JSON: Reading from raw folder (.ingest-metadata.json)');
             return readJSONFromFileInline(rawJSONFile, originalFilename);
           }
         }
