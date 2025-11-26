@@ -507,6 +507,57 @@ describe('readJSONMetadata()', () => {
   });
 
   describe('PP Edits File Priority', () => {
+    it('should fall through to IA file when PP file exists but missing clip ID', () => {
+      // EDGE CASE: PP file exists with only clip A, IA file has clip B
+      const proxyIAPath = path.join(PROXY_DIR, '.ingest-metadata.json');
+      const proxyPPPath = path.join(PROXY_DIR, '.ingest-metadata-pp.json');
+
+      const iaJSON = {
+        "_schema": "2.0",
+        "_completed": false,
+        "EAV0TEST1": {
+          "id": "EAV0TEST1",
+          "shotName": "kitchen-oven-cleaning-ESTAB-#1",
+          "location": "kitchen"
+        },
+        "EAV0TEST2": {
+          "id": "EAV0TEST2",
+          "shotName": "hallway-door-opening-CU-#2",
+          "location": "hallway"
+        }
+      };
+
+      const ppJSON = {
+        "_schema": "2.0",
+        "_completed": false,
+        "EAV0TEST1": {
+          "id": "EAV0TEST1",
+          "shotName": "CORRECTED-BY-QC",
+          "location": "living-room"
+        }
+        // EAV0TEST2 NOT in PP file (not yet QC'd)
+      };
+
+      fs.writeFileSync(proxyIAPath, JSON.stringify(iaJSON));
+      fs.writeFileSync(proxyPPPath, JSON.stringify(ppJSON));
+
+      const clip = new MockProjectItem({
+        name: 'EAV0TEST2.MOV',
+        proxyPath: path.join(PROXY_DIR, 'EAV0TEST2_Proxy.mov'),
+        mediaPath: path.join(RAW_DIR, 'EAV0TEST2.MOV')
+      });
+
+      const result = readJSONMetadata(clip, MockFile, $);
+
+      // BUG: Currently returns 'null' because PP file exists but doesn't contain EAV0TEST2
+      // EXPECTED: Should fall through to IA file and return hallway data
+      expect(result).not.toBe('null');
+
+      const parsed = JSON.parse(result);
+      expect(parsed.shotName).toBe('hallway-door-opening-CU-#2');
+      expect(parsed.location).toBe('hallway');
+    });
+
     it('should prioritize -pp.json over -ia.json when both exist', () => {
       // Proxy folder has BOTH files with DIFFERENT data
       const proxyIAPath = path.join(PROXY_DIR, '.ingest-metadata.json');
