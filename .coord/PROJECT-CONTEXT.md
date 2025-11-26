@@ -57,6 +57,8 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Naviga
 - [2025-11-25] ML_FEEDBACK_LOOP→.ingest-metadata-pp.json_prioritized→preserves_IA_original→enables_AI_training_diff✅
 - [2025-11-25] SECURITY_FIX→escapeHTML()_added→XSS_prevention_in_panel-main.js✅
 - [2025-11-25] CONSUMER_ALIGNMENT→panel-main.js_uses_hasStructuredName()→matches_navigation-panel.js_pattern✅
+- [2025-11-26] PP_EDITS_PRIORITY→readJSONMetadata_checks_-pp.json_first→user_edits_visible_after_save✅
+- [2025-11-26] PER_CLIP_FALLBACK→if_PP_file_missing_clip→falls_through_to_IA_original✅
 
 ## Completed Work (PR #50-#61)
 - [x] Track_A::JSON_read→working✅
@@ -69,12 +71,14 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Naviga
 - [x] SECURITY::XSS_prevention→escapeHTML()_helper→panel-main.js_hardened✅
 - [x] CONSUMER_FIX::hasMetadata_aligned→panel-main.js_uses_same_pattern_as_navigation-panel.js✅
 - [x] LUCIDLINK_FIX::File.exists_unreliable→try_read_first→prevents_data_loss✅ (PR #61)
+- [x] PP_EDITS_PRIORITY::readJSONMetadata_checks_-pp.json_first→user_sees_saved_edits✅
+- [x] PER_CLIP_FALLBACK::PP_file_missing_clip→falls_through_to_IA_original✅
 - [x] PRODUCTION_TESTING::User_validated→"This is working"✅
 
 ## Quality Gates Status
 - `npm run lint` → 0 errors ✅
 - `npm run typecheck` → 0 errors ✅
-- `npm test` → 143 tests passing ✅
+- `npm test` → 147 tests passing ✅
 - `npm run quality-gates` → All passing ✅
 
 ## Open Issues (3 total - all Low priority enhancements)
@@ -105,4 +109,4 @@ Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ---
 
-**LAST UPDATED:** 2025-11-26 (Hardening complete, LucidLink fix merged, 3 low-priority issues remain)
+**LAST UPDATED:** 2025-11-26 (PP edits priority fix merged, 147 tests, 3 low-priority issues remain)
