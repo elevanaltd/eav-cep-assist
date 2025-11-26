@@ -207,30 +207,22 @@ All core features implemented and merged to main:
 - [x] Issue #4: XMP namespace corruption ✅ FIXED
 - [x] LogComment parsing (element vs attribute format) ✅ FIXED (2025-11-14)
 
-### Open Issues (17 total as of 2025-11-25)
-
-**Critical/Blockers:**
-- [ ] Issue #14: Code injection vulnerability in applyMetadata() (partially fixed in PR #54)
-- [ ] Issue #16: Zero functional test coverage for ExtendScript layer
-- [ ] Issue #17: No automated deployment pipeline - implement CI/CD
-- [ ] Issue #18: Fix lint configuration - vendor library excluded
-- [ ] Issue #37: PRODUCTION BLOCKER: Add field-level lock enforcement to writeJSONToFile()
-- [ ] Issue #38: PRODUCTION BLOCKER: Add unit tests for Track A JSON functions
+### Open Issues (7 total as of 2025-11-26)
 
 **High Priority:**
-- [ ] Issue #19: Remove unauthorized file writes to user desktop
 - [ ] Issue #20: Implement scalability testing for large projects
-- [ ] Issue #21: Add SECURITY.md and vulnerability disclosure policy
-- [ ] Issue #22: Audit and improve error handling in ExtendScript
-- [ ] Issue #32: [CRITICAL] Offline Metadata Workflow Broken - Project Columns Not Accessible
 
 **Medium Priority:**
-- [ ] Issue #13: Feature: Auto-Apply XMP Metadata on Import
-- [ ] Issue #30: Replace regex-based XMP manipulation with Adobe XMPScript API
-- [ ] Issue #31: Update LogComment parsing to support IA's new hyphen-delimited format
-- [ ] Issue #35: Enhancement: Add batch flush delays to prevent metadata corruption
-- [ ] Issue #24: Create ADR for test infrastructure decisions (exists - may need update)
+- [ ] Issue #22: Audit and improve error handling in ExtendScript
+- [ ] Issue #32: Verify JSON sidecar works for offline/proxy clips (reclassified)
+- [ ] Issue #16: Document ExtendScript testing limitations (reclassified)
+
+**Low Priority:**
 - [ ] Issue #23: Create operational runbooks for common failure scenarios
+- [ ] Issue #35: Enhancement: Add batch flush delays to prevent metadata corruption
+- [ ] Issue #13: Feature: Auto-Apply XMP Metadata on Import
+
+**Closed (2025-11-26):** #14, #21 (internal tool - threat model doesn't apply), #17, #18, #19, #24, #30, #31, #37, #38 (obsolete - implemented or architecture superseded)
 
 **Track issues in:** [GitHub Issues](https://github.com/elevanaltd/eav-cep-assist/issues)
 
