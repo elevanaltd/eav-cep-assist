@@ -207,11 +207,9 @@ All core features implemented and merged to main:
 - [x] Issue #4: XMP namespace corruption ✅ FIXED
 - [x] LogComment parsing (element vs attribute format) ✅ FIXED (2025-11-14)
 
-### Open Issues (9 total as of 2025-11-26)
+### Open Issues (7 total as of 2025-11-26)
 
 **High Priority:**
-- [ ] Issue #14: Code injection vulnerability in applyMetadata() (partially fixed in PR #54)
-- [ ] Issue #21: Add SECURITY.md and vulnerability disclosure policy
 - [ ] Issue #20: Implement scalability testing for large projects
 
 **Medium Priority:**
@@ -224,7 +222,7 @@ All core features implemented and merged to main:
 - [ ] Issue #35: Enhancement: Add batch flush delays to prevent metadata corruption
 - [ ] Issue #13: Feature: Auto-Apply XMP Metadata on Import
 
-**Closed (2025-11-26 audit):** #17, #18, #19, #24, #30, #31, #37, #38 (obsolete - implemented or architecture superseded)
+**Closed (2025-11-26):** #14, #21 (internal tool - threat model doesn't apply), #17, #18, #19, #24, #30, #31, #37, #38 (obsolete - implemented or architecture superseded)
 
 **Track issues in:** [GitHub Issues](https://github.com/elevanaltd/eav-cep-assist/issues)
 

@@ -84,11 +84,9 @@
 **Target Date:** TBD
 **Phase:** Hardening (Security, Tests, CI/CD)
 
-**Open Issues to Address (9 total - audited 2025-11-26):**
+**Open Issues to Address (7 total - audited 2025-11-26):**
 
-#### High Priority (3):
-- [ ] Issue #14: Verify security fix complete (partial fix in PR #54)
-- [ ] Issue #21: Add SECURITY.md and vulnerability disclosure policy
+#### High Priority (1):
 - [ ] Issue #20: Implement scalability testing for large projects
 
 #### Medium Priority (3):
@@ -101,7 +99,7 @@
 - [ ] Issue #35: Batch flush delays for network storage
 - [ ] Issue #13: Auto-Apply on Import (feature request)
 
-**Closed (2025-11-26):** #17, #18, #19, #24, #30, #31, #37, #38 (implemented or architecture superseded)
+**Closed (2025-11-26):** #14, #21 (internal tool - threat model N/A), #17, #18, #19, #24, #30, #31, #37, #38 (implemented or architecture superseded)
 
 ---
 
