@@ -1583,51 +1583,76 @@ var EAVIngest = (function() {
           };
         }
 
-        step = 5; // Merge updates into metadata
+        step = 5; // Capture original metadata for comparison (before merging updates)
+        var originalMetadata = {};
+        for (var k in metadata) {
+          if (metadata.hasOwnProperty(k)) {
+            originalMetadata[k] = metadata[k];
+          }
+        }
+
+        step = 6; // Merge updates into metadata
         for (var key in updates) {
           if (updates.hasOwnProperty(key) && updates[key] !== undefined) {
             metadata[key] = updates[key];
           }
         }
 
-        step = 6; // Compute shotName from updated fields
+        step = 7; // Compute shotName from updated fields
         metadata.shotName = computeShotNameInline(metadata);
 
-        step = 7; // Update audit fields
+        step = 8; // Compare metadata before and after (skip write if unchanged)
+        // Create comparison copies without audit fields
+        var existingForCompare = {};
+        var newForCompare = {};
+        for (var key in metadata) {
+          if (metadata.hasOwnProperty(key) && key !== 'modifiedAt' && key !== 'modifiedBy') {
+            existingForCompare[key] = originalMetadata[key];
+            newForCompare[key] = metadata[key];
+          }
+        }
+
+        // Simple comparison (stringify both)
+        if (JSON.stringify(existingForCompare) === JSON.stringify(newForCompare)) {
+          $.writeln('DEBUG: Metadata unchanged, skipping write for ' + clipID);
+          return metadata.shotName || 'true';  // Return without file I/O
+        }
+
+        step = 9; // Update audit fields (only if metadata changed)
         metadata.modifiedAt = _toISOString();
         metadata.modifiedBy = 'cep-panel';
 
-        step = 8; // Update JSON data
+        step = 10; // Update JSON data
         jsonData[clipID] = metadata;
 
-        step = 9; // Write atomically (temp file + rename to prevent corruption)
+        step = 11; // Write atomically (temp file + rename to prevent corruption)
         var folder = jsonFile.parent.fsName;
         var tempFile = new File(folder + '/.ingest-metadata.tmp.json');
 
-        step = 10; // Open temp for write
+        step = 12; // Open temp for write
         var tempOpenResult = tempFile.open('w');
         if (!tempOpenResult) {
-          _lastWriteError = 'Step10: tempFile.open(w) returned false, folder=' + folder;
+          _lastWriteError = 'Step12: tempFile.open(w) returned false, folder=' + folder;
           return 'false';
         }
 
-        step = 11; // Write to temp
+        step = 13; // Write to temp
         tempFile.write(JSON.stringify(jsonData, null, 2)); // Pretty print
         tempFile.close();
 
-        step = 12; // Remove old file first (ExtendScript rename doesn't replace existing files)
+        step = 14; // Remove old file first (ExtendScript rename doesn't replace existing files)
         if (jsonFile.exists) {
           var removeResult = jsonFile.remove();
           if (!removeResult) {
-            _lastWriteError = 'Step12: jsonFile.remove() returned false';
+            _lastWriteError = 'Step14: jsonFile.remove() returned false';
             return 'false';
           }
         }
 
-        step = 13; // Now rename temp file to original name
+        step = 15; // Now rename temp file to original name
         var renameResult = tempFile.rename(jsonFile.name);
         if (!renameResult) {
-          _lastWriteError = 'Step13: tempFile.rename() returned false';
+          _lastWriteError = 'Step15: tempFile.rename() returned false';
           return 'false';
         }
 
