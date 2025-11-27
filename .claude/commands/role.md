@@ -4,17 +4,17 @@
 ```bash
 # Parse arguments for role name and flags
 FULL_ARGS="$ARGUMENTS"
-RAPH_MODE="ceremonial"  # default
+RAPH_MODE="live_raph"  # default: RAPH OCTAVE mode (evidence-based activation)
 
-# Check for --raph-verbose first (more specific), then --raph
+# Check for --raph-verbose first, then --noraph/--ceremonial for opt-out
 if echo "$FULL_ARGS" | grep -q -- "--raph-verbose"; then
   RAPH_MODE="live_raph_verbose"
   ROLE_INPUT=$(echo "$FULL_ARGS" | sed 's/--raph-verbose//g' | xargs)
-elif echo "$FULL_ARGS" | grep -q -- "--raph"; then
-  RAPH_MODE="live_raph"
-  ROLE_INPUT=$(echo "$FULL_ARGS" | sed 's/--raph//g' | xargs)
+elif echo "$FULL_ARGS" | grep -q -E -- "--noraph|--ceremonial"; then
+  RAPH_MODE="ceremonial"
+  ROLE_INPUT=$(echo "$FULL_ARGS" | sed -E 's/--noraph|--ceremonial//g' | xargs)
 else
-  ROLE_INPUT="$FULL_ARGS"
+  ROLE_INPUT=$(echo "$FULL_ARGS" | sed 's/--raph//g' | xargs)  # strip legacy --raph if present
 fi
 
 # Normalize role name (spaces→hyphens, common aliases)
@@ -324,16 +324,17 @@ If file not found, try:
 
 ## USAGE MODES:
 
-### Ceremonial (Fast - No Flag):
+### Live RAPH - OCTAVE (DEFAULT):
 ```bash
-/role holistic-orchestrator     # Quick activation, ~7/10 integration
-/role ho                        # Using alias
+/role holistic-orchestrator     # OCTAVE output, ~9/10 integration (default)
+/role ho                        # Using alias, same RAPH default
+/role critical-engineer         # Evidence-based activation, line citations
 ```
 
-### Live RAPH - OCTAVE (Default Evidence-Based):
+### Ceremonial (Fast - Opt-In):
 ```bash
-/role ho --raph                 # OCTAVE output, efficient, ~9/10 integration
-/role critical-engineer --raph  # Line citations prove reading
+/role ho --noraph               # Quick activation, ~7/10 integration
+/role ho --ceremonial           # Same as --noraph
 ```
 
 ### Live RAPH - Verbose (Debugging):
@@ -343,16 +344,18 @@ If file not found, try:
 ```
 
 **Token Comparison:**
-- Ceremonial: ~1k tokens, instant
-- RAPH (OCTAVE): ~1.5k tokens, efficient evidence-based
+- RAPH (OCTAVE): ~1.5k tokens, evidence-based (DEFAULT)
+- Ceremonial: ~1k tokens, instant (--noraph)
 - RAPH (Verbose): ~4k tokens, full prose for debugging
 
-**Design Rationale (S027 Evidence):**
+**Design Rationale (S027 Evidence + System Evolution):**
+- RAPH OCTAVE is now DEFAULT: minimal token overhead (+500) yields +20% integration quality
 - Verbose prose enables passive reading → comprehension theater risk
 - OCTAVE structure requires active extraction → cognitive forcing preserved
 - Line citations prove reading without full quotes
 - Selective prose injection (transfer mechanics) preserves synthesis depth
-- ~70% token savings with equivalent or better binding effectiveness
+- ~70% token savings vs verbose with equivalent or better binding effectiveness
+- Ceremonial remains available via --noraph for utility agents or quick queries
 
 ## QUICK REFERENCE:
 **Common:** ce (critical-engineer), ea (error-architect), ta (technical), il (implementation)
