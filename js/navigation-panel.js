@@ -20,7 +20,9 @@
     filterTagged: 'all',       // 'all' | 'tagged' | 'untagged'
     sortBy: 'bin',             // Sort order: 'name', 'name-desc', 'bin'
     selectedClips: [],         // Array of nodeIds for batch operations
-    expandedBins: {}           // Bin collapse state (undefined/false = collapsed, true = expanded)
+    expandedBins: {},          // Bin collapse state (undefined/false = collapsed, true = expanded)
+    batchProcessing: false,    // True while batch operation is running
+    batchCancelled: false      // Set to true when user clicks cancel during batch
   };
 
   // Initialize CSInterface
@@ -209,7 +211,15 @@
       });
 
       this.elements.batchApply.addEventListener('click', function() {
-        self.batchApplyToPremiere();
+        // Toggle behavior: Start batch OR cancel in-progress batch
+        if (PanelState.batchProcessing) {
+          // User clicked during processing - set cancel flag
+          PanelState.batchCancelled = true;
+          addDebug('[ClipBrowser] User requested cancel');
+        } else {
+          // Normal start batch operation
+          self.batchApplyToPremiere();
+        }
       });
 
       // Keyboard shortcut: Cmd+Shift+A for batch apply
@@ -217,7 +227,13 @@
         if (e.metaKey && e.shiftKey && e.key === 'A') {
           e.preventDefault();
           if (PanelState.selectedClips.length > 0) {
-            self.batchApplyToPremiere();
+            // Same toggle logic as button: start or cancel
+            if (PanelState.batchProcessing) {
+              PanelState.batchCancelled = true;
+              addDebug('[ClipBrowser] User requested cancel (keyboard)');
+            } else {
+              self.batchApplyToPremiere();
+            }
           }
         }
       });
@@ -841,8 +857,11 @@
 
       addDebug('[ClipBrowser] ⚡ Starting batch apply: ' + selectedCount + ' clips');
 
-      // Disable batch apply button and show processing state
-      this.elements.batchApply.disabled = true;
+      // Set processing state and reset cancel flag
+      PanelState.batchProcessing = true;
+      PanelState.batchCancelled = false;
+
+      // Keep button enabled (for cancel) and show processing state
       this.elements.batchApply.classList.add('processing');
       this.elements.batchApply.innerHTML = '<span class="batch-icon">⏳</span> Processing...';
 
@@ -860,6 +879,20 @@
 
       // Process each clip sequentially
       function processNextClip(index) {
+        // Check for cancellation FIRST (before processing or completion)
+        if (PanelState.batchCancelled) {
+          addDebug('[ClipBrowser] ⚠ Batch cancelled by user: ' +
+            processedCount + ' succeeded, ' + errorCount + ' failed, ' +
+            (selectedClipData.length - index) + ' remaining');
+
+          // Reset UI state but PRESERVE selection (user may retry)
+          self.elements.batchApply.classList.remove('processing');
+          self.elements.batchApply.innerHTML = '<span class="batch-icon">⚡</span> Batch Apply to Premiere';
+          PanelState.batchProcessing = false;
+          PanelState.batchCancelled = false;
+          return;
+        }
+
         if (index >= selectedClipData.length) {
           // All done!
           addDebug('[ClipBrowser] ✓ Batch apply complete: ' +
@@ -868,9 +901,9 @@
           // Reset button state
           self.elements.batchApply.classList.remove('processing');
           self.elements.batchApply.innerHTML = '<span class="batch-icon">⚡</span> Batch Apply to Premiere';
-          self.elements.batchApply.disabled = false;
+          PanelState.batchProcessing = false;
 
-          // Clear selection
+          // Clear selection (completion behavior - differs from cancel)
           self.clearSelection();
 
           // Refresh clip list to show updated names
@@ -881,9 +914,9 @@
         const clip = selectedClipData[index];
         addDebug('[ClipBrowser] Processing (' + (index + 1) + '/' + selectedClipData.length + '): ' + clip.name);
 
-        // Update progress in button
+        // Update button to show cancel option with progress
         self.elements.batchApply.innerHTML =
-                    '<span class="batch-icon">⏳</span> Processing ' + (index + 1) + '/' + selectedClipData.length;
+                    '<span class="batch-icon">✕</span> Cancel (' + (index + 1) + '/' + selectedClipData.length + ')';
 
         // NEW: JSON-based approach (Track A/B integration)
         // Step 1: Read JSON metadata from .ingest-metadata.json sidecar
