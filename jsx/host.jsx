@@ -801,7 +801,7 @@ var EAVIngest = (function() {
 
             }
 
-          } catch (readError) {
+          } catch (_readError) {
 
             // File doesn't exist or can't be read - use default
             existingPpData = { _schema: '2.0' };
@@ -938,7 +938,7 @@ var EAVIngest = (function() {
         var proxyPath = '';
         try {
           proxyPath = item.getProxyPath() || '';
-        } catch (proxyErr) {
+        } catch (_proxyErr) {
           proxyPath = '';
         }
 
@@ -1369,7 +1369,7 @@ var EAVIngest = (function() {
         }
       }
       return null;
-    }
+    };
 
     /**
      * Helper: Extract original filename from a file path
@@ -1388,7 +1388,7 @@ var EAVIngest = (function() {
       filename = filename.replace(/_proxy(\.[^.]+)?$/, '$1');
 
       return filename;
-    }
+    };
 
     /**
      * Helper: Read and parse JSON file, lookup clip metadata by ID
@@ -1418,7 +1418,7 @@ var EAVIngest = (function() {
         $.writeln('ERROR in readJSONFromFileInline: ' + e.message);
         return 'null';
       }
-    }
+    };
 
     /**
      * Read metadata from .ingest-metadata.json sidecar file
@@ -1498,7 +1498,7 @@ var EAVIngest = (function() {
         $.writeln('ERROR in readJSONMetadataInline: ' + e.message);
         return 'null';
       }
-    }
+    };
 
     /**
      * Read metadata by nodeId
@@ -1519,7 +1519,7 @@ var EAVIngest = (function() {
       } catch (e) {
         return 'null';
       }
-    }
+    };
 
     /**
      * Compute shotName from component metadata fields
@@ -1552,7 +1552,7 @@ var EAVIngest = (function() {
       }
 
       return baseName;
-    }
+    };
 
     /**
      * Helper: Write metadata updates to JSON file atomically
@@ -1644,7 +1644,7 @@ var EAVIngest = (function() {
         _lastWriteError = 'Step' + step + ' catch: ' + e.message + ' at line ' + e.line;
         return 'false';
       }
-    }
+    };
 
     // Store last write error for diagnostics
     var _lastWriteError = null;
@@ -1716,7 +1716,7 @@ var EAVIngest = (function() {
           // for files that actually exist. Instead, try to open and read directly.
 
           // Case 1: Try to read -pp.json (don't trust exists check)
-          var ppReadSuccess = false;
+          var _ppReadSuccess = false;
           var ppOpenResult = false;
           var ppContentLen = 0;
           try {
@@ -1726,7 +1726,7 @@ var EAVIngest = (function() {
               ppJsonFile.close();
               ppContentLen = ppContent ? ppContent.length : 0;
               if (ppContent && ppContent.length > 0) {
-                ppReadSuccess = true;
+                _ppReadSuccess = true;
                 $.writeln('DEBUG JSON WRITE: Updating existing PP edits file: ' + folder + '/.ingest-metadata-pp.json');
                 result = writeJSONToFileInline(ppJsonFile, originalFilename, updates);
                 continue;
@@ -1734,18 +1734,18 @@ var EAVIngest = (function() {
             }
           } catch (ppReadErr) {
             // File truly doesn't exist or can't be read
-            ppReadSuccess = false;
+            _ppReadSuccess = false;
             _lastWriteError = 'Case1 catch: ' + ppReadErr.message;
           }
 
           // Case 2: Try to read IA json (don't trust exists check)
-          var iaReadSuccess = false;
+          var _iaReadSuccess = false;
           try {
             if (iaJsonFile.open('r')) {
               var iaContent = iaJsonFile.read();
               iaJsonFile.close();
               if (iaContent && iaContent.length > 0) {
-                iaReadSuccess = true;
+                _iaReadSuccess = true;
                 $.writeln('DEBUG JSON WRITE: Creating PP edits file from IA base: ' + folder + '/.ingest-metadata-pp.json');
 
                 // Create new -pp.json with IA content as starting point
@@ -1758,9 +1758,9 @@ var EAVIngest = (function() {
                 continue;
               }
             }
-          } catch (iaReadErr) {
+          } catch (_iaReadErr) {
             // File truly doesn't exist or can't be read
-            iaReadSuccess = false;
+            _iaReadSuccess = false;
           }
 
           // Case 3: No JSON files readable - CREATE new -pp.json from scratch
@@ -1806,7 +1806,7 @@ var EAVIngest = (function() {
         $.writeln('ERROR in writeJSONMetadata: ' + e.message);
         return JSON.stringify({ error: 'EXCEPTION', message: e.message, line: e.line });
       }
-    }
+    };
 
     /**
      * Write metadata by nodeId
@@ -1837,14 +1837,14 @@ var EAVIngest = (function() {
         $.writeln('ERROR in writeJSONMetadataByNodeId: ' + e.message);
         return 'false';
       }
-    }
+    };
 
     // ========================================================================
     // END INLINED IMPLEMENTATION
     // ========================================================================
 
     // Use inlined implementations
-    var readJSONMetadataWrapper = function(mediaPath, FileConstructor) {
+    var readJSONMetadataWrapper = function(_mediaPath, _FileConstructor) {
       return 'null'; // Not used in CEP panel, stub only
     };
 
