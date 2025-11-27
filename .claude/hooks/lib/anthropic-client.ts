@@ -46,15 +46,6 @@ export async function callAnthropicAPI(
 ): Promise<IntentAnalysis> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  // Debug: Log environment details
-  if (process.env.DEBUG_SKILL_HOOK) {
-    console.error('[anthropic-client] API Key check:', {
-      hasKey: !!apiKey,
-      keyLength: apiKey ? apiKey.length : 0,
-      hooksDir: process.env.HOOKS_DIR,
-    });
-  }
-
   if (!apiKey) {
     throw new Error(
       '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
