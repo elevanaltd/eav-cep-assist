@@ -1,24 +1,28 @@
 #!/bin/bash
-# SessionStart Hook - Install hook dependencies with symlink awareness
+# SessionStart Hook - Install hook dependencies with git-based worktree detection
 # Ensures dependencies are available for all worktrees through shared node_modules
 
 set -e
 
 HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-NODE_MODULES_PATH="$HOOKS_DIR/node_modules"
 
-# Detect if node_modules is a symlink (worktree) or real directory (main repo)
-if [ -L "$NODE_MODULES_PATH" ]; then
-  # We're in a worktree - resolve symlink to find main repo
-  # Must cd to HOOKS_DIR first to resolve relative symlink path correctly
-  SYMLINK_TARGET="$(readlink "$NODE_MODULES_PATH")"
-  MAIN_HOOKS_DIR="$(cd "$HOOKS_DIR" && cd "$(dirname "$SYMLINK_TARGET")" && pwd)"
-  echo "[SessionStart] Detected worktree - installing dependencies in main repo"
-  INSTALL_DIR="$MAIN_HOOKS_DIR"
+# Use git to detect if we're in a worktree (more reliable than symlink detection)
+GIT_DIR="$(git rev-parse --git-dir 2>/dev/null)"
+GIT_COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null)"
+
+# Normalize paths for comparison (resolve any symlinks/relative paths)
+GIT_DIR_RESOLVED="$(cd "$GIT_DIR" 2>/dev/null && pwd)"
+GIT_COMMON_DIR_RESOLVED="$(cd "$GIT_COMMON_DIR" 2>/dev/null && pwd)"
+
+if [ "$GIT_DIR_RESOLVED" != "$GIT_COMMON_DIR_RESOLVED" ]; then
+  # We're in a worktree - GIT_COMMON_DIR points to main repo's .git
+  MAIN_REPO="$(cd "$GIT_COMMON_DIR_RESOLVED/.." && pwd)"
+  INSTALL_DIR="$MAIN_REPO/.claude/hooks"
+  echo "[SessionStart] Detected worktree - using main repo dependencies at $INSTALL_DIR"
 else
   # We're in main repo - install here
-  echo "[SessionStart] Installing dependencies in main repo"
   INSTALL_DIR="$HOOKS_DIR"
+  echo "[SessionStart] Main repo detected - installing dependencies locally"
 fi
 
 # Check if dependencies are already installed
