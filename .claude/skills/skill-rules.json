@@ -394,30 +394,6 @@
           "consult specialist"
         ]
       }
-    },
-    "github-issue-creation": {
-      "type": "domain",
-      "autoInject": true,
-      "enforcement": "suggest",
-      "priority": "medium",
-      "requiredSkills": [],
-      "description": "GitHub issue creation best practices including label verification, format standards, and systemic issue detection. Prevents duplicate work and ensures proper categorization. CRITICAL: Always check labels exist before creating issues.",
-      "promptTriggers": {
-        "keywords": [
-          "create issue",
-          "github issue",
-          "git issue",
-          "new issue",
-          "open issue",
-          "file issue",
-          "report issue",
-          "track issue",
-          "issue creation",
-          "gh issue create",
-          "systemic issue",
-          "technical debt issue"
-        ]
-      }
     }
   }
 }
