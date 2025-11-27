@@ -154,10 +154,14 @@
     setupEventListeners: function() {
       const self = this;
 
-      // Search input
+      // Search input with debounce (150ms delay to prevent jank during typing)
+      let searchTimeout = null;
       this.elements.searchInput.addEventListener('input', function(e) {
         PanelState.searchFilter = e.target.value;
-        self.render();
+        if (searchTimeout) {clearTimeout(searchTimeout);}
+        searchTimeout = setTimeout(function() {
+          self.render();
+        }, 150);
       });
 
       // Clear search
@@ -265,8 +269,17 @@
           // event.data might be string or already parsed object
           const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
           addDebug('[ClipBrowser] Metadata updated for: ' + data.name);
-          // Refresh clip list to show updated name
-          self.loadAllClips();
+
+          // Update single clip instead of full reload (performance optimization)
+          const clip = PanelState.allClips.find(function(c) { return c.nodeId === data.nodeId; });
+          if (clip) {
+            clip.name = data.name;
+            addDebug('[ClipBrowser] ✓ Updated clip name in state');
+            self.render();
+          } else {
+            addDebug('[ClipBrowser] ⚠ Clip not found in state, falling back to full reload');
+            self.loadAllClips();
+          }
         } catch (e) {
           addDebug('[ClipBrowser] ✗ Failed to parse metadata event: ' + e.message, true);
         }

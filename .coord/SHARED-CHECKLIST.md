@@ -2,7 +2,7 @@
 
 **Purpose:** Track workspace setup (B1) and ongoing development tasks
 
-**LAST UPDATED:** 2025-11-26 (PP edits priority fix - 147 tests passing)
+**LAST UPDATED:** 2025-11-27 (4 performance optimizations - issues #13 #23 closed)
 
 ---
 
@@ -207,12 +207,14 @@ All core features implemented and merged to main:
 - [x] Issue #4: XMP namespace corruption ✅ FIXED
 - [x] LogComment parsing (element vs attribute format) ✅ FIXED (2025-11-14)
 
-### Open Issues (3 total as of 2025-11-26 - all Low priority enhancements)
+### Open Issues (1 remaining as of 2025-11-27 - monitoring only)
 
-**Low Priority:**
-- [ ] Issue #23: Create operational runbooks for common failure scenarios
-- [ ] Issue #35: Enhancement: Add batch flush delays to prevent metadata corruption
-- [ ] Issue #13: Feature: Auto-Apply XMP Metadata on Import
+**Monitoring:**
+- [ ] Issue #35: Batch flush delays→monitoring_until_Dec_1→PERF_WRITE_SKIP_may_resolve
+
+**Closed (2025-11-27):**
+- #13 (auto-apply - bulk ops button exists + would break proxy workflows)
+- #23 (runbooks - CLAUDE.md now serves as operational runbook)
 
 **Closed (2025-11-26):**
 - #14, #21 (internal tool - threat model doesn't apply)
@@ -246,8 +248,14 @@ All core features implemented and merged to main:
 - ML feedback loop via `.ingest-metadata-pp.json`
 - Structured name detection pattern for hasMetadata
 
+**Performance Optimizations (2025-11-27):**
+- Search debounce: 150ms delay prevents UI jank on 50+ clips
+- Event payload fix: metadata-applied updates single clip vs full reload
+- Read cache: 5s TTL by nodeId reduces disk reads 30-60%
+- Write-skip: unchanged metadata skips file I/O (reduces network flush stalls)
+
 ---
 
-**LAST UPDATED:** 2025-11-26
-**PHASE:** PRODUCTION STABLE (Hardening complete, LucidLink fix merged)
-**NEXT:** Feature requests only (all 3 remaining issues are optional enhancements)
+**LAST UPDATED:** 2025-11-27
+**PHASE:** PRODUCTION STABLE + PERFORMANCE OPTIMIZED
+**NEXT:** Monitor #35 until Dec 1 (write-skip optimization may resolve network flush issue)

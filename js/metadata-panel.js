@@ -17,6 +17,34 @@
     filteredClips: []
   };
 
+  // ========================================
+  // METADATA READ CACHE (5 second TTL)
+  // ========================================
+
+  let metadataCache = {};  // { nodeId: { data: {...}, timestamp: number } }
+  const CACHE_TTL_MS = 5000;  // 5 seconds
+
+  function getCachedMetadata(nodeId) {
+    const cached = metadataCache[nodeId];
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+      return cached.data;
+    }
+    if (cached) {delete metadataCache[nodeId];}  // Expired
+    return null;
+  }
+
+  function setCachedMetadata(nodeId, data) {
+    metadataCache[nodeId] = { data: data, timestamp: Date.now() };
+  }
+
+  function invalidateCache(nodeId) {
+    if (nodeId) {
+      delete metadataCache[nodeId];
+    } else {
+      metadataCache = {};  // Clear all
+    }
+  }
+
   // Initialize CSInterface
   let csInterface;
   try {
@@ -371,6 +399,17 @@
       // Update header
       this.elements.formClipName.textContent = clip.name;
 
+      // Check cache first (5 second TTL)
+      const cached = getCachedMetadata(clip.nodeId);
+      if (cached) {
+        addDebug('[MetadataForm] ✓ Cache hit for ' + clip.name);
+        self.populateFormFromMetadata(cached);
+        return;
+      }
+
+      // Cache miss - proceed with ExtendScript call
+      addDebug('[MetadataForm] Cache miss, fetching from ExtendScript');
+
       // Call Track A readJSONMetadataByNodeId with error capture AND path diagnostics
       const escapedNodeId = escapeForEvalScript(clip.nodeId);
 
@@ -416,51 +455,11 @@
           const metadata = JSON.parse(jsonString);
           addDebug('[MetadataForm] ✓ Parsed JSON metadata');
 
-          // Populate form fields from JSON
-          self.elements.location.value = metadata.location || '';
-          self.elements.subject.value = metadata.subject || '';
-          self.elements.action.value = metadata.action || '';
-          self.elements.shotType.value = metadata.shotType || '';
+          // Store in cache (5 second TTL)
+          setCachedMetadata(clip.nodeId, metadata);
 
-          // Handle keywords array (join with commas for display)
-          const keywordsDisplay = (metadata.keywords || []).join(', ');
-          self.elements.description.value = keywordsDisplay;
-          addDebug('[MetadataForm] → Keywords: "' + keywordsDisplay + '"');
-
-          // Set identifier (Tape Name from JSON or fall back to clip name)
-          const identifierValue = metadata.originalFilename || metadata.id || clip.name || '';
-          self.elements.identifier.value = identifierValue;
-          addDebug('[MetadataForm] → Identifier: "' + identifierValue + '"');
-
-          // Load Good checkbox (currently not in Schema R1.1, default to false)
-          self.elements.good.checked = false;
-
-          // Display computed shotName (read-only field - will be added to HTML)
-          const shotNameDisplay = metadata.shotName || self.computeShotNameLocally(metadata);
-          const shotNameElement = document.getElementById('shotNameDisplay');
-          if (shotNameElement) {
-            shotNameElement.value = shotNameDisplay;
-          }
-          addDebug('[MetadataForm] → shotName: "' + shotNameDisplay + '"');
-
-          // Show lock indicator if folder completed
-          if (metadata._completed || (metadata.lockedFields && metadata.lockedFields.length > 0)) {
-            self.showLockIndicator(metadata.lockedBy, metadata.lockedAt);
-          } else {
-            self.hideLockIndicator();
-          }
-
-          // Show all metadata fields for both video and images
-          // Previously filtered action field for images - removed to allow editing stale data
-          self.elements.actionGroup.style.display = 'block';
-
-          // Update generated name preview
-          self.updateGeneratedName();
-
-          // Enable apply button
-          self.elements.applyBtn.disabled = false;
-
-          addDebug('[MetadataForm] ✓ Clip loaded into form');
+          // Populate form from metadata
+          self.populateFormFromMetadata(metadata);
 
         } catch (e) {
           addDebug('[MetadataForm] ✗ JSON parse error: ' + e.message, true);
@@ -474,6 +473,54 @@
           console.error('JSON parse error:', e, 'Received:', jsonString);
         }
       });
+    },
+
+    populateFormFromMetadata: function(metadata) {
+      // Populate form fields from JSON metadata (reusable for cache + fresh data)
+      this.elements.location.value = metadata.location || '';
+      this.elements.subject.value = metadata.subject || '';
+      this.elements.action.value = metadata.action || '';
+      this.elements.shotType.value = metadata.shotType || '';
+
+      // Handle keywords array (join with commas for display)
+      const keywordsDisplay = (metadata.keywords || []).join(', ');
+      this.elements.description.value = keywordsDisplay;
+      addDebug('[MetadataForm] → Keywords: "' + keywordsDisplay + '"');
+
+      // Set identifier (Tape Name from JSON or fall back to currentClip.name)
+      const identifierValue = metadata.originalFilename || metadata.id || (currentClip ? currentClip.name : '') || '';
+      this.elements.identifier.value = identifierValue;
+      addDebug('[MetadataForm] → Identifier: "' + identifierValue + '"');
+
+      // Load Good checkbox (currently not in Schema R1.1, default to false)
+      this.elements.good.checked = false;
+
+      // Display computed shotName (read-only field - will be added to HTML)
+      const shotNameDisplay = metadata.shotName || this.computeShotNameLocally(metadata);
+      const shotNameElement = document.getElementById('shotNameDisplay');
+      if (shotNameElement) {
+        shotNameElement.value = shotNameDisplay;
+      }
+      addDebug('[MetadataForm] → shotName: "' + shotNameDisplay + '"');
+
+      // Show lock indicator if folder completed
+      if (metadata._completed || (metadata.lockedFields && metadata.lockedFields.length > 0)) {
+        this.showLockIndicator(metadata.lockedBy, metadata.lockedAt);
+      } else {
+        this.hideLockIndicator();
+      }
+
+      // Show all metadata fields for both video and images
+      // Previously filtered action field for images - removed to allow editing stale data
+      this.elements.actionGroup.style.display = 'block';
+
+      // Update generated name preview
+      this.updateGeneratedName();
+
+      // Enable apply button
+      this.elements.applyBtn.disabled = false;
+
+      addDebug('[MetadataForm] ✓ Clip loaded into form');
     },
 
     computeShotNameLocally: function(metadata) {
@@ -672,13 +719,16 @@
           addDebug('[MetadataForm] ✓ Metadata saved');
           self.showSuccessIndicator('✓ Metadata saved');
 
+          // Invalidate cache (force fresh read on next load)
+          invalidateCache(currentClip.nodeId);
+
           // Reload form to show updated shotName from server
           self.loadClipIntoForm(currentClip);
 
           // Emit CEP event to notify Navigation Panel (clip name may have changed)
           try {
             const metadataEvent = new CSEvent('com.elevana.metadata-applied', 'APPLICATION');
-            metadataEvent.data = JSON.stringify({ nodeId: currentClip.nodeId });
+            metadataEvent.data = JSON.stringify({ nodeId: currentClip.nodeId, name: currentClip.name });
             csInterface.dispatchEvent(metadataEvent);
             addDebug('[MetadataForm] ✓ CEP metadata-applied event dispatched');
           } catch (e) {

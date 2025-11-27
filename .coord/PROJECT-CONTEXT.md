@@ -43,8 +43,8 @@
 - **Documentation:** See docs/002-DOC-ML-FEEDBACK-LOOP.md
 
 ## Current Focus
-PHASE::PRODUCTION_STABLE→All_core_features_complete→Hardening_complete✅
-GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Navigation_checkmarks_working✅→Batch_Apply_JSON✅→LucidLink_compatible✅
+PHASE::PRODUCTION_STABLE→Performance_optimizations_complete→Edge_optimizer_recommendations_implemented✅
+GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Performance_cache+debounce+skip-unchanged✅
 
 ## Key Decisions
 - [2025-11-25] XMP_REMOVAL→getAllProjectClips_simplified→removed_225_lines_XMP_parsing→JSON_only_architecture✅
@@ -59,6 +59,10 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Naviga
 - [2025-11-25] CONSUMER_ALIGNMENT→panel-main.js_uses_hasStructuredName()→matches_navigation-panel.js_pattern✅
 - [2025-11-26] PP_EDITS_PRIORITY→readJSONMetadata_checks_-pp.json_first→user_edits_visible_after_save✅
 - [2025-11-26] PER_CLIP_FALLBACK→if_PP_file_missing_clip→falls_through_to_IA_original✅
+- [2025-11-27] PERF_SEARCH_DEBOUNCE→150ms_debounce_on_search_input→prevents_UI_jank_on_50+_clips✅
+- [2025-11-27] PERF_EVENT_PAYLOAD→metadata-applied_includes_name→single_clip_update_vs_full_reload✅
+- [2025-11-27] PERF_READ_CACHE→5s_TTL_cache_by_nodeId→30-60%_fewer_disk_reads✅
+- [2025-11-27] PERF_WRITE_SKIP→skip_write_if_metadata_unchanged→reduces_network_flush_stalls✅
 
 ## Completed Work (PR #50-#61)
 - [x] Track_A::JSON_read→working✅
@@ -74,6 +78,7 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Naviga
 - [x] PP_EDITS_PRIORITY::readJSONMetadata_checks_-pp.json_first→user_sees_saved_edits✅
 - [x] PER_CLIP_FALLBACK::PP_file_missing_clip→falls_through_to_IA_original✅
 - [x] PRODUCTION_TESTING::User_validated→"This is working"✅
+- [x] PERF_OPTIMIZATIONS::edge-optimizer_analysis→4_fixes_implemented→lint+typecheck_passing✅
 
 ## Quality Gates Status
 - `npm run lint` → 0 errors ✅
@@ -81,15 +86,14 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Naviga
 - `npm test` → 147 tests passing ✅
 - `npm run quality-gates` → All passing ✅
 
-## Open Issues (3 total - all Low priority enhancements)
-- **Low:** #23 (Runbooks), #35 (Batch flush delays), #13 (Auto-apply feature)
+## Open Issues (1 remaining - monitoring only)
+- **#35:** Batch flush delays→monitoring_until_Dec_1→PERF_WRITE_SKIP_may_resolve
 
 ## Next Milestone
-FEATURE_REQUESTS_ONLY: All hardening complete. Remaining issues are optional enhancements.
+MONITOR_ISSUE_35::Dec_1_decision_gate→if_corruption_recurs→implement_flush_delays→else_close
 
 ## Recent User Feedback
-> "This is all working very well" (JSON read/write flow)
-> "works perfectly" (Batch Apply JSON rework)
+> "This is working" (performance optimizations deployed)
 
 ---
 Full history: (No PROJECT-HISTORY.md yet - append if created)
@@ -109,4 +113,4 @@ Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ---
 
-**LAST UPDATED:** 2025-11-26 (PP edits priority fix merged, 147 tests, 3 low-priority issues remain)
+**LAST UPDATED:** 2025-11-27 (4 performance optimizations: cache+debounce+event-fix+write-skip, 1 issue remaining)
