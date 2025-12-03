@@ -763,10 +763,13 @@
           addDebug('[MetadataForm] ✓ Metadata saved');
           self.showSuccessIndicator('✓ Metadata saved');
 
-          // Compute new shotName for event dispatch BEFORE invalidating cache
-          // Need cached metadata for shotNumber (not included in updates)
-          const cachedMetadata = getCachedMetadata(currentClip.nodeId);
-          const shotNumber = cachedMetadata ? cachedMetadata.shotNumber : null;
+          // Compute new shotName for event dispatch
+          // Get shotNumber from shotNameDisplay (reliable source - populated from metadata on load)
+          const shotNameElement = document.getElementById('shotNameDisplay');
+          const currentShotName = shotNameElement ? shotNameElement.value : '';
+          // Extract shotNumber from current name (format: xxx-#N)
+          const shotNumberMatch = currentShotName.match(/-#(\d+)$/);
+          const shotNumber = shotNumberMatch ? parseInt(shotNumberMatch[1], 10) : null;
           const newShotName = self.computeShotNameLocally({
             location: updates.location,
             subject: updates.subject,
