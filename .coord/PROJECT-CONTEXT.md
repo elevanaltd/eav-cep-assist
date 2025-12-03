@@ -63,8 +63,9 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Perfor
 - [2025-11-27] PERF_EVENT_PAYLOAD→metadata-applied_includes_name→single_clip_update_vs_full_reload✅
 - [2025-11-27] PERF_READ_CACHE→5s_TTL_cache_by_nodeId→30-60%_fewer_disk_reads✅
 - [2025-11-27] PERF_WRITE_SKIP→skip_write_if_metadata_unchanged→reduces_network_flush_stalls✅
+- [2025-12-03] AI_PENDING_INDICATOR→processedByAI_check→metadata_panel_warning+navigation_⏳_icon→PR#72✅
 
-## Completed Work (PR #50-#61)
+## Completed Work (PR #50-#72)
 - [x] Track_A::JSON_read→working✅
 - [x] Track_B::JSON_write→implemented→shotName_computed→PP_Clip_Name_updated✅
 - [x] STABLE_LOOKUP::extractOriginalFilename()→from_path_not_clip.name→reload_survives_rename✅
@@ -79,11 +80,12 @@ GOVERNANCE::JSON_read/write_working✅→PP_Clip_Name_update_working✅→Perfor
 - [x] PER_CLIP_FALLBACK::PP_file_missing_clip→falls_through_to_IA_original✅
 - [x] PRODUCTION_TESTING::User_validated→"This is working"✅
 - [x] PERF_OPTIMIZATIONS::edge-optimizer_analysis→4_fixes_implemented→lint+typecheck_passing✅
+- [x] AI_PENDING_INDICATOR::processedByAI_warning→metadata_panel_banner+navigation_⏳→PR#72✅
 
 ## Quality Gates Status
 - `npm run lint` → 0 errors ✅
 - `npm run typecheck` → 0 errors ✅
-- `npm test` → 147 tests passing ✅
+- `npm test` → 153 tests passing ✅
 - `npm run quality-gates` → All passing ✅
 
 ## Open Issues (1 remaining - monitoring only)
@@ -113,4 +115,4 @@ Full history: (No PROJECT-HISTORY.md yet - append if created)
 
 ---
 
-**LAST UPDATED:** 2025-11-27 (4 performance optimizations: cache+debounce+event-fix+write-skip, 1 issue remaining)
+**LAST UPDATED:** 2025-12-03 (AI pending indicator: processedByAI warning in metadata panel + ⏳ icon in navigation panel, PR #72)
