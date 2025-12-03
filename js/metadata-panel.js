@@ -458,6 +458,19 @@
           // Store in cache (5 second TTL)
           setCachedMetadata(clip.nodeId, metadata);
 
+          // Dispatch status event to Navigation Panel (for AI pending indicator)
+          try {
+            const statusEvent = new CSEvent('com.elevana.clip-status-updated', 'APPLICATION');
+            statusEvent.data = JSON.stringify({
+              nodeId: clip.nodeId,
+              processedByAI: metadata.processedByAI === true
+            });
+            csInterface.dispatchEvent(statusEvent);
+            addDebug('[MetadataForm] ✓ Dispatched clip-status-updated (processedByAI: ' + metadata.processedByAI + ')');
+          } catch (e) {
+            addDebug('[MetadataForm] ⚠ Failed to dispatch status event: ' + e.message, true);
+          }
+
           // Populate form from metadata
           self.populateFormFromMetadata(metadata);
 
@@ -508,6 +521,15 @@
         this.showLockIndicator(metadata.lockedBy, metadata.lockedAt);
       } else {
         this.hideLockIndicator();
+      }
+
+      // Show AI pending warning if processedByAI is false and all key fields are empty
+      const hasAnyMetadata = metadata.location || metadata.subject || metadata.action || metadata.shotType;
+      if (metadata.processedByAI === false && !hasAnyMetadata) {
+        this.showAIPendingWarning();
+        addDebug('[MetadataForm] ⚠ AI analysis pending - processedByAI: false, fields empty');
+      } else {
+        this.hideAIPendingWarning();
       }
 
       // Show all metadata fields for both video and images
@@ -596,6 +618,28 @@
       const indicator = document.getElementById('lockIndicator');
       if (indicator) {
         indicator.style.display = 'none';
+      }
+    },
+
+    showAIPendingWarning: function() {
+      let warningDiv = document.getElementById('aiPendingWarning');
+      if (!warningDiv) {
+        warningDiv = document.createElement('div');
+        warningDiv.id = 'aiPendingWarning';
+        warningDiv.style.cssText = 'background:#fff3e0; color:#e65100; padding:12px 16px; margin:10px 0; border-radius:6px; font-size:13px; border-left:4px solid #ff9800;';
+        const formContent = document.querySelector('.form-content');
+        if (formContent) {
+          formContent.insertBefore(warningDiv, formContent.firstChild);
+        }
+      }
+      warningDiv.innerHTML = '<strong>⚠️ AI analysis pending</strong><br>This clip hasn\'t been processed by Ingest Assistant yet. Metadata fields are empty.';
+      warningDiv.style.display = 'block';
+    },
+
+    hideAIPendingWarning: function() {
+      const warningDiv = document.getElementById('aiPendingWarning');
+      if (warningDiv) {
+        warningDiv.style.display = 'none';
       }
     },
 

@@ -22,7 +22,8 @@
     selectedClips: [],         // Array of nodeIds for batch operations
     expandedBins: {},          // Bin collapse state (undefined/false = collapsed, true = expanded)
     batchProcessing: false,    // True while batch operation is running
-    batchCancelled: false      // Set to true when user clicks cancel during batch
+    batchCancelled: false,     // Set to true when user clicks cancel during batch
+    clipMetadataStatus: {}     // { nodeId: { processedByAI: boolean } } - progressively populated
   };
 
   // Initialize CSInterface
@@ -301,6 +302,22 @@
         }
       });
 
+      // Listen for clip status updates (processedByAI) from Metadata Panel
+      csInterface.addEventListener('com.elevana.clip-status-updated', function(event) {
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          addDebug('[ClipBrowser] Clip status updated: ' + data.nodeId + ' (processedByAI: ' + data.processedByAI + ')');
+
+          // Store metadata status for this clip
+          PanelState.clipMetadataStatus[data.nodeId] = { processedByAI: data.processedByAI };
+
+          // Re-render to update indicator
+          self.render();
+        } catch (e) {
+          addDebug('[ClipBrowser] ✗ Failed to parse status event: ' + e.message, true);
+        }
+      });
+
       // Listen for clip selection from Metadata Panel navigation (CEP event)
       csInterface.addEventListener('com.elevana.clip-selected', function(event) {
         addDebug('[ClipBrowser] Received clip-selected event (external navigation)');
@@ -456,10 +473,23 @@
         const hasStructuredName = clip.name && clip.name.indexOf('-') !== -1 &&
                                   clip.name.split('-').length >= 2 &&
                                   !clip.name.match(/^EA\d{6}/i); // Exclude original camera names like EA001234
-        const hasMetadata = hasStructuredName;
 
-        const statusIcon = hasMetadata ? '✓' : '•';
-        const statusClass = hasMetadata ? 'tagged' : 'untagged';
+        // Check cached metadata status (populated when user clicks clips)
+        const cachedStatus = PanelState.clipMetadataStatus[clip.nodeId];
+        const aiPending = cachedStatus && cachedStatus.processedByAI === false;
+
+        // Determine status: ✓ (tagged) | ⏳ (AI pending) | • (unknown)
+        let statusIcon, statusClass;
+        if (hasStructuredName) {
+          statusIcon = '✓';
+          statusClass = 'tagged';
+        } else if (aiPending) {
+          statusIcon = '⏳';
+          statusClass = 'ai-pending';
+        } else {
+          statusIcon = '•';
+          statusClass = 'untagged';
+        }
 
         // Add 'in-bin' class if we're in bin grouping mode
         const inBinClass = (PanelState.sortBy === 'bin') ? ' in-bin' : '';
