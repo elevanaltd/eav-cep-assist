@@ -814,8 +814,11 @@
     },
 
     toggleBinSelection: function(binName) {
-      // Find all clips in this bin
-      const binClips = PanelState.allClips.filter(function(clip) {
+      // Get filtered clips first to respect active filters
+      const filteredClips = this.getFilteredClips();
+
+      // Find clips in this bin that are ALSO in the filtered set
+      const binClips = filteredClips.filter(function(clip) {
         if (!clip.treePath) {
           return binName === 'Other';
         }
