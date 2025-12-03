@@ -327,6 +327,10 @@ body {
     color: #808080; /* Gray dot */
 }
 
+.status-icon.ai-pending {
+    color: #ff9800; /* Orange hourglass - AI analysis pending */
+}
+
 .clip-name {
     flex: 1;
     font-size: 11px;
