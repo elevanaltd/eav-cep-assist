@@ -763,6 +763,21 @@
           addDebug('[MetadataForm] ✓ Metadata saved');
           self.showSuccessIndicator('✓ Metadata saved');
 
+          // Compute new shotName for event dispatch
+          // Get shotNumber from shotNameDisplay (reliable source - populated from metadata on load)
+          const shotNameElement = document.getElementById('shotNameDisplay');
+          const currentShotName = shotNameElement ? shotNameElement.value : '';
+          // Extract shotNumber from current name (format: xxx-#N)
+          const shotNumberMatch = currentShotName.match(/-#(\d+)$/);
+          const shotNumber = shotNumberMatch ? parseInt(shotNumberMatch[1], 10) : null;
+          const newShotName = self.computeShotNameLocally({
+            location: updates.location,
+            subject: updates.subject,
+            action: updates.action,
+            shotType: updates.shotType,
+            shotNumber: shotNumber
+          });
+
           // Invalidate cache (force fresh read on next load)
           invalidateCache(currentClip.nodeId);
 
@@ -772,9 +787,9 @@
           // Emit CEP event to notify Navigation Panel (clip name may have changed)
           try {
             const metadataEvent = new CSEvent('com.elevana.metadata-applied', 'APPLICATION');
-            metadataEvent.data = JSON.stringify({ nodeId: currentClip.nodeId, name: currentClip.name });
+            metadataEvent.data = JSON.stringify({ nodeId: currentClip.nodeId, name: newShotName });
             csInterface.dispatchEvent(metadataEvent);
-            addDebug('[MetadataForm] ✓ CEP metadata-applied event dispatched');
+            addDebug('[MetadataForm] ✓ CEP metadata-applied event dispatched with new shotName: ' + newShotName);
           } catch (e) {
             addDebug('[MetadataForm] ✗ Failed to dispatch metadata event: ' + e.message, true);
           }

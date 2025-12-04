@@ -2,7 +2,7 @@
 
 **Purpose:** Track workspace setup (B1) and ongoing development tasks
 
-**LAST UPDATED:** 2025-11-27 (4 performance optimizations - issues #13 #23 closed)
+**LAST UPDATED:** 2025-12-04 (PR #75: Bin selection filter fix + Navigation panel update fix - 160 tests)
 
 ---
 
@@ -14,7 +14,7 @@ All core features implemented and merged to main:
 - ✅ Batch Apply JSON Rework (PR #50)
 - ✅ XMP Removal + Tagged Filter (PR #52)
 - ✅ Consumer Alignment + Security Fix (PR #54)
-- ✅ 147 tests passing
+- ✅ 160 tests passing
 - ✅ Quality gates operational
 
 ---
@@ -41,7 +41,7 @@ All core features implemented and merged to main:
   - [x] Testing strategy: Unit tests (Vitest) + Manual tests (Premiere Pro)
   - [x] Test directory structure exists (`test/unit/`, `test/integration/`, `test/track-a/`)
   - [x] Add npm script: `npm test`
-  - [x] Verify: **147 tests passing** (as of 2025-11-26)
+  - [x] Verify: **160 tests passing** (as of 2025-12-04)
 
 ### B1.2: Coordination Documentation
 
@@ -99,7 +99,7 @@ All core features implemented and merged to main:
   - [x] Proven working files identified (jsx/host.jsx, js/*-panel.js)
 - [x] Architecture evolved beyond prototype
   - [x] JSON-only architecture implemented (XMP parsing removed)
-  - [x] 147 tests provide regression protection
+  - [x] 160 tests provide regression protection
 
 ### B1.6: B2 Handoff Preparation
 
@@ -141,7 +141,7 @@ All core features implemented and merged to main:
 ### Quality Gates Operational ✅
 - [x] `npm run lint` executes (ESLint 9.39.1, 0 errors)
 - [x] `npm run typecheck` executes (TypeScript 5.9.3, 0 errors)
-- [x] `npm test` executes (Vitest 2.1.8, **147 tests passing**)
+- [x] `npm test` executes (Vitest 2.1.8, **160 tests passing**)
 - [x] `npm run quality-gates` executes all gates successfully
 
 ### Documentation Complete ✅
@@ -160,7 +160,7 @@ All core features implemented and merged to main:
 
 ### Workspace Validated ✅
 - [x] Test directory structure created and documented
-- [x] 147 tests demonstrate CEP testing approach (mocks, fixtures, etc.)
+- [x] 160 tests demonstrate CEP testing approach (mocks, fixtures, etc.)
 - [x] Quality gate scripts tested and working
 - [x] Production validation by user: "This is working"
 
@@ -231,7 +231,7 @@ All core features implemented and merged to main:
 ## NOTES
 
 **Testing Achievements:**
-- 147 tests passing (as of 2025-11-26)
+- 160 tests passing (as of 2025-12-04)
 - Track A JSON read/write fully tested
 - CEP event system tested with mocks
 - Batch apply integration tests
@@ -256,6 +256,6 @@ All core features implemented and merged to main:
 
 ---
 
-**LAST UPDATED:** 2025-11-27
-**PHASE:** PRODUCTION STABLE + PERFORMANCE OPTIMIZED
-**NEXT:** Monitor #35 until Dec 1 (write-skip optimization may resolve network flush issue)
+**LAST UPDATED:** 2025-12-04
+**PHASE:** PRODUCTION STABLE + BUG FIXES (PR #75)
+**NEXT:** Monitor #35 - Dec 1 decision gate passed, assess if issue persists
