@@ -45,6 +45,27 @@ Before applying migrations, verify:
 - Deprecation cycle followed for breaking changes (14 days)
 
 ### Step 5: Execute Migration
+
+**PREFERRED: CI Pipeline Deployment (Gated Auto-Deploy)**
+
+For EAV monorepo, migrations should flow through CI:
+
+1. Create PR with migration files in `supabase/migrations/`
+2. Add `deploy-migrations` label to PR
+3. CI validates locally (lint, reset, tests, schema lint)
+4. Merge to main triggers production deployment
+5. Audit log entry created automatically
+
+**Benefits:**
+- No drift between code and schema
+- All migrations tied to git commits
+- Automatic audit trail
+- Requires CI checks to pass first
+
+**FALLBACK: Direct MCP Application**
+
+Use only when CI deployment is not available or for emergency fixes:
+
 **Tool Selection:**
 - **Use apply_migration**: DDL operations (CREATE, ALTER, DROP with deprecation)
 - **Use execute_sql**: DML operations, data migrations, temporary operations
@@ -53,6 +74,11 @@ Before applying migrations, verify:
 - Test complex migrations in staging environment first
 - Verify rollback procedures exist
 - Document expected schema changes
+
+**WARNING:** Direct MCP application bypasses CI validation. Always:
+- Create local migration file first
+- Commit to git after applying
+- Document in PR why CI was bypassed
 
 ### Step 6: Verify with Advisors
 ```bash
@@ -156,3 +182,19 @@ mcp__supabase__get_advisors(project_id, type: "performance")
 - ❌ Apply breaking changes without 14-day deprecation cycle
 - ❌ Bypass migration protocol for "urgent" changes (rollback exists for emergencies)
 - ❌ Modify production schema directly without migration files
+- ❌ Use MCP apply_migration without creating local file first (causes drift)
+- ❌ Skip CI deployment flow for convenience (gated deploy exists for safety)
+
+## CI Deployment Reference
+
+**Location:** `.github/workflows/ci.yml` (deploy-migrations job)
+
+**Required Secret:** `SUPABASE_ACCESS_TOKEN` in GitHub repo settings
+
+**Label:** `deploy-migrations` (must be on PR before merge)
+
+**Audit:** Deployments recorded in `audit_log` table with:
+- `action`: 'ci_migration_deploy'
+- `details`: commit_sha, actor, pr_number, pr_title
+
+**DR Playbook:** `.coord/docs/001-OPS-DISASTER-RECOVERY-PLAYBOOK.md`

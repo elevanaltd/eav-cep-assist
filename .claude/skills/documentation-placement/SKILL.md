@@ -4,60 +4,110 @@ description: Document placement rules, visibility protocols, and timeline test (
 allowed-tools: Read, Write, Bash
 ---
 
-# Documentation Placement
+# Documentation Placement Skill
 
-CORE_PRINCIPLE::"Timeline determines placement → Planning docs before code = coordination/, Implementation docs after code = dev/"
+## Purpose
+
+Provides rules for document placement across repository boundaries, ensures documentation visibility through timeline-based logic, and enforces documentation-first workflow.
+
+## When to Use This Skill
+
+Auto-activates when:
+- Creating new documentation ("document this", "write docs")
+- Deciding where documentation belongs ("where should this go")
+- Phase artifact placement (D1, D2, D3, B0-B4 reports)
+- Documentation-first PR workflow
+- Coordinating documentation across dev/ and coordination/ repos
 
 ---
 
-## TIMELINE TEST (THE DECISION RULE)
+## Core Principle: Timeline Test
 
-```octave
-DOCUMENT_PLACEMENT::[
-  IF[created_before_code_exists]→coordination/workflow-docs/,
-  IF[describes_actual_implementation]→dev/docs/,
-  IF[guides_implementation]→dev/docs/architecture/[D3-BLUEPRINT-ORIGINAL.md]
-]
+**DOCUMENT_PLACEMENT_LOGIC**:
+```
+IF document_created_before_code_exists:
+  THEN: coordination/workflow-docs/
+
+IF document_describes_actual_implementation:
+  THEN: dev/docs/
+
+IF document_guides_implementation:
+  THEN: dev/docs/ (e.g., D3-BLUEPRINT-ORIGINAL.md)
+```
+
+**Why**: Timeline determines placement - planning docs go in coordination/, implementation docs go in dev/.
+
+---
+
+## Repository Structure
+
+### Coordination Repository (`coordination/`)
+**Purpose**: Planning, phase artifacts, project management
+
+```
+coordination/
+├── workflow-docs/
+│   ├── D1-NORTH-STAR.md           # Requirements (phase artifact)
+│   ├── D2-DESIGN.md               # Design approach
+│   └── B0-VALIDATION.md           # Gate decision
+├── phase-reports/
+│   ├── B1-BUILD-PLAN.md           # Planning report
+│   ├── B2-IMPLEMENTATION.md       # Build report
+│   ├── B3-INTEGRATION.md          # Integration report
+│   └── B4-DELIVERY.md             # Delivery report
+├── planning-docs/
+│   ├── CHARTER.md                 # Project charter
+│   ├── ASSIGNMENTS.md             # Agent assignments
+│   └── PROJECT-CONTEXT.md         # Current status
+└── ACTIVE-WORK.md                 # Status board
+```
+
+### Dev Repository (`dev/`)
+**Purpose**: Implementation documentation, technical guides, API docs
+
+```
+dev/docs/
+├── architecture/
+│   ├── D3-BLUEPRINT-ORIGINAL.md   # The contract (from D3)
+│   ├── ARCHITECTURE-AS-BUILT.md   # Implementation reality
+│   └── ARCHITECTURE-DEVIATIONS.md # Explained differences
+├── adr/
+│   └── ADR-XXXX-{decision}.md     # Implementation decisions
+├── api/
+│   └── {endpoint}-api.md          # API documentation
+└── guides/
+    └── {feature}-guide.md         # Technical guides
 ```
 
 ---
 
-## REPOSITORY PLACEMENT RULES
+## Phase Artifact Placement Rules
 
-```octave
-COORDINATION::[
-  workflow-docs/[D1-NORTH-STAR.md, D2-DESIGN.md, B0-VALIDATION.md],
-  phase-reports/[B1-BUILD-PLAN.md, B2-IMPLEMENTATION.md, B3-INTEGRATION.md, B4-DELIVERY.md],
-  planning-docs/[CHARTER.md, ASSIGNMENTS.md, PROJECT-CONTEXT.md],
-  ACTIVE-WORK.md[status_board]
-]
-
-DEV_DOCS::[
-  architecture/[D3-BLUEPRINT-ORIGINAL.md, ARCHITECTURE-AS-BUILT.md, ARCHITECTURE-DEVIATIONS.md],
-  adr/[ADR-XXXX-{decision}.md],
-  api/[{endpoint}-api.md],
-  guides/[{feature}-guide.md]
-]
-
-PHASE_ARTIFACTS::[
-  D1_D2_B0→coordination/workflow-docs/,
-  D3_BLUEPRINT→dev/docs/architecture/[after_B1_migration],
-  B1_B2_B3_B4→coordination/phase-reports/
-]
 ```
+D1_NORTH_STAR    → coordination/workflow-docs/
+D2_DESIGN        → coordination/workflow-docs/
+D3_BLUEPRINT     → dev/docs/architecture/D3-BLUEPRINT-ORIGINAL.md
+B0_VALIDATION    → coordination/workflow-docs/
+B1-B4_REPORTS    → coordination/phase-reports/
+```
+
+**Critical**: D3 Blueprint moves FROM coordination TO dev/ at B1 migration gate.
 
 ---
 
-## DOCUMENTATION-FIRST PR PROTOCOL
+## Documentation-First PR Protocol
 
-**Principle**: "Documentation isn't a side effect of code, it's a prerequisite for code."
+### Core Principle
+**"Documentation isn't a side effect of code, it's a prerequisite for code."**
 
-**Example Workflow:**
+### Workflow Sequence
 ```bash
-# 1. Merge documentation FIRST
+# 1. Create and merge documentation FIRST
 git checkout -b docs/adr-001
 echo "# ADR-001: CQRS Implementation" > docs/adr/ADR-001.md
+git add docs/adr/ADR-001.md
 git commit -m "docs: Add ADR-001 for CQRS implementation"
+git push origin docs/adr-001
 gh pr create --title "docs: ADR-001 CQRS Implementation"
 gh pr merge --merge
 
@@ -69,120 +119,184 @@ git commit -m "feat: Implement CQRS per ADR-001
 Implements decision from docs/adr/ADR-001.md (merged in PR #123)"
 ```
 
-**Merge Strategy:**
-```octave
-DOC_TYPE_MERGE::[
-  D3_BLUEPRINT→immediate_before_B0,
-  ADRs→immediate_before_implementation,
-  API_DOCS→with_or_before_implementation,
-  ARCHITECTURE_AS_BUILT→with_implementation,
-  DEVIATIONS→update_as_discovered
-]
+### PR Merge Strategy
+```
+DOCUMENT_TYPE         MERGE_STRATEGY
+D3-BLUEPRINT         → Immediate merge before B0
+ADRs                 → Immediate merge before implementation
+API_DOCS             → Merge with or before implementation
+ARCHITECTURE_AS_BUILT → Merge with implementation
+DEVIATIONS           → Update as discovered
 ```
 
 ---
 
-## B1 MIGRATION GATE (CRITICAL CHECKPOINT)
+## B1 Migration Gate Enforcement
 
-```octave
-B1_EXECUTION_FLOW::[
-  B1_01[task-decomposer]→EXECUTE_IN[ideation_directory],
-  B1_02[workspace-architect]→EXECUTE_IN[ideation_directory],
+### Directory Context Requirements
+```
+B1_EXECUTION_FLOW:
+  B1_01[task-decomposer]     → EXECUTE_IN[ideation_directory]
+  B1_02[workspace-architect]  → EXECUTE_IN[ideation_directory]
 
-  MIGRATION_GATE::[
-    STOP→human_checkpoint,
-    verify→D3_BLUEPRINT_moved_to_dev/docs/architecture/,
-    action→cd_/Volumes/HestAI-Projects/{PROJECT}/dev/
-  ],
+  MIGRATION_GATE:
+    ⚠️ STOP - Human checkpoint
+    - Verify D3-BLUEPRINT moved to dev/docs/architecture/
+    - Confirm coordination structure updated
+    - cd /Volumes/HestAI-Projects/{PROJECT}/dev/
 
-  B1_03[workspace-architect]→VALIDATE_IN[dev_directory],
-  B1_04+→EXECUTE_IN[dev_directory]
-]
+  B1_03[workspace-architect]  → VALIDATE_IN[dev_directory]
+  B1_04[implementation-lead]  → EXECUTE_IN[dev_directory]
+  B1_05[build-plan-checker]   → EXECUTE_IN[dev_directory]
 ```
 
-**Example Migration:**
-```bash
-# At B1 migration gate
-cd /Volumes/HestAI-Projects/{project}
-mv coordination/workflow-docs/D3-BLUEPRINT.md dev/docs/architecture/D3-BLUEPRINT-ORIGINAL.md
-git commit -m "docs: Migrate D3 Blueprint to dev/ at B1 gate"
-cd dev/  # Continue B1_03 in new location
-```
+**Critical**: B1_02 completes in ideation/, B1_03 starts in dev/ after manual migration.
 
 ---
 
-## FRONT-MATTER REQUIREMENTS
+## ACTIVE-WORK.md Status Board
 
-```octave
-ARCHITECTURE_DOCS::[
-  applies_to_tag, supersedes, superseded_by,
-  schema_version, phase, status[ORIGINAL|AS_BUILT|DEVIATION]
-]
+### Purpose
+Mitigate worktree isolation by maintaining visible status board in coordination/.
 
-ADR_DOCS::[
-  adr_number, title, status[ACCEPTED|SUPERSEDED|DEPRECATED],
-  decision_date, implements, deviates_from
-]
-```
-
----
-
-## ACTIVE-WORK.md STATUS BOARD
-
-**Purpose**: Mitigate worktree isolation via visible status board
-
-**Template:**
+### Template
 ```markdown
 # Active Work Status Board
-_Last Updated: 2025-11-12_
+_Last Updated: 2025-11-12 14:30 PST_
 
-## Feature: CQRS (worktree: feat-cqrs)
-- Blueprint: D3-BLUEPRINT-ORIGINAL.md
-- ADR: ADR-001 ✅ MERGED
+## Feature: CQRS Implementation (worktree: feat-cqrs)
+- Blueprint: [D3-BLUEPRINT-ORIGINAL.md](../dev/docs/architecture/D3-BLUEPRINT-ORIGINAL.md)
+- ADR: [ADR-001](../dev/docs/adr/ADR-001.md) ✅ MERGED
 - Status: Implementing (B2_02)
-- PR: #456 [WIP]
+- PR: [#456](link) [WIP]
+- Agent: implementation-lead
+
+## Feature: Authentication (worktree: feat-auth)
+- ADR: [ADR-002](link) 🔄 IN REVIEW
+- Status: Design (awaiting ADR merge)
+- Agent: security-specialist
 ```
 
-**Update Protocol:**
-```octave
-VISIBILITY_RULES::[
-  check_ACTIVE_WORK.md_before_starting,
-  update_when_creating_worktree,
-  link_PRs_for_documentation_visibility,
-  mark_complete_when_merging
-]
+### Visibility Rules
+1. Check ACTIVE-WORK.md before starting work
+2. Update status when creating worktree
+3. Link PRs for documentation visibility
+4. Mark completion when merging
+
+---
+
+## Front-Matter Requirements
+
+### Architecture Documents
+```yaml
+---
+applies_to_tag: v1.0.0-beta1
+supersedes: null
+superseded_by: null
+schema_version: 1.0
+phase: D3
+status: ORIGINAL | AS_BUILT | DEVIATION
+---
+```
+
+### ADR Front-Matter
+```yaml
+---
+adr_number: 001
+title: CQRS Four-Tool Pattern
+status: ACCEPTED | SUPERSEDED | DEPRECATED
+decision_date: 2025-11-12
+implements: D3-BLUEPRINT-ORIGINAL.md#section
+deviates_from: null
+---
 ```
 
 ---
 
-## AGENT RESPONSIBILITIES
+## Phase Transition Cleanup Protocol
 
-```octave
-AGENT_BOUNDARIES::[
-  directory-curator→reports_violations_only[never_fixes_content],
-  workspace-architect→fixes_placement_violations+owns_migrations,
-  system-steward→documents_patterns_and_wisdom,
-  holistic-orchestrator→enforces_at_phase_gates,
-  hestai-doc-steward→governs_/Volumes/HestAI/docs/
-]
+### Mandatory Cleanup Points
+```
+CLEANUP_REQUIRED_AT:
+  - B1_02 completion (before migration gate)
+  - B2_04 completion (before B3)
+  - B3_04 completion (before B4)
+  - B4_05 completion (before delivery)
+```
+
+### Cleanup Sequence
+```
+1. holistic-orchestrator → directory-curator[analyze]
+2. directory-curator → REPORT[violations]
+3. holistic-orchestrator → workspace-architect[fix]
+4. workspace-architect → git commit[clean state]
 ```
 
 ---
 
-## PHASE TRANSITION CLEANUP
+## Agent Responsibilities
 
-```octave
-CLEANUP_GATES::[
-  B1_02_completion→before_migration_gate,
-  B2_04_completion→before_B3,
-  B3_04_completion→before_B4,
-  B4_05_completion→before_delivery
-]
-
-CLEANUP_SEQUENCE::[
-  holistic-orchestrator→directory-curator[analyze],
-  directory-curator→REPORT[violations],
-  holistic-orchestrator→workspace-architect[fix],
-  workspace-architect→git_commit[clean_state]
-]
+### Agent Boundaries
 ```
+directory-curator:    Reports violations only, never fixes content
+workspace-architect:  Fixes placement violations, owns migrations
+system-steward:      Documents patterns and wisdom
+holistic-orchestrator: Enforces at phase gates
+hestai-doc-steward:  Governs /docs/ areas in HestAI repo
+```
+
+---
+
+## Common Patterns
+
+### Pattern 1: Creating Phase Artifact
+```bash
+# Example: D1 North Star creation
+cd /Volumes/HestAI-Projects/{project}/coordination/workflow-docs/
+echo "# D1-NORTH-STAR" > D1-NORTH-STAR.md
+# Add content...
+git add workflow-docs/D1-NORTH-STAR.md
+git commit -m "docs: Add D1 North Star phase artifact"
+```
+
+### Pattern 2: Moving D3 Blueprint at B1 Gate
+```bash
+# Human checkpoint at B1 migration gate
+cd /Volumes/HestAI-Projects/{project}
+mv coordination/workflow-docs/D3-BLUEPRINT.md dev/docs/architecture/D3-BLUEPRINT-ORIGINAL.md
+git add .
+git commit -m "docs: Migrate D3 Blueprint to dev/ at B1 gate"
+cd dev/
+# Continue with B1_03...
+```
+
+### Pattern 3: Documentation-First ADR
+```bash
+# 1. Write ADR first
+cd /Volumes/HestAI-Projects/{project}/dev
+git checkout -b docs/adr-005
+echo "# ADR-005: Authentication Strategy" > docs/adr/ADR-005.md
+# Add content with front-matter...
+git add docs/adr/ADR-005.md
+git commit -m "docs: Add ADR-005 for authentication strategy"
+gh pr create --title "docs: ADR-005 Authentication Strategy"
+gh pr merge --merge
+
+# 2. Implement referencing merged ADR
+git checkout -b feat/auth-implementation
+# Implementation...
+git commit -m "feat: Implement authentication per ADR-005"
+```
+
+---
+
+## Key Takeaways
+
+1. **Timeline determines placement**: Before code = coordination/, after code = dev/
+2. **Documentation-first**: Merge docs before implementation code
+3. **Phase artifacts have designated homes**: D1-D2-B0 in coordination/, D3+ in dev/
+4. **ACTIVE-WORK.md prevents isolation**: Update status board for visibility
+5. **B1 migration gate**: Human checkpoint moves D3 Blueprint to dev/
+6. **Front-matter required**: Architecture docs and ADRs need valid YAML
+7. **Cleanup at phase gates**: Enforce clean state before transitions
+8. **Agent boundaries clear**: directory-curator reports, workspace-architect fixes

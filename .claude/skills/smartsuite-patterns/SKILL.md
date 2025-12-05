@@ -4,21 +4,33 @@ description: SmartSuite API patterns and field format validation. Covers choices
 allowed-tools: Read
 ---
 
-# SmartSuite Patterns
+# SmartSuite Patterns Skill
 
-CRITICAL_PRINCIPLE::"choices≠options → UUID_preservation≠UUID_corruption → Data_integrity≠Data_destruction"
+## Purpose
+
+Provides SmartSuite API patterns, field format requirements, and UUID corruption prevention strategies. Critical for correct SmartSuite integration and data integrity.
+
+## When to Use This Skill
+
+Auto-activates when:
+- Working with SmartSuite API
+- Creating or updating SmartSuite fields
+- "choices vs options" queries
+- UUID corruption prevention
+- SmartSuite field format validation
+- SmartSuite MCP integration
 
 ---
 
-## ⚠️ CRITICAL: UUID CORRUPTION PREVENTION
+## ⚠️ CRITICAL: UUID Corruption Prevention
 
-**THE GOLDEN RULE: Use `choices`, NEVER `options`**
+### THE GOLDEN RULE: Use `choices`, NEVER `options`
 
-**WRONG** (destroys all data - IRREVERSIBLE):
+**WRONG** (destroys all data):
 ```json
 {
   "params": {
-    "options": [  // ❌ WRONG - creates NEW UUIDs, destroys ALL existing data
+    "options": [  // ❌ WRONG - creates new UUIDs
       {"value": "draft"},
       {"value": "active"}
     ]
@@ -26,11 +38,11 @@ CRITICAL_PRINCIPLE::"choices≠options → UUID_preservation≠UUID_corruption �
 }
 ```
 
-**CORRECT** (preserves UUIDs and data):
+**CORRECT** (preserves UUIDs):
 ```json
 {
   "params": {
-    "choices": [  // ✅ CORRECT - preserves UUIDs and data
+    "choices": [  // ✅ CORRECT - preserves UUIDs
       {"value": "draft", "id": "existing-uuid-1"},
       {"value": "active", "id": "existing-uuid-2"}
     ]
@@ -38,137 +50,285 @@ CRITICAL_PRINCIPLE::"choices≠options → UUID_preservation≠UUID_corruption �
 }
 ```
 
-**Why This Matters**: Using `options` instead of `choices` **permanently destroys all data** in that field across all records. This is **IRREVERSIBLE**.
+**Why This Matters**: Using `options` instead of `choices` **permanently destroys all data** in that field across all records. This is IRREVERSIBLE.
 
 ---
 
-## AUTHENTICATION
+## Authentication Pattern
 
-```octave
-HEADERS::[
-  Authorization→"Token ${SMARTSUITE_API_TOKEN}",  // NOT "Bearer"
-  ACCOUNT_ID→"s3qnmox1",
-  Content_Type→"application/json"
-]
+```json
+{
+  "Authorization": "Token ${SMARTSUITE_API_TOKEN}",
+  "ACCOUNT-ID": "s3qnmox1",
+  "Content-Type": "application/json"
+}
+```
+
+**CRITICAL**: Use "Token" not "Bearer" for Authorization header
+
+---
+
+## Rate Limiting
+
+- **Max**: 4-5 requests/second
+- **Recommended delay**: 250ms between requests
+- **429 backoff**: 30 seconds with exponential backoff
+- **Retry strategy**: Max 3 retries for 5xx errors
+
+---
+
+## Performance Benchmarks (Production Tested)
+
+- **Query Operations**: 400-600ms consistently
+- **CRUD Operations**: 400-700ms including validation
+- **Bulk Operations**: 600-850ms for multiple records
+- **Schema Discovery**: 300-500ms (standard), 450-850ms (intelligent API)
+
+---
+
+## Core CRUD Operations
+
+### List Records (POST, not GET)
+```json
+POST /api/v1/applications/{appId}/records/list/
+{
+  "limit": 2,  // MCP safe limit
+  "offset": 0,
+  "filter": {
+    "operator": "and",
+    "fields": [
+      {"field": "status", "comparison": "is", "value": "active"}
+    ]
+  }
+}
+```
+
+### Get Single Record
+```
+GET /api/v1/applications/{appId}/records/{recordId}/
+```
+**CRITICAL**: Trailing slash required
+
+### Create Record
+```json
+POST /api/v1/applications/{appId}/records/
+{
+  "title": "Record Title",
+  "projects_link": ["68a8ff5237fde0bf797c05b3"],  // Array for linked records
+  "status": "draft"
+}
+```
+
+### Update Record
+```json
+PATCH /api/v1/applications/{appId}/records/{recordId}/
+{
+  "status": "active",
+  "assigned_to": ["user_id_1", "user_id_2"]  // Array for linked records
+}
+```
+
+### Delete Record
+```
+DELETE /api/v1/applications/{appId}/records/{recordId}/
+```
+**CRITICAL**: Trailing slash required or silent failure
+
+---
+
+## Bulk Operations (Max 25 records)
+
+### Bulk Create
+```json
+POST /api/v1/applications/{appId}/records/bulk/
+{
+  "items": [
+    {"title": "Record 1", "status": "draft"},
+    {"title": "Record 2", "status": "active"}
+  ]
+}
+```
+**Performance**: 600-850ms for multiple records
+
+### Bulk Update
+```json
+PATCH /api/v1/applications/{appId}/records/bulk/
+{
+  "items": [
+    {"id": "record_id_1", "status": "completed"},
+    {"id": "record_id_2", "priority": "high"}
+  ]
+}
 ```
 
 ---
 
-## CRITICAL FIELD FORMAT RULES
+## Critical Field Format Rules
 
-```octave
-LINKED_RECORDS::[
-  MUST→arrays[even_for_single_values],
-  WRONG→"project_id": "uuid",
-  CORRECT→"project_id": ["uuid"],
-  FILTER_OPERATORS→has_any_of|has_all_of|has_none_of[NEVER_is_or_equals]
-]
+### 1. Linked Record Fields
+- **MUST** be arrays, even for single values
+- **Wrong**: `"project_id": "68a8ff5237fde0bf797c05b3"`
+- **Correct**: `"project_id": ["68a8ff5237fde0bf797c05b3"]`
+- **Filter operators**: Use `has_any_of`, `has_all_of`, `has_none_of` - NEVER `is` or `equals`
 
-SELECT_STATUS_FIELDS::[
-  USE→option_codes≠display_labels,
-  WRONG→"status": "In Progress",
-  CORRECT→"status": "in_progress"
-]
+### 2. Rich Text Fields (SmartDoc Structure)
 
-FORMULA_ROLLUP_FIELDS::[
-  READ_ONLY→cannot_set_via_API,
-  CALCULATED→by_SmartSuite,
-  ATTEMPTING_SET→validation_error
-]
+**Populated Rich Text Field**:
+```json
+{
+  "projectBrief": {
+    "data": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {"textAlign": "left", "size": "medium"},
+          "content": [
+            { "type": "text", "text": "Your content here..." }
+          ]
+        }
+      ]
+    },
+    "html": "<div class=\"rendered\"><p>Your content here...</p></div>",
+    "preview": "Your content here..."
+  }
+}
+```
 
-RICH_TEXT_FIELDS::[
-  STRUCTURE→SmartDoc_format[data, html, preview],
-  EMPTY→{data:{type:"doc",content:[]}, html:"", preview:""}
-]
+**Empty Rich Text Field**:
+```json
+{
+  "description": {
+    "data": {"type": "doc", "content": []},
+    "html": "",
+    "preview": ""
+  }
+}
+```
 
-DATE_RANGE_FIELDS::[
-  FORMAT→{from_date:{date:ISO8601,include_time:bool}, to_date:{...}}
-]
+### 3. Select/Status Fields
+- Use option **codes** not display labels
+- **Wrong**: `"status": "In Progress"`
+- **Correct**: `"status": "in_progress"`
+
+### 4. Checklist Fields
+Must use full SmartDoc structure with items array:
+```json
+{
+  "checklist99": {
+    "items": [
+      {
+        "id": "item-id",
+        "content": { /* SmartDoc structure */ },
+        "completed": false,
+        "assignee": null,
+        "due_date": null
+      }
+    ]
+  }
+}
+```
+
+### 5. Date Range Fields
+```json
+{
+  "date_range": {
+    "from_date": {"date": "2025-01-15T00:00:00Z", "include_time": false},
+    "to_date": {"date": "2025-01-20T00:00:00Z", "include_time": false}
+  }
+}
+```
+
+### 6. Formula/Rollup Fields
+- **READ ONLY** - cannot be set via API
+- Values are calculated by SmartSuite
+- Attempting to set will cause validation errors
+
+---
+
+## Field Discovery Process
+
+### Step 1: Use Schema Discovery
+```typescript
+// Always start with schema discovery
+const schema = await smartsuiteSchema(tableId, 'summary');
+// Returns: table info, field list with types
+```
+
+### Step 2: Get Field Details
+```typescript
+// For detailed field information including choices
+const fieldDetail = await smartsuiteSchema(tableId, 'field_detail', fieldSlug);
+// Returns: Full field configuration including UUIDs
+```
+
+### Step 3: Validate Before Write
+```typescript
+// ALWAYS validate field format before writing
+// - Linked records: Check for arrays
+// - Select fields: Check for codes not labels
+// - Required fields: Ensure present
 ```
 
 ---
 
-## DRY-RUN SAFETY PATTERN (MANDATORY)
+## DRY-RUN Safety Pattern
 
-```octave
-ALWAYS_DEFAULT::[
-  smartsuiteFieldCreate→dryRun:true,
-  smartsuiteFieldUpdate→dryRun:true,
-  smartsuiteRecord→dryRun:true
-]
+**ALWAYS** default to `dry_run: true` for mutations:
 
-EXECUTION::[
-  1_dry_run→verify_output,
-  2_review→confirm_correct,
-  3_execute→dryRun:false
-]
+```typescript
+// Field creation with dry-run
+smartsuiteFieldCreate(tableId, fieldConfig, dryRun: true)
+
+// Field update with dry-run
+smartsuiteFieldUpdate(tableId, fieldId, updates, dryRun: true)
+
+// Record mutation with dry-run
+smartsuiteRecord('update', tableId, recordId, data, dryRun: true)
 ```
+
+**Only set `dryRun: false` after verifying operation is correct**
 
 ---
 
-## CRUD OPERATIONS (QUICK REFERENCE)
+## Common Patterns
 
-```octave
-OPERATIONS::[
-  LIST→POST /api/v1/applications/{appId}/records/list/,
-  GET→GET /api/v1/applications/{appId}/records/{recordId}/[trailing_slash_REQUIRED],
-  CREATE→POST /api/v1/applications/{appId}/records/,
-  UPDATE→PATCH /api/v1/applications/{appId}/records/{recordId}/,
-  DELETE→DELETE /api/v1/applications/{appId}/records/{recordId}/[trailing_slash_REQUIRED],
-  BULK_CREATE→POST /api/v1/applications/{appId}/records/bulk/[max_25],
-  BULK_UPDATE→PATCH /api/v1/applications/{appId}/records/bulk/[max_25]
-]
-
-TRAILING_SLASH::[
-  GET_DELETE→REQUIRED[silent_failure_without],
-  POST_PATCH→optional
-]
-
-RATE_LIMITING::[
-  MAX→4_5_requests_per_second,
-  RECOMMENDED→250ms_delay_between_requests,
-  429_BACKOFF→30s_exponential,
-  RETRY→max_3_retries_for_5xx
-]
-```
-
----
-
-## FEW-SHOT EXAMPLES
-
-### Example 1: Safe Field Update (UUID Preservation)
-
+### Pattern 1: Safe Field Update (Preserving UUIDs)
 ```typescript
 // 1. Get existing field configuration
 const fieldDetail = await smartsuiteSchema(tableId, 'field_detail', 'status');
 
-// 2. Extract existing choices WITH UUIDs
+// 2. Extract existing choices with UUIDs
 const existingChoices = fieldDetail.params.choices;
-// [{"value": "draft", "id": "uuid-1"}, {"value": "active", "id": "uuid-2"}]
+// [
+//   {"value": "draft", "id": "uuid-1"},
+//   {"value": "active", "id": "uuid-2"}
+// ]
 
 // 3. Add new choice while preserving existing UUIDs
 const updatedChoices = [
-  ...existingChoices,  // ✅ Preserve existing with UUIDs
-  {"value": "archived", "id": generateNewUUID()}
+  ...existingChoices,  // Preserve existing with UUIDs
+  {"value": "archived", "id": generateNewUUID()}  // Add new
 ];
 
-// 4. DRY-RUN first
+// 4. Update field with DRY-RUN first
 await smartsuiteFieldUpdate(
-  tableId, fieldId,
+  tableId,
+  fieldId,
   { params: { choices: updatedChoices } },  // ✅ choices, not options
   dryRun: true
 );
 
-// 5. Verify output, then execute
+// 5. Review output, then execute
 await smartsuiteFieldUpdate(
-  tableId, fieldId,
+  tableId,
+  fieldId,
   { params: { choices: updatedChoices } },
   dryRun: false
 );
 ```
 
-### Example 2: Creating Linked Record
-
+### Pattern 2: Creating Linked Record
 ```typescript
 // WRONG: String value
 const wrong = {
@@ -180,11 +340,11 @@ const correct = {
   project_id: ["68a8ff5237fde0bf797c05b3"]  // ✅ Works
 };
 
+// Create record
 await smartsuiteRecord('create', tableId, null, correct);
 ```
 
-### Example 3: Filtering Linked Records
-
+### Pattern 3: Filtering Linked Records
 ```typescript
 // WRONG: Using 'is' operator
 const wrongFilter = {
@@ -200,65 +360,51 @@ const correctFilter = {
   value: ["project-uuid"]  // Array format
 };
 
+// Query with filter
 await smartsuiteQuery('search', tableId, {
-  filter: { operator: "and", fields: [correctFilter] }
+  filter: {
+    operator: "and",
+    fields: [correctFilter]
+  }
 });
 ```
 
 ---
 
-## FIELD DISCOVERY WORKFLOW
+## Anti-Patterns to Avoid
 
-```octave
-DISCOVERY_SEQUENCE::[
-  STEP_1→smartsuiteSchema(tableId,'summary')→table_info+field_list,
-  STEP_2→smartsuiteSchema(tableId,'field_detail',fieldSlug)→full_config+UUIDs,
-  STEP_3→validate_field_format_before_write
-]
+❌ **Using `options` instead of `choices` for select field updates**
+✅ Always use `choices` with preserved UUIDs
 
-VALIDATION_CHECKLIST::[
-  linked_records→check_arrays,
-  select_fields→check_codes≠labels,
-  required_fields→ensure_present,
-  formula_fields→skip_in_writes[read_only]
-]
-```
+❌ **Single values for linked record fields**
+✅ Always use arrays, even for single links
 
----
+❌ **Display labels for select field values**
+✅ Use option codes (e.g., "in_progress" not "In Progress")
 
-## ANTI-PATTERNS
+❌ **Skipping dry-run for mutations**
+✅ Always dry-run first, then execute
 
-```octave
-NEVER::[
-  options_instead_of_choices→UUID_corruption,
-  single_values_for_linked_records→validation_error,
-  display_labels_for_selects→field_mismatch,
-  skip_dry_run→data_risk,
-  is_operator_for_linked_records→query_failure,
-  set_formula_rollup_values→validation_error,
-  forget_trailing_slash_DELETE_GET→silent_failure
-]
+❌ **Using `is` operator for linked record filters**
+✅ Use `has_any_of`, `has_all_of`, or `has_none_of`
 
-ALWAYS::[
-  choices_with_preserved_UUIDs→data_integrity,
-  arrays_for_linked_records→even_single_values,
-  option_codes_for_selects→not_labels,
-  dry_run_first→then_execute,
-  has_any_of_for_linked_filters→not_is,
-  trailing_slash_DELETE_GET→prevent_silent_failure,
-  250ms_delay_between_requests→rate_limit_compliance
-]
-```
+❌ **Attempting to set formula/rollup field values**
+✅ These are read-only, calculated by SmartSuite
+
+❌ **Forgetting trailing slashes in DELETE/GET requests**
+✅ Always include trailing slash or expect silent failures
 
 ---
 
-## PERFORMANCE BENCHMARKS
+## Key Takeaways
 
-```octave
-PRODUCTION_TESTED::[
-  QUERY→400_600ms,
-  CRUD→400_700ms,
-  BULK→600_850ms[multiple_records],
-  SCHEMA_DISCOVERY→300_500ms[standard],450_850ms[intelligent_API]
-]
-```
+1. **UUID preservation**: Use `choices` not `options` - this is CRITICAL
+2. **Linked records**: Always arrays, even for single values
+3. **DRY-RUN first**: Default to dry_run=true for all mutations
+4. **Field discovery**: Use schema tools before writing
+5. **Select field codes**: Use codes not display labels
+6. **Filter operators**: `has_any_of` for linked records, not `is`
+7. **Trailing slashes**: Required for GET/DELETE or silent failure
+8. **Formula fields**: Read-only, don't attempt to set
+9. **Rate limiting**: 250ms delay between requests recommended
+10. **SmartDoc structure**: Rich text requires full document structure

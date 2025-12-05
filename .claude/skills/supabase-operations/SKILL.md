@@ -13,7 +13,8 @@ SUPABASE_MASTERY::[MIGRATION_VALIDATION+RLS_OPTIMIZATION+MCP_BENCHMARKS+ADR_003_
 MIGRATION_VALIDATION::migration-protocols.md::[
   7_step_workflow,
   backwards_compatible_schema_changes,
-  multi_app_deployment_safety
+  multi_app_deployment_safety,
+  CI_gated_deployment[preferred_over_direct_MCP]
 ]
 
 RLS_OPTIMIZATION::rls-optimization.md::[
@@ -43,7 +44,8 @@ STATE_TRACKING::state-tracking.md::[
 MIGRATION_OPERATIONS::[
   before_applying_migrations→validation_checklist,
   after_schema_changes→compliance_verification,
-  debugging_migration_divergence
+  debugging_migration_divergence,
+  CI_deployment_flow→PR_with_deploy_migrations_label
 ]
 
 RLS_DESIGN::[
@@ -88,5 +90,30 @@ PROVIDES::[
   migration_validation_checklists,
   RLS_optimization_patterns,
   MCP_tool_selection_guidance,
-  compliance_verification_procedures
+  compliance_verification_procedures,
+  CI_deployment_guidance[gated_auto_deploy]
+]
+
+## CI_DEPLOYMENT_AWARENESS
+
+PREFERRED_FLOW::[
+  1::create_PR_with_migrations,
+  2::add_deploy_migrations_label,
+  3::CI_validates_locally,
+  4::merge_triggers_production_deploy,
+  5::audit_log_entry_created
+]
+
+DIRECT_MCP_APPLICATION::[
+  STATUS::fallback_only,
+  WHEN::CI_unavailable_OR_emergency,
+  REQUIREMENT::always_create_local_file_first,
+  WARNING::bypasses_CI_validation
+]
+
+CI_REFERENCE::[
+  WORKFLOW::".github/workflows/ci.yml (deploy-migrations job)",
+  SECRET::"SUPABASE_ACCESS_TOKEN required",
+  LABEL::"deploy-migrations",
+  DR_PLAYBOOK::".coord/docs/001-OPS-DISASTER-RECOVERY-PLAYBOOK.md"
 ]
