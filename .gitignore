@@ -73,3 +73,7 @@ jsx/generated/
 # Git worktrees (HestAI Workbench)
 /worktrees/
 /worktree-*/
+
+# HestAI debate artifacts (raw, reconstructible from .oct.md)
+debates/*.json
+*.jsonl
