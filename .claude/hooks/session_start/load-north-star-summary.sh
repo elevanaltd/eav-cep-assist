@@ -17,23 +17,15 @@ YELLOW='\033[33m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-# Check for .coord coordination structure
-COORD_PATH="$PROJECT_DIR/.coord"
-
-if [ ! -e "$COORD_PATH" ]; then
+# Check for .hestai north-star (three-tier, primary), legacy workflow, or .coord fallback
+if [ -d "$PROJECT_DIR/.hestai/north-star" ]; then
+  WORKFLOW_DOCS="$PROJECT_DIR/.hestai/north-star"
+elif [ -d "$PROJECT_DIR/.hestai/workflow" ]; then
+  WORKFLOW_DOCS="$PROJECT_DIR/.hestai/workflow"
+elif [ -d "$PROJECT_DIR/.coord/workflow-docs" ]; then
+  WORKFLOW_DOCS="$PROJECT_DIR/.coord/workflow-docs"
+else
   # No coordination - silent exit (this is expected for many projects)
-  exit 0
-fi
-
-# Check if .coord is a symlink or directory
-if [ ! -L "$COORD_PATH" ] && [ ! -d "$COORD_PATH" ]; then
-  exit 0
-fi
-
-# Look for workflow-docs folder
-WORKFLOW_DOCS="$COORD_PATH/workflow-docs"
-
-if [ ! -d "$WORKFLOW_DOCS" ]; then
   exit 0
 fi
 
@@ -66,7 +58,7 @@ cat "$SUMMARY_FILE"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo ""
-echo -e "${GREEN}✓ North Star Summary loaded from coordination${RESET}"
+echo -e "${GREEN}✓ North Star Summary loaded from hestai workflow${RESET}"
 echo -e "${BLUE}  Location: $RELATIVE_PATH${RESET}"
 echo -e "${BLUE}  Use '/ns-summary-create' to regenerate summary${RESET}"
 echo ""
