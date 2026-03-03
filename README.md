@@ -10,6 +10,8 @@ Two-panel system that integrates directly into Premiere Pro:
 
 Works seamlessly with [Ingest Assistant](https://github.com/elevanaltd/ingest-assistant) for AI-powered metadata generation before import.
 
+![CEP Panel Screenshot](docs/images/screenshot.png)
+
 ---
 
 ## Features
