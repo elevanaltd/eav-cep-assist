@@ -64,4 +64,11 @@ node_modules/
 jsx/generated/
 
 # Large analysis artifacts
-.coord/reports/codebase-analysis.xml
+.hestai/reports/codebase-analysis.xml
+
+# HestAI system layer (injected by MCP server, read-only)
+.hestai-sys/
+
+# Git worktrees (HestAI Workbench)
+/worktrees/
+/worktree-*/

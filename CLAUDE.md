@@ -268,11 +268,11 @@ NAVIGATION_SHOWS_0_CLIPS::[
 
 ```octave
 CLAUDE.md::operational_guide[you_are_here]
-.coord/PROJECT-CONTEXT.md::project_identity+tech_stack
-.coord/ECOSYSTEM-POSITION.md::pipeline_position
-.coord/workflow-docs/003-QUICK_REFERENCE-NEXT_SESSION.md::session_handoff
-.coord/workflow-docs/002-CEP_PANEL_CURRENT_STATE-BUILD-STATUS.md::build_status
-.coord/docs/005-DOC-SCHEMA-R1-1-AUTHORITATIVE-CEP-IA-METADATA.md::JSON_schema_spec
+.hestai/context/PROJECT-CONTEXT.md::project_identity+tech_stack
+.hestai/context/ECOSYSTEM-POSITION.md::pipeline_position
+.hestai/workflow/003-QUICK_REFERENCE-NEXT_SESSION.md::session_handoff
+.hestai/workflow/002-CEP_PANEL_CURRENT_STATE-BUILD-STATUS.md::build_status
+docs/005-DOC-SCHEMA-R1-1-AUTHORITATIVE-CEP-IA-METADATA.md::JSON_schema_spec
 ```
 
 ---
