@@ -63,5 +63,13 @@ node_modules/
 # Build artifacts
 jsx/generated/
 
-# Large analysis artifacts
-.coord/reports/codebase-analysis.xml
+# HestAI system layer (injected by MCP server, read-only)
+.hestai-sys/
+
+# HestAI working state (Tier 3 - changes frequently, no PR needed)
+.hestai-state/
+.hestai/state
+
+# Git worktrees (HestAI Workbench)
+/worktrees/
+/worktree-*/
