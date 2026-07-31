@@ -18,6 +18,8 @@ fi
 # Step 1: Check Premiere Pro version
 echo "Step 1: Checking Premiere Pro installation..."
 PP_PATHS=(
+    "/Applications/Adobe Premiere Pro 2026"
+    "/Applications/Adobe Premiere Pro 2025"
     "/Applications/Adobe Premiere Pro 2024"
     "/Applications/Adobe Premiere Pro 2023"
     "/Applications/Adobe Premiere Pro 2022"
@@ -37,7 +39,7 @@ for PP_PATH in "${PP_PATHS[@]}"; do
 
         # Determine CSXS version
         case "$PP_VERSION" in
-            *2024*|*2023*)
+            *2026*|*2025*|*2024*|*2023*)
                 CSXS_VERSION="12"
                 ;;
             *2022*|*2021*)
