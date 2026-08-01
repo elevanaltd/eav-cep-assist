@@ -1,6 +1,6 @@
 # EAV Ingest Assistant - CEP Panel
 
-Adobe CEP extension for Premiere Pro that streamlines video/image metadata tagging with structured naming and XMP integration.
+Adobe CEP extension for Premiere Pro that streamlines video/image metadata tagging with structured naming and JSON sidecar metadata.
 
 ## Overview
 
@@ -16,17 +16,18 @@ Works seamlessly with [Ingest Assistant](https://github.com/elevanaltd/ingest-as
 
 ## Features
 
-### ✅ Current (v1.0)
+### ✅ Current (v2.0)
 
 **Navigation Panel:**
 - Clip browser with thumbnails
 - Search and filter (video/image/tagged)
 - Click to load in Metadata Panel
 - Auto-open in Source Monitor
-- XMP metadata preview
+- JSON metadata preview
+- Batch Apply to Premiere
 
 **Metadata Panel:**
-- Structured naming: `{location}-{subject}-{action}-{shotType}`
+- Structured naming: `{location}-{subject}-{action}-{shotType}-#{shotNumber}`
 - Form fields: Location, Subject, Action, Shot Type, Description
 - Live name preview
 - XMP metadata read/write (`xmpDM:logComment`, `xmpDM:shotName`, `dc:description`)
@@ -34,11 +35,11 @@ Works seamlessly with [Ingest Assistant](https://github.com/elevanaltd/ingest-as
 - Good/Bad flagging
 - Diagnostics panel for debugging
 
-**XMP Integration:**
-- Reads metadata from Ingest Assistant
-- Writes to proxy-safe XMP namespaces
+**Metadata Integration:**
+- Reads metadata from .ingest-metadata.json sidecars (JSON-first)
+- Writes clip name and metadata to Premiere Pro
+- Writes human corrections to .ingest-metadata-pp.json (ML feedback)
 - Survives proxy workflow
-- Compatible with Adobe Bridge
 
 ---
 
@@ -100,30 +101,34 @@ See detailed instructions: [INSTALL-WINDOWS.md](INSTALL-WINDOWS.md)
 
 **Videos (with action):**
 ```
-{location}-{subject}-{action}-{shotType}
-Example: kitchen-oven-cleaning-CU
+{location}-{subject}-{action}-{shotType}-#{shotNumber}
+Example: kitchen-oven-cleaning-MID-#3
 ```
 
 **Images / Static Shots:**
 ```
-{location}-{subject}-{shotType}
-Example: bathroom-sink-WS
+{location}-{subject}-{shotType}-#{shotNumber}
+Example: bathroom-sink-WS-#1
 ```
 
 **Shot Types:**
-- `WS` - Wide shot
-- `MID` - Mid shot
-- `CU` - Close up
-- `UNDER` - Underneath
-- `FP` - Focus pull
-- `TRACK` - Tracking shot
-- `ESTAB` - Establishing shot
+- `WS` - Wide Shot
+- `MID` - Medium Shot
+- `CU` - Close Up
+- `UNDER` - Underslung
+- `FP` - First Person
+- `TRACK` - Tracking Shot
+- `ESTAB` - Establishing
 
 ---
 
-## XMP Metadata Fields
+## Metadata Integration
 
-The panel writes to the following XMP fields:
+The panel reads from JSON sidecars and writes to both XMP and JSON:
+
+**Read path:** `.ingest-metadata.json` (co-located with media, written by Ingest Assistant)
+
+**XMP write path** — the panel writes to the following XMP fields:
 
 | Field | XMP Path | Purpose |
 |-------|----------|---------|
@@ -132,11 +137,12 @@ The panel writes to the following XMP fields:
 | **Description** | `dc:description` | Metadata tags (comma-separated) |
 | **Identifier** | `dc:identifier` | Original filename/ID |
 
+**JSON write path:** `.ingest-metadata-pp.json` (human-corrected version, same folder as media, used for ML feedback loop)
+
 **Compatibility:**
-- ✅ Reads from Ingest Assistant
+- ✅ Reads from .ingest-metadata.json sidecars
 - ✅ Survives proxy creation
-- ✅ Compatible with Adobe Bridge
-- ✅ Round-trip editing (CEP ↔ IA)
+- ✅ Round-trip editing (CEP ↔ IA via JSON)
 
 ---
 
@@ -144,9 +150,9 @@ The panel writes to the following XMP fields:
 
 **Workflow:**
 1. Process files in [Ingest Assistant](https://github.com/elevanaltd/ingest-assistant) (AI analysis)
-2. IA writes XMP metadata to files
+2. IA writes `.ingest-metadata.json` sidecars to media folders
 3. Import files to Premiere Pro
-4. CEP panel auto-loads XMP metadata
+4. CEP panel reads `.ingest-metadata.json` sidecar
 5. Review/edit in CEP panel
 6. Apply to Premiere Pro
 
@@ -228,6 +234,9 @@ eav-cep-assist/
 ./deploy-navigation.sh  # Deploy Navigation panel
 ./deploy-metadata.sh    # Deploy Metadata panel
 # Restart Premiere Pro
+./diagnose.sh           # Run diagnostics for troubleshooting
+npm test                # Run test suite
+npm run lint            # Check ES3 compliance
 ```
 
 ---
@@ -237,7 +246,6 @@ eav-cep-assist/
 ### Future Features (See Issues)
 
 - 🔲 Auto-apply XMP on import ([#13](https://github.com/elevanaltd/eav-cep-assist/issues/13))
-- 🔲 Batch operations panel
 - 🔲 Hot-folder watch integration
 - 🔲 Keyboard shortcuts
 - 🔲 Custom lexicon support
@@ -259,6 +267,14 @@ Investigated in [#12](https://github.com/elevanaltd/eav-cep-assist/issues/12) - 
 
 ## Version History
 
+**v2.0.0** (2025-12)
+- JSON sidecar architecture (.ingest-metadata.json as source of truth)
+- Two-panel system: Navigation + Metadata as separate CEP extensions
+- Batch Apply to Premiere
+- AI analysis pending indicator
+- ES3 enforcement tooling
+- ML feedback loop via .ingest-metadata-pp.json
+
 **v1.0.0** (2025-11-12)
 - Two-panel system (Navigation + Metadata)
 - XMP metadata read/write
@@ -269,7 +285,7 @@ Investigated in [#12](https://github.com/elevanaltd/eav-cep-assist/issues/12) - 
 
 ---
 
-**License:** MIT
+**License:** Apache 2.0
 **Author:** Elevana Development Team
 **Repository:** https://github.com/elevanaltd/eav-cep-assist
 
