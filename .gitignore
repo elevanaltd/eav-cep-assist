@@ -67,7 +67,7 @@ jsx/generated/
 .hestai-sys/
 
 # HestAI working state (Tier 3 - changes frequently, no PR needed)
-.hestai-state/
+.hestai-state
 .hestai/state
 
 # Git worktrees (HestAI Workbench)
