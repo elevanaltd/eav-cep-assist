@@ -505,7 +505,7 @@
       this.elements.identifier.value = identifierValue;
       addDebug('[MetadataForm] → Identifier: "' + identifierValue + '"');
 
-      // Good checkbox = bestTake (Schema R1.1 Amendment A1; absent/non-true → unchecked)
+      // "Best" checkbox = bestTake (Schema R1.1 Amendment A1; absent/non-true → unchecked)
       this.elements.good.checked = metadata.bestTake === true;
 
       // Display computed shotName (read-only field - will be added to HTML)

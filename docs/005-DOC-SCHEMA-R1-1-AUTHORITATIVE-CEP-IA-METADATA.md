@@ -204,7 +204,7 @@ function generateShotName(location, subject, action, shotType, shotNumber) {
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `bestTake` | `boolean` | ❌ (optional) | `false` | Editor marked this clip as the best take (CEP "Good" checkbox) |
+| `bestTake` | `boolean` | ❌ (optional) | `false` | Editor marked this clip as the best take (CEP "Best" checkbox) |
 
 **Rules:**
 - **Optional and additive.** An absent key reads as `false`. Existing IA output stays valid unchanged, and IA is not required to emit it.

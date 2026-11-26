@@ -42,7 +42,7 @@ CEP Panel deploys independently without requiring Ingest Assistant changes first
 
 **Status:** ✅ LOCKED (2025-11-18) - Validated against actual Premiere Pro integration test + User confirmation
 
-**Amendments:** A1 (2026-11-26): optional, CEP-written `bestTake` boolean (the "Good" checkbox). It is additive with no `_schema` bump. Governance record: `NSR-R1-A1-BESTTAKE-20261126` (PR #85). R1 stays locked for all other changes.
+**Amendments:** A1 (2026-11-26): optional, CEP-written `bestTake` boolean (the "Best" checkbox, formerly labelled "Good"). It is additive with no `_schema` bump. Governance record: `NSR-R1-A1-BESTTAKE-20261126` (PR #85). R1 stays locked for all other changes.
 
 **File Structure:**
 ```json
