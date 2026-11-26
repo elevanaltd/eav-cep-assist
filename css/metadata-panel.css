@@ -79,7 +79,7 @@ body {
     color: #b0b0b0;
 }
 
-/* Split row for Tape Name | Description | Good (20/70/10) */
+/* Split row for Tape Name | Description | Best (20/70/10) */
 .form-row-split {
     display: flex;
     gap: 8px;
@@ -114,7 +114,7 @@ body {
     border-color: #0078d4;
 }
 
-/* Checkbox styling for Good field */
+/* Checkbox styling for Best (bestTake) field */
 .form-group-checkbox {
     display: flex;
     flex-direction: column;

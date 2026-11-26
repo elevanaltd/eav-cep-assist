@@ -1,8 +1,9 @@
 # R1.1 Authoritative JSON Schema - CEP Panel + Ingest Assistant Metadata
 
 **Schema Version:** R1.1
+**Amendments:** A1 (2026-11-26) — additive optional `bestTake` field (§3.2 Editorial QC Fields). `_schema` stays `"2.0"`. Governance: `NSR-R1-A1-BESTTAKE-20261126`.
 **Document Status:** PRODUCTION-VALIDATED (Empirical Test Evidence)
-**Last Updated:** 2025-11-18
+**Last Updated:** 2026-11-26
 **Test Source:** Actual Premiere Pro test with 3 clips + ExtendScript path analysis
 
 ---
@@ -196,6 +197,20 @@ function generateShotName(location, subject, action, shotType, shotNumber) {
 ```json
 "lockedFields": []  // All fields editable
 ```
+
+---
+
+#### **Editorial QC Fields (Amendment A1, CEP-written)**
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `bestTake` | `boolean` | ❌ (optional) | `false` | Editor marked this clip as the best take (CEP "Best" checkbox) |
+
+**Rules:**
+- **Optional and additive.** An absent key reads as `false`. Existing IA output stays valid unchanged, and IA is not required to emit it.
+- **CEP-written only.** It is written on Apply to `.ingest-metadata-pp.json` (the human-corrections file), never to IA's `.ingest-metadata.json`.
+- **Not lockable.** It is outside `lockedFields` / R6 lock semantics (QC annotation, not IA-derived metadata).
+- **Not part of `shotName`.** It does not affect the generated name or the Premiere Pro Clip Name.
 
 ---
 
