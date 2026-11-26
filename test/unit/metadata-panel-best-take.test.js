@@ -19,10 +19,14 @@ const BODY_HTML = PANEL_HTML
 const NODE_ID = 'node-001';
 const CLIP = { nodeId: NODE_ID, name: 'EA001621.MOV' };
 
+const CLIP_B = { nodeId: 'node-002', name: 'EA001622.MOV' };
+
+const READ_RE = /^EAVIngest\.readJSONMetadataByNodeId\("((?:[^"\\]|\\.)*)"\)$/;
 const WRITE_RE = /^EAVIngest\.writeJSONMetadataByNodeId\("((?:[^"\\]|\\.)*)", "((?:[^"\\]|\\.)*)"\)$/;
 
-function createFakeHost(initialMetadata) {
-  const store = { [NODE_ID]: Object.assign({}, initialMetadata) };
+// otherClips: optional { nodeId: metadata } for multi-clip navigation scenarios
+function createFakeHost(initialMetadata, otherClips) {
+  const store = Object.assign({ [NODE_ID]: Object.assign({}, initialMetadata) }, otherClips || {});
   const listeners = {};
   const writes = [];
 
@@ -31,14 +35,15 @@ function createFakeHost(initialMetadata) {
     if (script.indexOf('try { $.evalFile') === 0) {return 'SUCCESS';}
     if (script === 'typeof EAVIngest') {return 'object';}
     if (script === 'typeof EAVIngest.readJSONMetadataByNodeId') {return 'function';}
-    if (script.indexOf('EAVIngest.readJSONMetadataByNodeId(') === 0) {
-      return JSON.stringify(store[NODE_ID]);
+    const read = script.match(READ_RE);
+    if (read) {
+      return store[read[1]] ? JSON.stringify(store[read[1]]) : 'null';
     }
     const write = script.match(WRITE_RE);
     if (write) {
       const updates = JSON.parse(JSON.parse('"' + write[2] + '"'));
       writes.push(updates);
-      Object.assign(store[NODE_ID], updates); // mirrors host.jsx generic key merge
+      Object.assign(store[write[1]], updates); // mirrors host.jsx generic key merge
       return 'true';
     }
     return '';
@@ -56,9 +61,10 @@ function createFakeHost(initialMetadata) {
     store,
     writes,
     FakeCSInterface,
-    selectClip() {
+    selectClip(clip) {
+      const target = clip || CLIP;
       (listeners['com.elevana.clip-selected'] || []).forEach(function(fn) {
-        fn({ data: JSON.stringify({ clip: CLIP, clipIndex: 0, totalClips: 1, filteredClips: [CLIP] }) });
+        fn({ data: JSON.stringify({ clip: target, clipIndex: 0, totalClips: 1, filteredClips: [target] }) });
       });
     }
   };
@@ -95,7 +101,7 @@ describe('Metadata Panel - Good checkbox persists as bestTake', () => {
     delete global.CSEvent;
   });
 
-  it('loads a legacy clip without bestTake as unchecked', () => {
+  it('loads a legacy clip without bestTake as unchecked (regression guard, passes pre/post)', () => {
     const host = createFakeHost(IA_METADATA);
     bootPanel(host);
     host.selectClip();
@@ -125,6 +131,7 @@ describe('Metadata Panel - Good checkbox persists as bestTake', () => {
     const host = createFakeHost(Object.assign({}, IA_METADATA, { bestTake: true }));
     bootPanel(host);
     host.selectClip();
+    expect(goodBox().checked).toBe(true);  // precondition: loaded as ticked
 
     goodBox().checked = false;
     applyBtn().click();
@@ -147,7 +154,22 @@ describe('Metadata Panel - Good checkbox persists as bestTake', () => {
     expect(goodBox().checked).toBe(true);
   });
 
-  it('does not change the computed shotName', () => {
+  it('does not carry a ticked box over to the next clip lacking bestTake', () => {
+    const legacyClipB = Object.assign({}, IA_METADATA, { id: 'EA001622', originalFilename: 'EA001622.MOV' });
+    const host = createFakeHost(
+      Object.assign({}, IA_METADATA, { bestTake: true }),
+      { [CLIP_B.nodeId]: legacyClipB }
+    );
+    bootPanel(host);
+
+    host.selectClip(CLIP);
+    expect(goodBox().checked).toBe(true);
+
+    host.selectClip(CLIP_B);
+    expect(goodBox().checked).toBe(false);
+  });
+
+  it('does not change the computed shotName (regression guard, passes pre/post)', () => {
     const host = createFakeHost(IA_METADATA);
     bootPanel(host);
     host.selectClip();
