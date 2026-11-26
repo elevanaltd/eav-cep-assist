@@ -101,6 +101,12 @@ describe('Metadata Panel - Good checkbox persists as bestTake', () => {
     delete global.CSEvent;
   });
 
+  it('labels the checkbox "Best" (operator ruling 2026-11-26)', () => {
+    const host = createFakeHost(IA_METADATA);
+    bootPanel(host);
+    expect(document.querySelector('label[for="metadataGood"]').textContent.trim()).toBe('Best');
+  });
+
   it('loads a legacy clip without bestTake as unchecked (regression guard, passes pre/post)', () => {
     const host = createFakeHost(IA_METADATA);
     bootPanel(host);
