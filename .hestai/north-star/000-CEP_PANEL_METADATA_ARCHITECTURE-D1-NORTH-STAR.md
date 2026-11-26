@@ -42,6 +42,8 @@ CEP Panel deploys independently without requiring Ingest Assistant changes first
 
 **Status:** ✅ LOCKED (2025-11-18) - Validated against actual Premiere Pro integration test + User confirmation
 
+**Amendments:** A1 (2026-11-26): optional, CEP-written `bestTake` boolean (the "Good" checkbox). It is additive with no `_schema` bump. Governance record: `NSR-R1-A1-BESTTAKE-20261126` (PR #85). R1 stays locked for all other changes.
+
 **File Structure:**
 ```json
 {
@@ -85,7 +87,7 @@ CEP Panel deploys independently without requiring Ingest Assistant changes first
 - ✅ Changed to field-level locking (`lockedFields` array vs `locked` boolean)
 - ✅ Confirmed `shotName` includes `#N` format
 
-**See Complete Specification:** `.coord/docs/005-DOC-SCHEMA-R1-1-AUTHORITATIVE-CEP-IA-METADATA.md`
+**See Complete Specification:** `docs/005-DOC-SCHEMA-R1-1-AUTHORITATIVE-CEP-IA-METADATA.md`
 
 **Key Design Decisions:**
 - **Primary Key:** Original filename (EA001621), NOT PP Clip Name (survives PP renames)
