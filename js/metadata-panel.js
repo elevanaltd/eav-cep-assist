@@ -505,8 +505,8 @@
       this.elements.identifier.value = identifierValue;
       addDebug('[MetadataForm] → Identifier: "' + identifierValue + '"');
 
-      // Load Good checkbox (currently not in Schema R1.1, default to false)
-      this.elements.good.checked = false;
+      // Good checkbox = bestTake (Schema R1.1 Amendment A1; absent/non-true → unchecked)
+      this.elements.good.checked = metadata.bestTake === true;
 
       // Display computed shotName (read-only field - will be added to HTML)
       const shotNameDisplay = metadata.shotName || this.computeShotNameLocally(metadata);
@@ -735,7 +735,8 @@
         subject: subject,
         action: action,
         shotType: shotType,
-        keywords: keywords
+        keywords: keywords,
+        bestTake: this.elements.good.checked
         // Note: shotName computed server-side by ExtendScript
         // shotNumber not included (managed by IA during initial cataloging)
       };
